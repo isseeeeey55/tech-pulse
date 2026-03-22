@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" type="device">
+  <diagram id="lambda-az" name="Lambda AZ Metadata">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Background -->
+        <mxCell id="bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="20" y="5" width="1360" height="570" as="geometry" />
+        </mxCell>
+
+        <!-- Title -->
+        <mxCell id="title" value="Lambda AZ メタデータによる同一AZ内通信の最適化" style="text;html=1;fontSize=18;fontStyle=1;verticalAlign=middle;align=center;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="200" y="15" width="1000" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- AWS Cloud -->
+        <mxCell id="aws-cloud" value="AWS Cloud" style="points=[[0,0],[0.25,0],[0.5,0],[0.75,0],[1,0],[1,0.25],[1,0.5],[1,0.75],[1,1],[0.75,1],[0.5,1],[0.25,1],[0,1],[0,0.75],[0,0.5],[0,0.25]];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=12;fontStyle=0;container=1;pointerEvents=0;collapsible=0;recursiveResize=0;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_aws_cloud_alt;strokeColor=#232F3E;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#232F3E;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="55" width="1320" height="500" as="geometry" />
+        </mxCell>
+
+        <!-- Region -->
+        <mxCell id="region" value="ap-northeast-1" style="points=[[0,0],[0.25,0],[0.5,0],[0.75,0],[1,0],[1,0.25],[1,0.5],[1,0.75],[1,1],[0.75,1],[0.5,1],[0.25,1],[0,1],[0,0.75],[0,0.5],[0,0.25]];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=12;fontStyle=0;container=1;pointerEvents=0;collapsible=0;recursiveResize=0;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_region;strokeColor=#00A4A6;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#147EBA;dashed=1;" vertex="1" parent="aws-cloud">
+          <mxGeometry x="15" y="35" width="1290" height="450" as="geometry" />
+        </mxCell>
+
+        <!-- AZ-a -->
+        <mxCell id="az-a" value="AZ-a (apne1-az1)" style="fillColor=#EBF5FB;strokeColor=#147EBA;dashed=1;verticalAlign=top;fontStyle=1;fontColor=#147EBA;whiteSpace=wrap;html=1;rounded=1;container=1;collapsible=0;" vertex="1" parent="region">
+          <mxGeometry x="30" y="40" width="380" height="380" as="geometry" />
+        </mxCell>
+
+        <!-- Lambda in AZ-a -->
+        <mxCell id="lambda-a" value="" style="sketch=0;points=[[0,0,0],[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0,0],[0,1,0],[0.25,1,0],[0.5,1,0],[0.75,1,0],[1,1,0],[0,0.25,0],[0,0.5,0],[0,0.75,0],[1,0.25,0],[1,0.5,0],[1,0.75,0]];outlineConnect=0;fontColor=#232F3E;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;" vertex="1" parent="az-a">
+          <mxGeometry x="50" y="80" width="68" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="lambda-a-label" value="Lambda 関数" style="text;html=1;fontSize=11;verticalAlign=top;align=center;fontColor=#232F3E;" vertex="1" parent="az-a">
+          <mxGeometry x="30" y="170" width="110" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- RDS in AZ-a -->
+        <mxCell id="rds-a" value="" style="sketch=0;points=[[0,0,0],[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0,0],[0,1,0],[0.25,1,0],[0.5,1,0],[0.75,1,0],[1,1,0],[0,0.25,0],[0,0.5,0],[0,0.75,0],[1,0.25,0],[1,0.5,0],[1,0.75,0]];outlineConnect=0;fontColor=#232F3E;fillColor=#C925D1;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.rds;" vertex="1" parent="az-a">
+          <mxGeometry x="250" y="80" width="68" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="rds-a-label" value="RDS (Primary)" style="text;html=1;fontSize=11;verticalAlign=top;align=center;fontColor=#232F3E;" vertex="1" parent="az-a">
+          <mxGeometry x="230" y="170" width="110" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Lambda → RDS in same AZ (green, fast) — label removed from edge -->
+        <mxCell id="e-same-az" style="html=1;endArrow=block;startArrow=none;endFill=1;strokeColor=#7AA116;strokeWidth=3;rounded=0;" edge="1" source="lambda-a" target="rds-a" parent="az-a">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-same-az-label" value="同一AZ 低レイテンシー" style="text;html=1;fontSize=10;fontColor=#7AA116;verticalAlign=top;align=center;" vertex="1" parent="az-a">
+          <mxGeometry x="100" y="55" width="140" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- NEW badge on Lambda -->
+        <mxCell id="new-badge" value="&lt;font color=&quot;#ffffff&quot;&gt;&lt;b&gt;NEW&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF0000;strokeColor=none;fontSize=10;arcSize=50;" vertex="1" parent="az-a">
+          <mxGeometry x="115" y="78" width="40" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- AZ metadata callout -->
+        <mxCell id="az-meta" value="AZ ID を取得&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;169.254.169.254&lt;br&gt;/meta-data/placement/&lt;br&gt;availability-zone-id&lt;/font&gt;" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;size=15;position=0.5;position2=1;base=20;rounded=1;fillColor=#FFF3E0;strokeColor=#E65100;fontColor=#E65100;fontSize=10;verticalAlign=middle;align=center;" vertex="1" parent="az-a">
+          <mxGeometry x="20" y="210" width="150" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ElastiCache in AZ-a -->
+        <mxCell id="cache-a" value="" style="sketch=0;points=[[0,0,0],[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0,0],[0,1,0],[0.25,1,0],[0.5,1,0],[0.75,1,0],[1,1,0],[0,0.25,0],[0,0.5,0],[0,0.75,0],[1,0.25,0],[1,0.5,0],[1,0.75,0]];outlineConnect=0;fontColor=#232F3E;fillColor=#C925D1;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.elasticache;" vertex="1" parent="az-a">
+          <mxGeometry x="250" y="250" width="68" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="cache-a-label" value="ElastiCache" style="text;html=1;fontSize=11;verticalAlign=top;align=center;fontColor=#232F3E;" vertex="1" parent="az-a">
+          <mxGeometry x="235" y="325" width="100" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Lambda → ElastiCache same AZ -->
+        <mxCell id="e-same-az2" style="html=1;endArrow=block;startArrow=none;endFill=1;strokeColor=#7AA116;strokeWidth=3;rounded=0;" edge="1" source="lambda-a" target="cache-a" parent="az-a">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- AZ-c -->
+        <mxCell id="az-c" value="AZ-c (apne1-az4)" style="fillColor=#FAFAFA;strokeColor=#147EBA;dashed=1;verticalAlign=top;fontStyle=1;fontColor=#147EBA;whiteSpace=wrap;html=1;rounded=1;container=1;collapsible=0;" vertex="1" parent="region">
+          <mxGeometry x="470" y="40" width="330" height="380" as="geometry" />
+        </mxCell>
+
+        <!-- RDS Standby in AZ-c -->
+        <mxCell id="rds-c" value="" style="sketch=0;points=[[0,0,0],[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0,0],[0,1,0],[0.25,1,0],[0.5,1,0],[0.75,1,0],[1,1,0],[0,0.25,0],[0,0.5,0],[0,0.75,0],[1,0.25,0],[1,0.5,0],[1,0.75,0]];outlineConnect=0;fontColor=#232F3E;fillColor=#C925D1;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.rds;" vertex="1" parent="az-c">
+          <mxGeometry x="130" y="80" width="68" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="rds-c-label" value="RDS (Standby)" style="text;html=1;fontSize=11;verticalAlign=top;align=center;fontColor=#232F3E;" vertex="1" parent="az-c">
+          <mxGeometry x="110" y="170" width="110" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- ElastiCache in AZ-c -->
+        <mxCell id="cache-c" value="" style="sketch=0;points=[[0,0,0],[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0,0],[0,1,0],[0.25,1,0],[0.5,1,0],[0.75,1,0],[1,1,0],[0,0.25,0],[0,0.5,0],[0,0.75,0],[1,0.25,0],[1,0.5,0],[1,0.75,0]];outlineConnect=0;fontColor=#232F3E;fillColor=#C925D1;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.elasticache;" vertex="1" parent="az-c">
+          <mxGeometry x="130" y="250" width="68" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="cache-c-label" value="ElastiCache" style="text;html=1;fontSize=11;verticalAlign=top;align=center;fontColor=#232F3E;" vertex="1" parent="az-c">
+          <mxGeometry x="115" y="325" width="100" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Cross-AZ arrow (red, dashed, avoided) — label as separate text -->
+        <mxCell id="e-cross-az" style="html=1;endArrow=block;startArrow=none;endFill=1;strokeColor=#DD344C;strokeWidth=2;dashed=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="lambda-a" target="rds-c" parent="region">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-cross-az-label" value="クロスAZ コスト・レイテンシー増" style="text;html=1;fontSize=10;fontColor=#DD344C;verticalAlign=top;align=center;" vertex="1" parent="region">
+          <mxGeometry x="300" y="195" width="220" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#CCCCCC;" vertex="1" parent="region">
+          <mxGeometry x="870" y="60" width="380" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend-title" value="&lt;b&gt;AZ メタデータ活用の効果&lt;/b&gt;" style="text;html=1;fontSize=12;verticalAlign=middle;align=left;fontColor=#232F3E;" vertex="1" parent="region">
+          <mxGeometry x="890" y="65" width="200" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend-good" value="" style="html=1;strokeColor=#7AA116;strokeWidth=3;fillColor=none;" edge="1" parent="region">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="900" y="105" as="sourcePoint" />
+            <mxPoint x="960" y="105" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-good-text" value="同一AZ通信（低コスト・低レイテンシー）" style="text;html=1;fontSize=10;verticalAlign=middle;align=left;fontColor=#232F3E;" vertex="1" parent="region">
+          <mxGeometry x="970" y="95" width="250" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend-bad" value="" style="html=1;strokeColor=#DD344C;strokeWidth=2;dashed=1;fillColor=none;" edge="1" parent="region">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="900" y="140" as="sourcePoint" />
+            <mxPoint x="960" y="140" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-bad-text" value="クロスAZ通信（コスト増・レイテンシー増）" style="text;html=1;fontSize=10;verticalAlign=middle;align=left;fontColor=#232F3E;" vertex="1" parent="region">
+          <mxGeometry x="970" y="130" width="260" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Summary text -->
+        <mxCell id="summary" value="Lambda が AZ ID を取得 → 同一AZ内のRDS/ElastiCacheに接続&lt;br&gt;→ クロスAZ通信コストとレイテンシーを回避" style="text;html=1;fontSize=11;verticalAlign=middle;align=center;fontColor=#545B64;fontStyle=2;" vertex="1" parent="region">
+          <mxGeometry x="870" y="220" width="380" height="40" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

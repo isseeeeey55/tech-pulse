@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" type="device">
+  <diagram id="bedrock-webrtc" name="Bedrock AgentCore WebRTC Architecture">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="600" fit="1" crop="1" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Background -->
+        <mxCell id="bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="20" y="5" width="1470" height="580" as="geometry" />
+        </mxCell>
+
+        <!-- Title -->
+        <mxCell id="title" value="Bedrock AgentCore Runtime ― WebRTC による音声AIエージェント構成" style="text;html=1;fontSize=18;fontStyle=1;verticalAlign=middle;align=center;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="250" y="10" width="1000" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ===== Main horizontal line: y center = 200 ===== -->
+
+        <!-- User (x=60) -->
+        <mxCell id="user" value="ユーザー" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#232F3D;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.user;" vertex="1" parent="1">
+          <mxGeometry x="60" y="176" width="48" height="48" as="geometry" />
+        </mxCell>
+
+        <!-- Browser (x=220, same y center as main line) -->
+        <mxCell id="browser" value="ブラウザ" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#232F3D;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.client;" vertex="1" parent="1">
+          <mxGeometry x="210" y="162" width="78" height="76" as="geometry" />
+        </mxCell>
+
+        <!-- Mobile (x=220, below main line) -->
+        <mxCell id="mobile" value="モバイルアプリ" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#232F3D;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.mobile_client;" vertex="1" parent="1">
+          <mxGeometry x="222" y="380" width="53" height="78" as="geometry" />
+        </mxCell>
+
+        <!-- ===== AWS Cloud ===== -->
+        <mxCell id="aws-cloud" value="AWS Cloud" style="points=[[0,0],[0.25,0],[0.5,0],[0.75,0],[1,0],[1,0.25],[1,0.5],[1,0.75],[1,1],[0.75,1],[0.5,1],[0.25,1],[0,1],[0,0.75],[0,0.5],[0,0.25]];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=12;fontStyle=0;container=1;pointerEvents=0;collapsible=0;recursiveResize=0;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_aws_cloud_alt;strokeColor=#232F3E;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#232F3E;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="430" y="60" width="1030" height="510" as="geometry" />
+        </mxCell>
+
+        <!-- Region -->
+        <mxCell id="region" value="ap-northeast-1" style="points=[[0,0],[0.25,0],[0.5,0],[0.75,0],[1,0],[1,0.25],[1,0.5],[1,0.75],[1,1],[0.75,1],[0.5,1],[0.25,1],[0,1],[0,0.75],[0,0.5],[0,0.25]];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=12;fontStyle=0;container=1;pointerEvents=0;collapsible=0;recursiveResize=0;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_region;strokeColor=#00A4A6;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#147EBA;dashed=1;" vertex="1" parent="aws-cloud">
+          <mxGeometry x="20" y="40" width="990" height="450" as="geometry" />
+        </mxCell>
+
+        <!-- Bedrock icon (center y=200 in page coords → region-relative y=100) -->
+        <mxCell id="bedrock" value="" style="sketch=0;points=[[0,0,0],[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0,0],[0,1,0],[0.25,1,0],[0.5,1,0],[0.75,1,0],[1,1,0],[0,0.25,0],[0,0.5,0],[0,0.75,0],[1,0.25,0],[1,0.5,0],[1,0.75,0]];outlineConnect=0;fontColor=#232F3E;fillColor=#01A88D;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.bedrock;" vertex="1" parent="region">
+          <mxGeometry x="180" y="61" width="78" height="78" as="geometry" />
+        </mxCell>
+
+        <!-- Bedrock label (well below icon, at y=155) -->
+        <mxCell id="bedrock-label" value="Amazon Bedrock&lt;br&gt;AgentCore Runtime" style="text;html=1;fontSize=12;fontStyle=0;verticalAlign=top;align=center;fontColor=#232F3E;" vertex="1" parent="region">
+          <mxGeometry x="130" y="150" width="180" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- NEW badge -->
+        <mxCell id="new-badge" value="&lt;font color=&quot;#ffffff&quot;&gt;&lt;b&gt;NEW&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF0000;strokeColor=none;fontSize=11;arcSize=50;" vertex="1" parent="region">
+          <mxGeometry x="262" y="58" width="45" height="22" as="geometry" />
+        </mxCell>
+
+        <!-- Nova Sonic icon (same y as Bedrock) -->
+        <mxCell id="nova-sonic" value="" style="sketch=0;points=[[0,0,0],[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0,0],[0,1,0],[0.25,1,0],[0.5,1,0],[0.75,1,0],[1,1,0],[0,0.25,0],[0,0.5,0],[0,0.75,0],[1,0.25,0],[1,0.5,0],[1,0.75,0]];outlineConnect=0;fontColor=#232F3E;fillColor=#01A88D;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.sagemaker;" vertex="1" parent="region">
+          <mxGeometry x="520" y="61" width="78" height="78" as="geometry" />
+        </mxCell>
+
+        <!-- Nova Sonic label -->
+        <mxCell id="nova-label" value="Amazon Nova Sonic&lt;br&gt;(音声基盤モデル)" style="text;html=1;fontSize=12;fontStyle=0;verticalAlign=top;align=center;fontColor=#232F3E;" vertex="1" parent="region">
+          <mxGeometry x="470" y="150" width="180" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Protocol labels (between clients and Bedrock, no overlaps) -->
+        <mxCell id="webrtc-box" value="&lt;b&gt;WebRTC (UDP)&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#01A88D;fontColor=#ffffff;strokeColor=none;fontSize=12;" vertex="1" parent="region">
+          <mxGeometry x="30" y="30" width="130" height="28" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ws-box" value="&lt;b&gt;WebSocket (TCP)&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#545B64;fontColor=#ffffff;strokeColor=none;fontSize=12;" vertex="1" parent="region">
+          <mxGeometry x="30" y="310" width="140" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- SDK boxes (right side, same y band) -->
+        <mxCell id="sdk-title" value="&lt;b&gt;対応フレームワーク&lt;/b&gt;" style="text;html=1;fontSize=12;fontStyle=0;verticalAlign=middle;align=left;fontColor=#1565C0;" vertex="1" parent="region">
+          <mxGeometry x="760" y="40" width="150" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sdk1" value="Pipecat" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;fontColor=#1565C0;strokeColor=#90CAF9;fontSize=11;" vertex="1" parent="region">
+          <mxGeometry x="760" y="70" width="100" height="26" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sdk2" value="LiveKit" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;fontColor=#1565C0;strokeColor=#90CAF9;fontSize=11;" vertex="1" parent="region">
+          <mxGeometry x="760" y="106" width="100" height="26" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sdk3" value="Strands Agents" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;fontColor=#1565C0;strokeColor=#90CAF9;fontSize=11;" vertex="1" parent="region">
+          <mxGeometry x="760" y="142" width="100" height="26" as="geometry" />
+        </mxCell>
+
+        <!-- ===== Edges ===== -->
+
+        <!-- User → Browser: straight horizontal -->
+        <mxCell id="e1" style="html=1;endArrow=block;startArrow=none;endFill=1;strokeColor=#545B64;rounded=0;" edge="1" source="user" target="browser" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- User → Mobile: straight diagonal -->
+        <mxCell id="e2" style="html=1;endArrow=block;startArrow=none;endFill=1;strokeColor=#545B64;rounded=0;" edge="1" source="user" target="mobile" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Browser → Bedrock: straight horizontal (same y line!) -->
+        <mxCell id="e3" style="html=1;endArrow=block;startArrow=block;startFill=1;endFill=1;strokeColor=#01A88D;strokeWidth=2;rounded=0;" edge="1" source="browser" target="bedrock" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Mobile → Bedrock: orthogonal, route through x=400 to avoid labels -->
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;startArrow=block;startFill=1;endFill=1;strokeColor=#545B64;strokeWidth=2;rounded=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" source="mobile" target="bedrock" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="400" y="419" />
+              <mxPoint x="400" y="239" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Bedrock → Nova Sonic: straight horizontal -->
+        <mxCell id="e5" value="音声処理" style="html=1;endArrow=block;startArrow=block;startFill=1;endFill=1;strokeColor=#545B64;rounded=0;fontSize=11;fontColor=#545B64;labelPosition=center;verticalLabelPosition=top;verticalAlign=bottom;" edge="1" source="bedrock" target="nova-sonic" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Nova Sonic → SDKs: straight horizontal -->
+        <mxCell id="e6" style="html=1;endArrow=block;startArrow=none;endFill=1;strokeColor=#1565C0;rounded=0;dashed=1;" edge="1" source="nova-sonic" target="sdk2" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
