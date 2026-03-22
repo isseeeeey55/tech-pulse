@@ -22,9 +22,6 @@ paginate = 10
     Title = "Tech Pulse"
     Content = "![Tech Pulse](/tech-pulse/images/hero.png)\n\nAWS と Claude Code の最新アップデートを、SRE視点でわかりやすく解説する技術ブログです。\n\n毎日のアップデート情報を自動収集し、注目ポイントの深掘り・コード例・活用Tipsをまとめてお届けします。インフラエンジニア・SREの日々のキャッチアップにご活用ください。"
 
-  [[params.socialIcons]]
-    name = "rss"
-    url = "index.xml"
 
 [outputs]
   home = ["HTML", "RSS", "JSON"]
@@ -54,6 +51,11 @@ paginate = 10
     name = "Search"
     url = "/search/"
     weight = 40
+  [[menu.main]]
+    identifier = "rss"
+    name = "RSS"
+    url = "/tech-pulse/index.xml"
+    weight = 50
 
 [markup]
   [markup.highlight]
