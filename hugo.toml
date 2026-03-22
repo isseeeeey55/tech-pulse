@@ -1,4 +1,5 @@
 baseURL = "https://isseeeeey55.github.io/tech-pulse/"
+canonifyURLs = true
 languageCode = "ja"
 title = "Tech Pulse"
 theme = "PaperMod"
@@ -14,6 +15,7 @@ paginate = 10
   ShowCodeCopyButtons = true
   ShowRssButtonInSectionTermList = true
   ShowToc = true
+  ShareButtons = ["x", "facebook", "telegram"]
   description = "AWS & Claude Code の最新アップデートをお届けする技術ブログ"
   author = "Tech Pulse"
 
