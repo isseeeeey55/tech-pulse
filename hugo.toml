@@ -57,6 +57,10 @@ paginate = 10
     url = "/index.xml"
     weight = 50
 
+[services]
+  [services.googleAnalytics]
+    id = "G-DBZETGP0QY"
+
 [markup]
   [markup.highlight]
     style = "monokai"
