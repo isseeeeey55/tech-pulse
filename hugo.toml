@@ -21,12 +21,7 @@ paginate = 10
 
   [params.homeInfoParams]
     Title = "Tech Pulse"
-    Content = "AWS と Claude Code の最新アップデートを、SRE視点でわかりやすく解説します。"
-
-  [params.cover]
-    image = "images/hero.png"
-    alt = "Tech Pulse"
-    hiddenInSingle = true
+    Content = "![Tech Pulse](/tech-pulse/images/hero.png)\n\nAWS と Claude Code の最新アップデートを、SRE視点でわかりやすく解説します。"
 
   [[params.socialIcons]]
     name = "rss"
@@ -43,22 +38,22 @@ paginate = 10
   [[menu.main]]
     identifier = "tags"
     name = "Tags"
-    url = "/tags/"
+    url = "/tech-pulse/tags/"
     weight = 10
   [[menu.main]]
     identifier = "categories"
     name = "Categories"
-    url = "/categories/"
+    url = "/tech-pulse/categories/"
     weight = 20
   [[menu.main]]
     identifier = "archives"
     name = "Archives"
-    url = "/archives/"
+    url = "/tech-pulse/archives/"
     weight = 30
   [[menu.main]]
     identifier = "search"
     name = "Search"
-    url = "/search/"
+    url = "/tech-pulse/search/"
     weight = 40
 
 [markup]
