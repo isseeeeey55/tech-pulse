@@ -1,6 +1,6 @@
 ---
 title: "【AWS】2026/03/21 のアップデートまとめ"
-tags: ["aws", "update"]
+tags: ["aws", "bedrock", "eks", "neuron", "datasync", "redshift", "webrtc"]
 date: "2026-03-21T08:00:00+09:00"
 categories: ["AWS Updates"]
 summary: "Bedrock AgentCore RuntimeへのWebRTC追加、EKS Provisioned Control Planeの99.99% SLA・8XLティア新設が目立つ6件のアップデート。"
@@ -76,10 +76,10 @@ EKS Provisioned Control Planeが提供されている全リージョンで利用
 
 ```bash
 # Neuron DRAドライバのインストール
-kubectl apply -f https://raw.githubusercontent.com/aws-neuron/aws-neuron-eks-samples/main/dra/neuron-dra-driver.yaml
+$ kubectl apply -f https://raw.githubusercontent.com/aws-neuron/aws-neuron-eks-samples/main/dra/neuron-dra-driver.yaml
 
 # ResourceClassの確認
-kubectl get resourceclass
+$ kubectl get resourceclass
 ```
 
 次に、ResourceClaimTemplateを定義してMLワークロードに適用します：
@@ -145,8 +145,7 @@ parametersRef:
 
 MLワークロードでの効果を測るには、以下のメトリクスを監視します：
 
-```python
-import boto3
+```pythonimport boto3
 import time
 
 def measure_resource_allocation_time():
@@ -175,7 +174,7 @@ DataSyncが全ロケーションタイプでSecrets Managerに対応しました
 
 ```bash
 # 従来の方法（非推奨）
-aws datasync create-location-smb \
+$ aws datasync create-location-smb \
     --server-hostname example.com \
     --user myuser \
     --password "hardcoded-password" \
@@ -186,13 +185,13 @@ Secrets Managerを使う方法：
 
 ```bash
 # Secrets Managerにクレデンシャルを保存
-aws secretsmanager create-secret \
+$ aws secretsmanager create-secret \
     --name "datasync/smb-credentials" \
     --description "SMB server credentials for DataSync" \
     --secret-string '{"username":"myuser","password":"secure-password"}'
 
 # DataSyncロケーション作成時にSecrets Managerを参照
-aws datasync create-location-smb \
+$ aws datasync create-location-smb \
     --server-hostname example.com \
     --secrets-manager-arn "arn:aws:secretsmanager:region:account:secret:datasync/smb-credentials" \
     --subdirectory /data
@@ -200,8 +199,7 @@ aws datasync create-location-smb \
 
 **Terraformでの実装例**
 
-```hcl
-resource "aws_secretsmanager_secret" "datasync_credentials" {
+```hclresource "aws_secretsmanager_secret" "datasync_credentials" {
   name = "datasync/nfs-credentials"
   description = "NFS credentials for DataSync transfer"
 }
@@ -230,8 +228,7 @@ resource "aws_datasync_location_nfs" "source" {
 
 SOC 2やISO 27001の要件を満たしやすくなります。認証情報の自動ローテーションも設定可能です：
 
-```python
-import boto3
+```pythonimport boto3
 
 def setup_credential_rotation():
     """認証情報の自動ローテーション設定"""

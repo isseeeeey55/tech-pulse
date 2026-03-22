@@ -1,6 +1,6 @@
 ---
 title: "【Claude Code】v2.1.81 リリースノートまとめ"
-tags: ["claudecode", "ai", "cli"]
+tags: ["claude-code", "oauth", "permissions", "security"]
 date: "2026-03-22T08:00:00+09:00"
 categories: ["Claude Code Updates"]
 summary: "セキュリティと安定性の向上に重点を置いたマイナーアップデート。OAuth認証フローの改善、パーミッション管理の強化が主な変更点。"

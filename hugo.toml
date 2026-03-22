@@ -23,9 +23,10 @@ paginate = 10
     Title = "Tech Pulse"
     Content = "AWS と Claude Code の最新アップデートを、SRE視点でわかりやすく解説します。"
 
-  [[params.socialIcons]]
-    name = "github"
-    url = "https://github.com/isseeeeey55"
+  [params.cover]
+    image = "images/hero.png"
+    alt = "Tech Pulse"
+    hiddenInSingle = true
 
   [[params.socialIcons]]
     name = "rss"
