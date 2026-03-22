@@ -1,5 +1,5 @@
 baseURL = "https://isseeeeey55.github.io/tech-pulse/"
-canonifyURLs = true
+relativeURLs = true
 languageCode = "ja"
 title = "Tech Pulse"
 theme = "PaperMod"
@@ -21,7 +21,7 @@ paginate = 10
 
   [params.homeInfoParams]
     Title = "Tech Pulse"
-    Content = "![Tech Pulse](/tech-pulse/images/hero.png)\n\nAWS と Claude Code の最新アップデートを、SRE視点でわかりやすく解説します。"
+    Content = "![Tech Pulse](images/hero.png)\n\nAWS と Claude Code の最新アップデートを、SRE視点でわかりやすく解説します。"
 
   [[params.socialIcons]]
     name = "rss"
@@ -38,22 +38,22 @@ paginate = 10
   [[menu.main]]
     identifier = "tags"
     name = "Tags"
-    url = "/tech-pulse/tags/"
+    url = "/tags/"
     weight = 10
   [[menu.main]]
     identifier = "categories"
     name = "Categories"
-    url = "/tech-pulse/categories/"
+    url = "/categories/"
     weight = 20
   [[menu.main]]
     identifier = "archives"
     name = "Archives"
-    url = "/tech-pulse/archives/"
+    url = "/archives/"
     weight = 30
   [[menu.main]]
     identifier = "search"
     name = "Search"
-    url = "/tech-pulse/search/"
+    url = "/search/"
     weight = 40
 
 [markup]
