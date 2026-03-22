@@ -1,5 +1,4 @@
 baseURL = "https://isseeeeey55.github.io/tech-pulse/"
-relativeURLs = true
 languageCode = "ja"
 title = "Tech Pulse"
 theme = "PaperMod"
@@ -21,7 +20,7 @@ paginate = 10
 
   [params.homeInfoParams]
     Title = "Tech Pulse"
-    Content = "![Tech Pulse](images/hero.png)\n\nAWS と Claude Code の最新アップデートを、SRE視点でわかりやすく解説します。"
+    Content = "![Tech Pulse](/tech-pulse/images/hero.png)\n\nAWS と Claude Code の最新アップデートを、SRE視点でわかりやすく解説します。"
 
   [[params.socialIcons]]
     name = "rss"
