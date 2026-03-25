@@ -1,17 +1,19 @@
 ---
 title: "【AWS】2026/03/26 のアップデートまとめ"
 date: 2026-03-26T08:01:24+09:00
-draft: true
+draft: false
 tags: ["aws", "sagemaker", "bedrock", "route53", "batch", "backup", "documentdb", "hyperpod", "ec2", "timestream", "iam", "eventbridge", "cloudwatch"]
 categories: ["AWS Updates"]
 summary: "2026/03/26 のAWSアップデートまとめ"
 ---
 
+![](/tech-pulse/images/aws-updates-20260326/header.png)
+
 # 2026年3月26日 AWS アップデート情報まとめ
 
 ## はじめに
 
-本日は12件のAWSアップデートが発表されました。特に注目すべきは、Amazon SageMaker Unified StudioがCursor IDEからのリモート接続をサポート開始したことと、Amazon Bedrock AgentCoreがChromeエンタープライズポリシーとカスタムルート証明書に対応したことです。これらのアップデートは、MLエンジニアの開発体験向上とエンタープライズ環境でのAIエージェント運用の安全性強化を実現します。また、EC2 I7ieインスタンスの新リージョン展開やAWS BackupのDocumentDBサポート拡大など、インフラストラクチャとデータ保護分野でも重要な進展がありました。
+本日は11件のAWSアップデートが発表されました。特に注目すべきは、Amazon SageMaker Unified StudioがCursor IDEからのリモート接続をサポート開始したことと、Amazon Bedrock AgentCoreがChromeエンタープライズポリシーとカスタムルート証明書に対応したことです。これらのアップデートは、MLエンジニアの開発体験向上とエンタープライズ環境でのAIエージェント運用の安全性強化を実現します。また、EC2 I7ieインスタンスの新リージョン展開やAWS BackupのDocumentDBサポート拡大など、インフラストラクチャとデータ保護分野でも重要な進展がありました。
 
 ## 注目アップデート深掘り
 
@@ -59,6 +61,9 @@ estimator.fit({'train': 's3://your-bucket/train-data'})
 この統合により、コード補完の恩恵を受けながら、メモリ集約的なデータ前処理や長時間の訓練をクラウド上で効率的に実行できるようになります。
 
 ### Amazon Bedrock AgentCoreがエンタープライズ環境で本格運用可能に
+
+> **Amazon Bedrock AgentCoreとは？**
+> Bedrock上でAIエージェントを構築・実行するためのマネージドランタイム環境です。LLMにツール呼び出しやブラウザ操作などの「行動」能力を持たせ、複雑なタスクを自律的に実行するエージェントをデプロイできます。従来のBedrock APIが「問いに答える」だけだったのに対し、AgentCoreは「実際に操作する」AIを実現するサービスです。
 
 Amazon Bedrock AgentCoreのChromeエンタープライズポリシーとカスタムルート証明書サポートは、セキュリティ要件の厳しい企業環境でのAIエージェント導入を現実的なものにします。従来、AIエージェントの企業導入では、ネットワークセキュリティやアクセス制御の制約が大きな障壁となっていましたが、この機能により企業のセキュリティポリシーに準拠した運用が可能になります。
 
@@ -116,6 +121,12 @@ resource "aws_bedrock_agent" "ops_assistant" {
 導入判断においては、セキュリティ要件とのバランス、既存システムへの影響範囲、そして段階的な移行計画の策定が重要になります。
 
 ## 全アップデート一覧
+
+> **Amazon SageMaker HyperPodとは？**
+> 大規模MLモデルの分散トレーニングに特化したマネージドクラスター環境です。SlurmやEKSをオーケストレーターとして使い、数百〜数千GPUの学習ジョブを自動復旧・ヘルスチェック付きで実行できます。自前でGPUクラスターを構築・運用する手間を大幅に削減するサービスです。
+
+> **Amazon Timestream for InfluxDBとは？**
+> オープンソースの時系列DB「InfluxDB」をAWSがフルマネージドで提供するサービスです。IoTセンサーデータやアプリケーションメトリクスの収集・分析に適しており、既存のInfluxDB互換クライアントやクエリ（Flux、InfluxQL）がそのまま使えます。
 
 | サービス | アップデート内容 | 概要 |
 |----------|------------------|------|
