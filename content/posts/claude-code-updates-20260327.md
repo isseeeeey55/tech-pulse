@@ -1,161 +1,117 @@
 ---
-title: "【Claude Code】v2.1.84 リリースノートまとめ"
+title: "【Claude Code】v2.1.84 / v2.1.85 リリースノートまとめ"
 date: 2026-03-27T08:01:19+09:00
-draft: true
-tags: ["claude-code", "oauth", "mcp", "powershell", "worktree", "background-tasks", "streaming", "bedrock", "vertex-ai", "infrastructure-as-code", "sre"]
+draft: false
+tags: ["claude-code", "powershell", "mcp", "worktree", "hooks", "bedrock", "vertex-ai", "streaming", "otel"]
 categories: ["Claude Code Updates"]
-summary: "v2.1.84 のClaude Codeリリースノートまとめ"
+summary: "v2.1.84/v2.1.85 のClaude Codeリリースノートまとめ。PowerShellツール、3Pモデル制御環境変数、Hooks条件フィルタ等"
 ---
+
+![](/tech-pulse/images/claude-code-updates-20260327/header.png)
 
 ## はじめに
 
-Claude Code v2.1.84 がリリースされました。今回のアップデートは、SRE（Site Reliability Engineering）業務や大規模なインフラ運用を強く意識した機能強化が中心となっています。
-
-主な変更点として、OAuth認証基盤の強化による企業環境での導入促進、MCP（Model Context Protocol）ツール群の拡張、そしてバックグラウンドタスクの詳細監視機能が実装されました。さらに、Bedrock/Vertex AI などの外部 AI モデルとの連携において、環境変数による細かな制御が可能となり、マルチクラウド環境での柔軟な運用が実現されています。
-
-これらの機能は、特に企業のインフラチームが Claude Code を本格的な運用基盤として活用する際の課題を解決することを目的としており、開発からプロダクション環境まで一貫したワークフローの構築を支援します。
+Claude Code v2.1.84 および v2.1.85 がリリースされました。v2.1.84では、Windows環境でのPowerShellツール（opt-inプレビュー）、Bedrock/Vertex AI向けの環境変数による詳細なモデル制御、フック機能の拡張が主な変更点です。v2.1.85ではフック条件フィルタの追加やMCP OAuth改善など、運用品質の向上が図られています。
 
 ## 注目アップデート深掘り
 
-### OAuth 認証基盤の企業向け強化
+### PowerShell ツール（opt-in プレビュー）
 
-今回のリリースで最も注目すべき機能の一つが、OAuth 認証システムの大幅な強化です。従来の Claude Code では、個人開発者向けの簡易な認証機能が中心でしたが、企業環境での導入を前提とした本格的な OAuth 2.0 対応が実装されました。
+v2.1.84で最も注目すべき新機能が、Windows向けPowerShellツールのopt-inプレビューです。従来のClaude CodeはBashツールのみでLinux/macOS環境が前提でしたが、PowerShellツールの追加によりWindows Server環境でも直接コマンド実行が可能になります。
 
-**なぜこの変更が重要なのか**
+**有効化方法**
 
-企業環境では、セキュリティポリシーやコンプライアンス要件により、従来の API キー方式では導入が困難なケースが多数存在しました。特に金融機関や医療機関などの規制業界では、OAuth による細かな権限制御と監査ログの取得が必須要件となっています。この機能により、Claude Code が企業のセキュリティガバナンスに準拠した形で導入できるようになりました。
+PowerShellツールはopt-inのため、明示的に有効化が必要です：
 
-**具体的な使い方**
+```json
+{
+  "permissions": {
+    "allow": ["PowerShell"]
+  }
+}
+```
 
-OAuth 設定は環境変数または設定ファイルで行います：
+> **PowerShellツールとは？**
+> Claude CodeがWindows環境でPowerShellコマンドを直接実行できるようにする新しいツールです。Bashツールと同様の位置づけで、ファイル操作、プロセス管理、Azure CLI呼び出しなどが可能になります。
+
+Windows ServerでIaCを管理しているチームや、Azure環境との連携が必要なSREにとって、これまでWSL経由で行っていた作業をネイティブなPowerShellで実行できるようになる点が大きなメリットです。
+
+詳細: https://code.claude.com/docs/en/tools-reference#powershell-tool
+
+### 3Pモデル制御の環境変数拡張
+
+Bedrock、Vertex AI、Foundry経由でClaude Codeを利用している企業向けに、モデル制御の環境変数が大幅に拡張されました。
 
 ```bash
-# 環境変数による設定
-$ export CLAUDE_OAUTH_CLIENT_ID="your-client-id"
-$ export CLAUDE_OAUTH_CLIENT_SECRET="your-client-secret" 
-$ export CLAUDE_OAUTH_SCOPE="code:read code:write infrastructure:manage"
+# デフォルトモデルの能力検出をオーバーライド
+$ export ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTS="effort,thinking"
+$ export ANTHROPIC_DEFAULT_SONNET_MODEL_SUPPORTS="effort,thinking"
 
-# OAuth フローの開始
-$ claude-code auth login --oauth
-Opening browser for OAuth authentication...
-✓ Authentication successful
-✓ Token stored securely
+# /model ピッカーのラベルをカスタマイズ
+$ export ANTHROPIC_DEFAULT_OPUS_MODEL_NAME="Claude Opus (Bedrock)"
+$ export ANTHROPIC_DEFAULT_OPUS_MODEL_DESCRIPTION="us-east-1 endpoint"
 ```
 
-設定ファイル（`.claude-config.yaml`）による管理も可能です：
+3Pプロバイダー経由ではモデルのバージョンがピン留めされることがあり、能力検出が正しく動作しないケースがありました。これらの環境変数により、`effort`（推論コスト制御）や`thinking`（拡張思考）の対応状況を明示的に指定できるようになります。
 
-```yaml
-oauth:
-  client_id: "${CLAUDE_OAUTH_CLIENT_ID}"
-  client_secret: "${CLAUDE_OAUTH_CLIENT_SECRET}"
-  scopes:
-    - "code:read"
-    - "code:write" 
-    - "infrastructure:manage"
-  token_refresh_threshold: 300 # seconds
+### Hooks の条件フィルタ（v2.1.85）
+
+![フック条件フィルタ Before/After](/tech-pulse/images/claude-code-updates-20260327/hooks-filter.png)
+
+v2.1.85で追加された`if`フィールドにより、フックの発火条件をパーミッションルール構文で指定できるようになりました。
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "if": "Bash(git *)",
+        "command": "echo 'git command detected'"
+      }
+    ]
+  }
+}
 ```
 
-**Before/After の比較**
-
-従来は API キー方式のみで、全権限を持つトークンによる認証でした：
-
-```bash
-# Before: API キー方式（全権限）
-$ export CLAUDE_API_KEY="sk-xxxxxxxxxxxxx"
-$ claude-code generate --prompt "Create Terraform script"
-```
-
-OAuth 導入後は、スコープベースの細かな権限制御が可能になります：
-
-```bash
-# After: OAuth + スコープベース権限制御  
-$ claude-code generate --prompt "Create Terraform script"
-✓ Checking permissions... (infrastructure:manage scope required)
-✓ Generating Terraform configuration...
-```
-
-### MCP ツール群の大幅拡張
-
-MCP（Model Context Protocol）ツールセットが大幅に拡張され、特に PowerShell ツールとワークツリー管理機能が新たに追加されました。これにより、Windows 環境での Infrastructure as Code（IaC）開発と、複雑なプロジェクト構造の管理が飛躍的に向上しています。
-
-> **Note:** MCP（Model Context Protocol）は、AI モデルが外部システムと安全に連携するための標準プロトコルです。Claude Code では、このプロトコルを通じて様々な開発ツールとの統合を実現しています。
-
-**なぜこの変更が重要なのか**
-
-従来の Claude Code は Linux/macOS 環境での利用が前提となっており、Windows Server や Azure 環境でのインフラ管理には制約がありました。PowerShell ツールの追加により、Windows ベースのインフラ環境でも Claude Code の恩恵を受けられるようになります。また、ワークツリー機能により、大規模なモノレポジトリでの作業効率が大幅に向上します。
-
-**具体的な使い方**
-
-PowerShell ツールを使った Azure インフラの管理例：
-
-```bash
-# PowerShell MCP ツールの有効化
-$ claude-code config mcp enable powershell
-
-# Azure リソース作成スクリプトの生成
-$ claude-code generate --mcp powershell --prompt "Create Azure VM with monitoring"
-```
-
-生成される PowerShell スクリプト例：
-
-```powershell
-# Generated by Claude Code v2.1.84
-param(
-    [string]$ResourceGroupName = "rg-production",
-    [string]$VMName = "vm-web-01",
-    [string]$Location = "japaneast"
-)
-
-# VM作成とモニタリング設定
-New-AzVM -ResourceGroupName $ResourceGroupName -Name $VMName -Location $Location
-Enable-AzVMDiagnostics -VM $VM -ResourceGroupName $ResourceGroupName
-```
-
-ワークツリー機能による複数環境の並行管理：
-
-```bash
-# 開発・ステージング・本番環境のワークツリー作成
-$ claude-code worktree create dev --branch feature/new-infrastructure  
-$ claude-code worktree create staging --branch release/v2.1.0
-$ claude-code worktree create production --branch main
-
-# 各環境での並行作業
-$ claude-code worktree switch dev
-$ claude-code generate --prompt "Update development Kubernetes manifests"
-
-$ claude-code worktree switch production  
-$ claude-code generate --prompt "Apply security patches to production configs"
-```
+従来はmatcherでツール名を指定するだけでしたが、`if`フィールドで`Bash(git *)`のように引数パターンまで絞り込めるようになりました。全てのBash実行でフックプロセスが起動されていた状況が改善され、プロセス生成のオーバーヘッドを大幅に削減できます。
 
 ## 実用的な活用ポイント
 
-今回のアップデートにより、日常的な開発ワークフローが大きく改善されます。特に注目すべきは、リクエスト ID ヘッダーによるトラブルシューティング機能の強化です。本番環境でのデバッグ作業において、特定のリクエストを追跡できるようになり、問題の特定が格段に容易になります。
+**ストリーミングタイムアウトの調整**: `CLAUDE_STREAM_IDLE_TIMEOUT_MS`環境変数（デフォルト90秒）で、ストリーミングのアイドル監視閾値を設定できます。ネットワークが不安定な環境や、レスポンスが遅い3Pプロバイダー利用時に値を大きくすることで、不要な切断を防げます。
 
-SRE の観点では、バックグラウンドタスクの監視機能とアイドルタイムアウト設定が特に有効です。長時間実行されるインフラ自動化スクリプトや CI/CD パイプラインとの連携において、タスクの実行状況をリアルタイムで把握し、適切なタイムアウト制御を行えるようになります。
+**リクエストIDによるデバッグ**: APIリクエストに`x-client-request-id`ヘッダーが付与されるようになりました。タイムアウトやエラー発生時にAnthropicサポートへ共有することで、問題の特定が格段に容易になります。
 
-すぐに試せる Tips として、まず OAuth 設定を開発環境で検証し、段階的に本番環境に適用することを推奨します。また、PowerShell ツールは既存の Windows Server 環境があれば即座に活用でき、Azure CLI との併用でクラウドインフラの管理効率を向上させることができます。
+**バックグラウンドタスクの通知**: Bashのバックグラウンドタスクが対話プロンプトで停止している場合、約45秒後に通知が表示されるようになりました。`sudo`待ちなどでタスクが固まっている状況を早期に検知できます。
 
-企業環境での導入においては、OAuth スコープの設計が重要です。チームごとに必要最小限の権限を付与し、定期的な権限レビューを実施することで、セキュリティを保ちながら開発生産性を向上させることが可能です。
+**MCP説明文の2KB制限**: MCPツールの説明文とサーバー指示が2KBにキャップされました。OpenAPI生成されたMCPサーバーがコンテキストを圧迫する問題が解消されます。
 
 ## 全変更点一覧
 
-| カテゴリ | 機能 | 概要 |
-|---------|------|------|
-| Feature | OAuth 認証基盤 | 企業向け OAuth 2.0 完全対応、スコープベース権限制御 |
-| Feature | PowerShell MCP ツール | Windows 環境での IaC スクリプト生成・実行支援 |
-| Feature | ワークツリー管理 | 複数ブランチ・環境の並行作業支援 |
-| Feature | バックグラウンドタスク監視 | 長時間実行タスクの状態追跡とログ出力 |
-| Improvement | リクエスト ID ヘッダー | API リクエストの詳細トラッキングとデバッグ支援 |
-| Improvement | ストリーミングタイムアウト制御 | API 連携の安定性向上、カスタマイズ可能なタイムアウト設定 |
-| Improvement | 環境変数による AI モデル制御 | Bedrock/Vertex AI の詳細パラメータ制御 |
-| Improvement | タスク作成フック | 自動化プロセスのライフサイクル管理 |
-| Fix | MCP プロトコル安定性 | 外部ツール連携時の接続エラー軽減 |
-| Fix | ワークスペース同期 | 大規模プロジェクトでのファイル同期問題解決 |
+| カテゴリ | 変更内容 | 概要 |
+|---------|---------|------|
+| Feature | PowerShell ツール（v2.1.84） | Windows向け opt-in プレビュー |
+| Feature | 3Pモデル制御環境変数（v2.1.84） | `ANTHROPIC_DEFAULT_{OPUS,SONNET,HAIKU}_MODEL_SUPPORTS/NAME/DESCRIPTION` |
+| Feature | `CLAUDE_STREAM_IDLE_TIMEOUT_MS`（v2.1.84） | ストリーミングアイドル監視の閾値設定 |
+| Feature | `TaskCreated` フック（v2.1.84） | タスク作成時に発火するフックイベント |
+| Feature | `WorktreeCreate` HTTP フック（v2.1.84） | ワークツリー作成時にHTTPフック対応 |
+| Feature | `allowedChannelPlugins`（v2.1.84） | 管理者向けチャンネルプラグイン許可リスト |
+| Feature | フック条件フィルタ `if`（v2.1.85） | パーミッションルール構文でフック発火条件を制御 |
+| Feature | MCPサーバー環境変数（v2.1.85） | `CLAUDE_CODE_MCP_SERVER_NAME/URL` を headersHelper に提供 |
+| Improvement | `x-client-request-id` ヘッダー | APIリクエストのデバッグ追跡 |
+| Improvement | MCP説明文 2KB キャップ | コンテキスト圧迫防止 |
+| Improvement | ディープリンクのターミナル選択 | 優先ターミナルで開くように改善 |
+| Improvement | Rules/Skills `paths:` YAML対応 | glob のYAMLリスト形式をサポート |
+| Fix | IME入力（CJK）のインライン描画 | 日本語入力がカーソル位置に正しく表示 |
+| Fix | macOS キーチェーン一時エラー | "Not logged in" 誤表示を修正 |
+| Fix | Partial clone リポジトリ起動性能 | Scalar/GVFS での大量blob ダウンロード回避 |
+| Fix | `/compact` のコンテキスト超過 | 大規模会話でのコンパクト失敗を修正（v2.1.85） |
+| Fix | MCP OAuth スコープ再認可 | リフレッシュトークン存在時の昇格フロー修正（v2.1.85） |
 
 ## まとめ
 
-Claude Code v2.1.84 は、企業環境での本格運用を強く意識したリリースとなりました。OAuth 認証基盤の強化により、セキュリティガバナンスが厳格な組織でも安心して導入できる基盤が整いました。また、PowerShell ツールの追加により、Windows エコシステムでの活用範囲が大幅に拡大しています。
+v2.1.84/v2.1.85は「マルチプラットフォーム対応」と「運用精度の向上」が2大テーマです。PowerShellツールによるWindows対応、3Pモデル制御環境変数によるBedrock/Vertex AI環境でのカスタマイズ性向上は、企業環境でのClaude Code活用範囲を広げます。
 
-今回のアップデートの全体的な傾向として、個人開発者向けの機能から、チーム開発・企業運用を前提とした機能への進化が顕著に現れています。バックグラウンドタスク監視やリクエスト追跡機能は、運用チームの日常業務を大きく改善する可能性を秘めており、今後の Claude Code の方向性を示す重要な指標と言えるでしょう。
+v2.1.85のフック条件フィルタ（`if`フィールド）は、PreToolUseフックを多用しているユーザーにとって大きな改善です。不要なプロセス生成を削減し、フックのパフォーマンスオーバーヘッドを最小化できます。
 
-SRE やインフラエンジニアにとって、このバージョンは積極的に検証・導入を検討する価値のあるリリースです。特に、マルチクラウド環境での運用や、Windows Server を含む混在環境での統一的なインフラ管理を実現したい組織には、大きなメリットをもたらすでしょう。
+バグ修正面では、日本語入力（IME）のインライン描画修正やmacOSキーチェーンの一時エラー対応など、日常的な使用感を改善する修正が多く含まれています。
