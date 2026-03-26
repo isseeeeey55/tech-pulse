@@ -15,12 +15,12 @@ paginate = 10
   ShowRssButtonInSectionTermList = true
   ShowToc = true
   ShareButtons = ["x", "facebook", "telegram"]
-  description = "AWS & Claude Code の最新アップデートをお届けする技術ブログ"
+  description = "AWS・Claude Code・New Relic の最新アップデートをお届けする技術ブログ"
   author = "Tech Pulse"
 
   [params.homeInfoParams]
     Title = "Tech Pulse"
-    Content = "![Tech Pulse](/tech-pulse/images/hero.png)\n\nAWS と Claude Code の最新アップデートを、SRE視点でわかりやすく解説する技術ブログです。\n\n毎日のアップデート情報を自動収集し、注目ポイントの深掘り・コード例・活用Tipsをまとめてお届けします。インフラエンジニア・SREの日々のキャッチアップにご活用ください。"
+    Content = "![Tech Pulse](/tech-pulse/images/hero.png)\n\nAWS、Claude Code、New Relic の最新アップデートを、SRE視点でわかりやすく解説する技術ブログです。\n\n毎日のアップデート情報を自動収集し、注目ポイントの深掘り・コード例・活用Tipsをまとめてお届けします。インフラエンジニア・SREの日々のキャッチアップにご活用ください。"
 
 
 [outputs]
