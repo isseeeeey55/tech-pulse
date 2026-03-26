@@ -19,6 +19,8 @@ Claude Code v2.1.83が2026年3月26日にリリースされました。今回の
 
 ### managed-settings.d/による柔軟なポリシー設定
 
+![managed-settings.d/ による設定管理の進化](/tech-pulse/images/claude-code-updates-20260326/managed-settings.png)
+
 > **managed-settingsとは？**
 > Claude Codeの組織管理者が全社的なポリシーを強制適用するための設定ファイルです。従来は `managed-settings.json` の1ファイルでしたが、複数チームが独立してポリシーを管理する場合に競合が起きやすい問題がありました。
 
@@ -52,6 +54,8 @@ EOF
 実際のSRE業務では、この機能を活用してコンプライアンス要件を満たしながら、開発チームの生産性を維持できます。設定の優先度は自動的に解決され、より具体的な設定が上位のポリシーを上書きする仕組みになっています。
 
 ### 動的環境制御を実現するCwdChanged/FileChangedフック
+
+![CwdChanged / FileChanged フックイベント](/tech-pulse/images/claude-code-updates-20260326/hooks-flow.png)
 
 もう一つの重要な機能が、`CwdChanged` と `FileChanged` の2つの新しいフックイベントです。作業ディレクトリの変更やファイルの変更に応じて、シェルコマンドを自動実行できるようになりました。
 
