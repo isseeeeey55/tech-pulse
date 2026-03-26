@@ -1,6 +1,6 @@
 ---
 title: "【New Relic】2026年2-3月のアップデートまとめ"
-date: 2026-03-26T10:00:00+09:00
+date: 2026-03-26T09:00:00+09:00
 draft: false
 tags: ["newrelic", "infrastructure-agent", "sre-agent", "no-code-parsing", "pipeline-control", "opentelemetry", "nrql", "dashboards", "alerts", "logs"]
 categories: ["New Relic Updates"]
