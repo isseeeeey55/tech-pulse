@@ -1,98 +1,27 @@
 ---
 title: "【AWS】2026/03/28 のアップデートまとめ"
 date: 2026-03-28T08:01:26+09:00
-draft: true
-tags: ["aws", "gamelift", "ec2", "step-functions", "bedrock", "lambda", "management-console", "healthimaging", "ecs"]
+draft: false
+tags: ["aws", "gamelift", "ec2", "step-functions", "bedrock", "lambda", "management-console", "healthimaging", "ecs", "cloudwatch", "timestream"]
 categories: ["AWS Updates"]
 summary: "2026/03/28 のAWSアップデートまとめ"
 ---
 
+![](/tech-pulse/images/aws-updates-20260328/header.png)
+
 ## はじめに
 
-2026年3月28日、AWSから7件のアップデートが発表されました。今回は特にセキュリティとアクセス制御に関する改善が目立ち、AWS Management Consoleでのサービス・リージョン可視性制御機能の追加と、AWS HealthImagingでの研究レベル細粒度アクセス制御が注目ポイントです。また、Lambda Managed Instancesが最大32GBメモリ・16vCPUに拡張されるなど、パフォーマンス面での大幅な向上も見られます。
+2026年3月28日、AWSから9件のアップデートが発表されました。今回は特にセキュリティとアクセス制御に関する改善が目立ち、AWS Management Consoleでのサービス・リージョン可視性制御機能の追加と、AWS HealthImagingでの研究レベル細粒度アクセス制御が注目ポイントです。また、Lambda Managed Instancesが最大32GBメモリ・16vCPUに拡張されるなど、パフォーマンス面での大幅な向上も見られます。
 
 ## 注目アップデート深掘り
 
 ### AWS Management Consoleのサービス・リージョン可視性制御機能
 
-### なぜこのアップデートが重要なのか
+![](/tech-pulse/images/aws-updates-20260328/console-visibility.png)
 
-大規模な組織やマルチアカウント環境において、ユーザーに対して必要最小限のサービスやリージョンのみを表示することは、セキュリティとユーザビリティの両面で重要な要件でした。従来は、IAMポリシーによる権限制御でアクセスを制限できても、Management Console上では利用不可能なサービスも表示されるため、混乱やミスオペレーションのリスクがありました。この新機能により、表示レベルでの制御が可能となり、よりクリーンで安全な管理環境を構築できるようになります。
+この新機能は、AWS Management Consoleの「Unified Settings」からサービスやリージョンの表示/非表示をコントロールできるUI設定です。IAMポリシーやSCPとは異なり、コンソール画面上の表示そのものを制御します。
 
-### 具体的な設定手順
-
-まず、AWS Management Consoleの「Unified Settings」から設定を行います：
-
-```bash
-# AWS CLIを使用した設定例
-$ aws account put-alternate-contact \
-    --alternate-contact-type OPERATIONS \
-    --name "Operations Team" \
-    --title "Cloud Operations" \
-    --email-address "ops@example.com" \
-    --phone-number "+1-555-0123"
-
-# サービス可視性の設定（CLI）
-$ aws organizations create-policy \
-    --name "ServiceVisibilityPolicy" \
-    --description "Control service visibility in console" \
-    --type "SERVICE_CONTROL_POLICY" \
-    --content '{
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Effect": "Deny",
-                "Action": [
-                    "sagemaker:*",
-                    "databrew:*"
-                ],
-                "Resource": "*",
-                "Condition": {
-                    "StringNotEquals": {
-                        "aws:RequestedRegion": ["us-east-1", "ap-northeast-1"]
-                    }
-                }
-            }
-        ]
-    }'
-```
-
-Terraformを使用した場合の設定例：
-
-```hcl
-# Terraform設定例
-resource "aws_organizations_policy" "console_visibility" {
-  name        = "console-visibility-policy"
-  description = "Controls console service and region visibility"
-  type        = "SERVICE_CONTROL_POLICY"
-
-  content = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "ec2:*",
-          "s3:*",
-          "cloudwatch:*",
-          "lambda:*"
-        ]
-        Resource = "*"
-        Condition = {
-          StringEquals = {
-            "aws:RequestedRegion" = ["us-east-1", "ap-northeast-1", "eu-west-1"]
-          }
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_organizations_policy_attachment" "console_visibility" {
-  policy_id = aws_organizations_policy.console_visibility.id
-  target_id = var.organizational_unit_id
-}
-```
+大規模な組織やマルチアカウント環境において、ユーザーに対して必要最小限のサービスやリージョンのみを表示することで、セキュリティとユーザビリティの両面を改善できます。
 
 ### 従来の方法との比較
 
@@ -105,51 +34,6 @@ resource "aws_organizations_policy_attachment" "console_visibility" {
 - 許可されたサービス・リージョンのみが表示される
 - ユーザーインターフェースがすっきりし、操作ミスが減少
 - 部門や役割に応じたカスタマイズされたコンソール体験を提供
-
-Python SDKを使用した動的な設定変更例：
-
-```python
-import boto3
-
-def update_console_visibility(account_id, allowed_services, allowed_regions):
-    """
-    コンソールの可視性設定を動的に更新
-    """
-    client = boto3.client('organizations')
-    
-    policy_document = {
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Effect": "Allow",
-                "Action": [f"{service}:*" for service in allowed_services],
-                "Resource": "*",
-                "Condition": {
-                    "StringEquals": {
-                        "aws:RequestedRegion": allowed_regions
-                    }
-                }
-            }
-        ]
-    }
-    
-    try:
-        response = client.create_policy(
-            Name=f"console-visibility-{account_id}",
-            Description="Dynamic console visibility policy",
-            Type="SERVICE_CONTROL_POLICY",
-            Content=json.dumps(policy_document)
-        )
-        return response['Policy']['PolicySummary']['Id']
-    except Exception as e:
-        print(f"Error creating policy: {e}")
-        return None
-
-# 使用例
-allowed_services = ['ec2', 's3', 'lambda', 'cloudwatch']
-allowed_regions = ['us-east-1', 'ap-northeast-1']
-policy_id = update_console_visibility('123456789012', allowed_services, allowed_regions)
-```
 
 ### AWS Lambda Managed Instancesの大幅な性能向上
 
@@ -219,42 +103,6 @@ resource "aws_lambda_function" "high_performance" {
 }
 ```
 
-### 実際のパフォーマンステスト例
-
-```python
-import time
-import psutil
-import numpy as np
-
-def handler(event, context):
-    """
-    高メモリ・高CPU要求ワークロードのテスト
-    """
-    print(f"Available memory: {context.memory_limit_in_mb}MB")
-    print(f"CPU count: {psutil.cpu_count()}")
-    
-    # 大規模データ処理のシミュレーション
-    start_time = time.time()
-    
-    # 20GB のデータを処理（従来のLambdaでは不可能）
-    large_array = np.random.rand(2500000000)  # 約20GBの配列
-    
-    # 並列計算処理
-    result = np.mean(large_array)
-    
-    processing_time = time.time() - start_time
-    
-    return {
-        'statusCode': 200,
-        'body': {
-            'result': result,
-            'processing_time': processing_time,
-            'memory_used': psutil.virtual_memory().used / (1024**3),
-            'cpu_utilization': psutil.cpu_percent(interval=1)
-        }
-    }
-```
-
 > **Note:** 高メモリ設定を使用する際は、コストが大幅に増加する可能性があります。必要な場面でのみ使用し、適切なタイムアウト設定でコストを制御することが重要です。
 
 ## SRE視点での活用ポイント
@@ -267,6 +115,15 @@ def handler(event, context):
 
 **Lambda の高性能化**については、これまでバッチジョブでECS Fargateを使用していたようなワークロードの一部をサーバーレス化できる可能性があります。特に、不定期に発生する重い処理（レポート生成、データ変換等）では、常時起動が不要なLambdaの方がコスト効率が良い場合があります。ただし、実行時間が15分を超える処理や、頻繁に実行される処理については、依然としてFargateやEC2の方が適している可能性が高いため、ワークロードの特性を十分に分析した上で判断することが重要です。
 
+> **Amazon GameLiftとは？**
+> オンラインマルチプレイヤーゲーム用のサーバーホスティングサービスです。ゲームセッションの自動スケーリング、マッチメイキング、低レイテンシー接続を提供し、大規模なリアルタイムゲームの運用を支援します。
+
+> **AWS HealthImagingとは？**
+> 医療画像（DICOM形式のCT・MRI等）をクラウド上で保存・管理・分析するためのサービスです。医療機関や研究機関向けに、HIPAA準拠のセキュアなデータ管理と高速な画像アクセスを提供します。
+
+> **Amazon Bedrock AgentCoreとは？**
+> Bedrock上でAIエージェントを構築・実行するためのマネージドランタイム環境です。Step Functionsとの統合により、AIエージェントをワークフローに組み込んだ自動化が実現できます。
+
 ## 全アップデート一覧
 
 | サービス | タイトル | 概要 |
@@ -277,7 +134,9 @@ def handler(event, context):
 | AWS Lambda | [32GB メモリ・16vCPU サポート](https://aws.amazon.com/about-aws/whats-new/2026/03/lambda-32-gb-memory-16-vcpus/) | Managed Instancesで大幅な性能向上、重いワークロードのサーバーレス実行が可能 |
 | AWS HealthImaging | [研究レベル細粒度アクセス制御](https://aws.amazon.com/about-aws/whats-new/2026/03/aws-healthimaging-study-level-access-control/) | DICOM研究レベルでの詳細なアクセス制御をサポート、医療データのセキュリティを強化 |
 | Amazon EC2 | [U7i インスタンス欧州ミラノ展開](https://aws.amazon.com/about-aws/whats-new/2026/03/ec2-u7i-europe-milan/) | 高メモリU7i（メモリ最適化・Intel搭載）インスタンスが欧州ミラノリージョンで利用可能 |
-| Amazon ECS | [GovCloud での FIPS 認定ワークロード対応](https://aws.amazon.com/about-aws/whats-new/2026/03/amazon-ecs-mi-supports-fips-graviron-gpu/) | Managed InstancesがGravitone（ARM系高性能）とGPUアクセラレーテッドインスタンスでFIPS認定ワークロードをサポート |
+| Amazon ECS | [GovCloud での FIPS 認定ワークロード対応](https://aws.amazon.com/about-aws/whats-new/2026/03/amazon-ecs-mi-supports-fips-graviron-gpu/) | Managed InstancesがGraviton（ARM系高性能）とGPUアクセラレーテッドインスタンスでFIPS認定ワークロードをサポート |
+| Amazon CloudWatch Logs | [Infrequent Access クラスの分析機能拡張](https://aws.amazon.com/about-aws/whats-new/2026/03/amazon-cloudwatch-infrequent-access-log-class/) | OpenSearch SQL/PPL対応とデータ保護機能（機密情報の自動検出・マスキング）を追加 |
+| Amazon Timestream for InfluxDB | [Advanced Metrics 機能追加](https://aws.amazon.com/about-aws/whats-new/2026/03/amazon-timestream-for-influxdb-advanced-metrics/) | CloudWatchへの詳細な運用メトリクス自動公開、追加設定不要 |
 
 ## まとめ
 

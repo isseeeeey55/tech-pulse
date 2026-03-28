@@ -1,101 +1,93 @@
 ---
-title: "【Claude Code】v2.1.86・v2.1.85 リリースノートまとめ"
+title: "【Claude Code】v2.1.86 リリースノートまとめ"
 date: 2026-03-28T08:01:09+09:00
-draft: true
-tags: ["claude-code", "oauth", "session-management", "opentelemetry", "distributed-systems", "authentication", "plugin-management", "environment-variables", "sre", "infrastructure-automation"]
+draft: false
+tags: ["claude-code", "session-id", "read-tool", "bedrock", "vertex-ai", "bug-fix", "performance"]
 categories: ["Claude Code Updates"]
-summary: "v2.1.86・v2.1.85 のClaude Codeリリースノートまとめ"
+summary: "v2.1.86 のClaude Codeリリースノートまとめ。Session IDヘッダー追加、Readツールのトークン削減、Bedrock/Vertexキャッシュ改善、多数のバグ修正"
 ---
+
+![](/tech-pulse/images/claude-code-updates-20260328/header.png)
 
 ## はじめに
 
-Claude Code v2.1.86 および v2.1.85 がリリースされました。今回のアップデートは、セッション管理の強化、OAuth認証の改善、そしてSREエンジニアにとって重要なインフラストラクチャ管理機能の向上に焦点を当てています。
-
-v2.1.86では、APIリクエストへのセッションID追加による追跡性の向上、特殊バージョン管理システムのディレクトリ除外機能、そして各種パフォーマンスと安定性の改善が実装されました。v2.1.85では、環境変数拡張機能、プラグイン管理の強化、フック処理の改善、OAuth認証のRFC準拠、OpenTelemetryログ制御の詳細化が追加されています。
-
-これらの変更により、分散システムの運用、セキュリティコンプライアンス、インフラ自動化における信頼性が大幅に向上し、特にマルチ環境での作業効率が改善されています。
+Claude Code v2.1.86 がリリースされました。今回は新機能よりもバグ修正と安定性改善が中心のリリースです。注目すべき改善として、APIリクエストへの `X-Claude-Code-Session-Id` ヘッダー追加、Read ツールのトークン使用量削減、Bedrock/Vertex/Foundry のプロンプトキャッシュヒット率改善があります。また、`--resume` の致命的なバグ修正やOOM対策など、日常的な使用感に直結する修正が多数含まれています。
 
 ## 注目アップデート深掘り
 
-### セッションID追加による分散システム追跡の強化
+### Session ID ヘッダーでプロキシのセッション集約が可能に
 
-今回のアップデートで最も重要な変更の一つが、APIリクエストへのセッションID追加です。これは分散システムやマイクロサービス環境での運用において、リクエストの追跡と監査を大幅に改善します。
+APIリクエストに `X-Claude-Code-Session-Id` ヘッダーが追加されました。これにより、企業環境でClaude Code のトラフィックをプロキシ経由で管理している場合、リクエストボディをパースすることなくセッション単位でリクエストを集約・監視できるようになります。
 
-従来の課題として、複数のサービス間でのAPI呼び出しにおいて、どのセッションからどのリクエストが発生したかを特定することが困難でした。特に障害調査時には、ログを横断的に追跡する必要があり、時間のかかる作業となっていました。
+**SRE業務への影響**
 
-```bash
-# セッションIDを含むAPI呼び出しの例
-$ claude-code api --session-trace call infrastructure/deploy.py
-Session ID: session_abc123def456
-Request: POST /api/v1/deploy
-Headers: {
-  "X-Session-ID": "session_abc123def456",
-  "Content-Type": "application/json"
-}
-```
-
-この機能により、ログ集約システム（ELK Stack、Splunk等）でのクエリが効率化され、特定セッションに関連するすべての操作を一括で追跡できるようになりました。また、分散トレーシングツールとの連携も向上し、インフラストラクチャの変更履歴とその影響範囲を正確に把握できるようになります。
-
-### OAuth認証のRFC準拠による認証サーバー発見機能
-
-OAuth認証機能がRFC準拠の認証サーバー発見機能に対応しました。これにより、企業環境でのIDプロバイダーとの統合がより標準的で安全になります。
-
-```json
-{
-  "authorization_endpoint": "https://auth.company.com/oauth2/authorize",
-  "token_endpoint": "https://auth.company.com/oauth2/token",
-  "userinfo_endpoint": "https://auth.company.com/oauth2/userinfo",
-  "jwks_uri": "https://auth.company.com/.well-known/jwks.json"
-}
-```
-
-この改善により、複数のクラウドプロバイダーやSaaSサービスへのアクセス時に、統一されたIDプロバイダーを使用した認証が可能になります。特に、AWS IAM Roles for Service Accounts (IRSA)やGCP Workload Identityとの連携において、より安全で効率的な認証フローを実現できます。
+API Gateway やリバースプロキシでClaude Codeのトラフィックを管理している企業では、このヘッダーを使って：
+- セッション単位のトークン使用量を集計
+- 特定セッションのリクエストをログから追跡
+- チーム別・プロジェクト別のコスト配分
 
 ```bash
-# RFC準拠の発見エンドポイントを使用した認証設定
-$ claude-code auth configure --discovery-url https://auth.company.com/.well-known/openid_configuration
-Discovering OAuth endpoints...
-✓ Authorization endpoint found
-✓ Token endpoint found  
-✓ JWKS endpoint found
-Authentication configured successfully
+# プロキシログからセッション別のリクエスト数を集計する例
+$ grep "X-Claude-Code-Session-Id" /var/log/proxy/access.log \
+  | awk -F'"' '{print $2}' | sort | uniq -c | sort -rn
 ```
+
+### Read ツールのトークン使用量を大幅削減
+
+![Read ツールのトークン使用量削減](/tech-pulse/images/claude-code-updates-20260328/read-tool-optimization.png)
+
+Read ツールに2つの最適化が入りました：
+1. **コンパクト行番号フォーマット**: 行番号の表示形式を最適化し、トークン消費を削減
+2. **重複再読み取りの重複排除**: 同じファイルを変更なしに再度読んだ場合、重複コンテンツを省略
+
+大量のファイルを読む作業（コードレビュー、リファクタリング等）でのトークン効率が改善されます。`@` によるファイルメンション時もJSON エスケープが不要になり、rawな文字列としてコンテンツが渡されるようになりました。
+
+### Bedrock/Vertex/Foundry のキャッシュヒット率改善
+
+3Pプロバイダー（Bedrock、Vertex AI、Foundry）利用者向けに、ツール説明文から動的コンテンツを除去することでプロンプトキャッシュのヒット率が改善されました。
+
+> **プロンプトキャッシュとは？**
+> APIリクエストのプロンプト部分が前回と同一の場合、キャッシュされた結果を再利用する仕組みです。キャッシュヒット時はレイテンシーが短縮され、一部プロバイダーではコスト削減にもなります。ツール説明文に動的な値が含まれるとキャッシュが無効化されていた問題が解消されました。
 
 ## 実用的な活用ポイント
 
-今回のアップデートは、日常の開発ワークフローに直接的な改善をもたらします。特に、マルチ環境での作業において環境変数拡張機能が威力を発揮します。AWS、GCP、Azureの複数環境を管理する際に、環境固有の設定を動的に切り替えることが可能になりました。
+**--resume の安定性向上**: v2.1.85より前のセッションを `--resume` で再開すると「tool_use ids were found without tool_result blocks」エラーで失敗するバグが修正されました。長期セッションの再開が安定して動作するようになります。
 
-```bash
-# 環境別の設定例
-$ export CLAUDE_ENV=staging
-$ claude-code deploy --config ${CLAUDE_ENV}/infrastructure.yaml
-```
+**外部ファイルの Read/Write/Edit 修正**: 条件付きスキルやルールが設定されている環境で、プロジェクトルート外のファイル（`~/.claude/CLAUDE.md` 等）の読み書きが失敗するバグが修正されました。
 
-プラグイン管理の強化により、組織のセキュリティポリシーに基づいてプラグインの有効化/無効化を制御できるようになりました。これにより、開発チームごとに異なるツールチェーンを使用する場合でも、一元的なポリシー管理が実現できます。
+**OOM 対策**: `/feedback` を非常に長いセッション（大量のトランスクリプト）で使用するとメモリ不足でクラッシュする問題が修正されました。また、長時間セッションでのマークダウン/ハイライトレンダーキャッシュによるメモリ増加も修正されています。
 
-OpenTelemetryログの詳細制御機能は、本番環境でのトラブルシューティング時に特に有効です。必要な情報のみを出力することで、ログの可読性を保ちながら、詳細な診断情報を取得できます。SREチームにとって、障害対応時間の短縮と根本原因分析の精度向上が期待できます。
+**macOS キーチェーンキャッシュ延長**: MCP コネクタが多数設定されている場合の起動時イベントループ停滞が改善されました（キャッシュ: 5秒→30秒）。
 
-フック処理の改善により、権限ルールに基づく条件付き実行が可能になり、インフラプロビジョニングスクリプトの安全性と効率性が向上しています。
+**OAuth URL コピー修正**: `c` ショートカットでOAuthログインURLをコピーする際、先頭約20文字しかコピーされないバグが修正されました。
 
 ## 全変更点一覧
 
 | カテゴリ | 変更内容 | 概要 |
 |---------|---------|------|
-| Feature | APIリクエストへのセッションID追加 | 分散システムでの追跡性向上 |
-| Feature | 環境変数拡張機能 | マルチ環境でのヘルパースクリプト管理 |
-| Feature | プラグイン管理強化 | 組織ポリシーベースの制御 |
-| Feature | OAuth認証サーバー発見 | RFC準拠の認証サーバー自動発見 |
-| Improvement | 特殊バージョン管理システム対応 | ディレクトリ除外機能の追加 |
-| Improvement | フック処理の権限ルール対応 | 条件付きフック実行の実装 |
-| Improvement | OpenTelemetryログ制御 | 詳細なログ出力制御機能 |
-| Fix | メモリ管理の改善 | 長時間稼働時の安定性向上 |
-| Fix | ファイル操作の修正 | 設定管理スクリプトの信頼性向上 |
-| Fix | 各種バグ修正 | パフォーマンスと安定性の改善 |
+| Feature | `X-Claude-Code-Session-Id` ヘッダー | プロキシでのセッション集約用 |
+| Feature | `.jj` / `.sl` VCS除外 | Jujutsu / Sapling メタデータを除外 |
+| Improvement | Read ツールのトークン削減 | コンパクト行番号 + 重複再読み取り排除 |
+| Improvement | `@` メンションのトークン削減 | raw文字列化（JSON エスケープ不要に） |
+| Improvement | 3Pプロバイダーキャッシュ改善 | ツール説明文から動的コンテンツを除去 |
+| Improvement | macOS キーチェーンキャッシュ | 5秒→30秒に延長（MCP多数時の起動改善） |
+| Improvement | `/skills` 表示最適化 | 説明文250文字キャップ + アルファベット順 |
+| Fix | `--resume` エラー修正 | v2.1.85以前のセッション再開が可能に |
+| Fix | Write/Edit/Read 外部ファイル修正 | 条件付きスキル設定時のプロジェクト外ファイル対応 |
+| Fix | `/feedback` OOM 修正 | 大量トランスクリプトでのメモリ不足対策 |
+| Fix | OAuth URL コピー修正 | `c` ショートカットで全URLコピー可能に |
+| Fix | OAuth トークンマスク漏洩修正 | 狭端末での行折り返し時のトークン先頭漏洩を防止 |
+| Fix | プラグインスクリプト権限修正 | macOS/Linux で v2.1.83 以降の Permission denied を修正 |
+| Fix | ステータスライン誤表示修正 | 複数インスタンス時の `/model` 表示を修正 |
+| Fix | `--bare` モード MCP修正 | インタラクティブセッションでのMCPツール欠落を修正 |
+| Fix | メモリリーク修正 | マークダウン/ハイライトキャッシュの文字列保持を解消 |
+| Fix (VSCode) | "Not responding" 誤表示 | 長時間操作中の誤検知を修正 |
+| Fix (VSCode) | OAuthリフレッシュ後のモデル | Max planユーザーのSonnetフォールバックを修正 |
 
 ## まとめ
 
-今回のリリースは、Claude Codeの企業環境での活用を大幅に改善するものとなっています。特に、セッション管理とOAuth認証の強化により、エンタープライズグレードのセキュリティ要件に対応できるようになりました。
+v2.1.86は安定性・パフォーマンス改善にフォーカスしたリリースです。新機能は `X-Claude-Code-Session-Id` ヘッダーと Jujutsu/Sapling VCS除外のみですが、日常的な使用感に直結するバグ修正が豊富です。
 
-SREエンジニアの視点では、分散システムでの追跡性向上、マルチ環境管理の効率化、そして障害対応時のトラブルシューティング能力の向上が最も価値のある改善点と言えるでしょう。これらの機能により、インフラストラクチャの運用がより予測可能で制御可能なものになり、DevOpsプラクティスのさらなる成熟を支援します。
+特に `--resume` の修正、外部ファイル操作の修正、OOM対策は、長期セッションやカスタム設定を活用しているユーザーにとって重要な改善です。Read ツールのトークン削減と3Pプロバイダーのキャッシュ改善は、コスト効率の向上にも寄与します。
 
-継続的な安定性とパフォーマンスの改善も着実に進んでおり、本番環境での長期運用における信頼性が向上しています。次回のリリースでも、このような実用的な改善が継続されることを期待できそうです。
+VSCode拡張の修正（"Not responding"誤表示、OAuthリフレッシュ後のモデルフォールバック）もあり、IDE経由で利用しているユーザーの体験も改善されています。
