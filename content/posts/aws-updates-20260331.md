@@ -1,27 +1,30 @@
 ---
 title: "【AWS】2026/03/31 のアップデートまとめ"
 date: 2026-03-31T08:01:25+09:00
-draft: true
-tags: ["aws", "opensearch", "direct-connect", "cloudwatch", "eventbridge", "sagemaker", "mediatailor", "sns", "terraform"]
+draft: false
+tags: ["aws", "opensearch", "direct-connect", "cloudwatch", "eventbridge", "sagemaker", "mediatailor", "athena", "terraform"]
 categories: ["AWS Updates"]
-summary: "2026/03/31 のAWSアップデートまとめ"
+summary: "2026/03/31 のAWSアップデートまとめ。OpenSearch Cluster Insightsのコンソール統合、Direct ConnectのBGP監視CloudWatch対応、Athenaリージョン拡大など5件"
 ---
 
-# 2026年3月31日 AWS週間アップデート
+![](/tech-pulse/images/aws-updates-20260331/header.png)
 
 ## はじめに
 
-2026年3月31日週は、4件のアップデートがリリースされました。今回の注目ポイントは、**Amazon OpenSearch ServiceのCluster Insightsがコンソールから直接アクセス可能になった点**と、**AWS Direct ConnectでBGPセッションのCloudWatch監視が可能になった点**です。これらのアップデートは、いずれもインフラ運用の監視・改善に直結する機能強化であり、SREにとって非常に実用的な価値があります。
+2026年3月31日のAWSアップデートは5件です。OpenSearch Service の Cluster Insights が AWS 管理コンソールから直接確認できるようになったことと、Direct Connect で BGP セッションの CloudWatch 監視が可能になったことが実運用に効くアップデートです。
 
 ## 注目アップデート深掘り
 
 ### OpenSearch Service Cluster Insights のコンソール統合とEventBridge連携
 
-Amazon OpenSearch ServiceのCluster Insightsが大幅に使いやすくなりました。従来はOpenSearch Dashboards経由でのみアクセス可能でしたが、AWS管理コンソールから直接確認できるようになり、さらにAmazon EventBridgeとの連携により自動化された監視が可能になっています。
+> **Cluster Insights とは？**
+> OpenSearch クラスターのパフォーマンス、容量、セキュリティに関する推奨事項を自動生成する機能です。シャード配置やインデックスの最適化提案などを提示してくれます。
 
-**なぜこのアップデートが重要なのか**
+従来 OpenSearch Dashboards 経由でしかアクセスできなかった Cluster Insights が、AWS 管理コンソールから直接確認できるようになりました。さらに EventBridge との連携で、問題検知時の自動対応も組めるようになっています。
 
-OpenSearchクラスターの運用では、パフォーマンス劣化や安定性の問題を事前に検知することが重要です。しかし従来は、運用チームがOpenSearch Dashboardsに個別にアクセスして状態を確認する必要があり、監視の自動化が困難でした。今回のアップデートにより、AWSの統合された運用環境での監視と、イベント駆動型の自動対応が実現できます。
+**コンソール統合で何が楽になるか**
+
+これまでは運用チームが OpenSearch Dashboards に個別にログインして状態を確認する必要がありました。今回のアップデートで、AWS コンソール上で他のサービスと同じ画面から確認でき、EventBridge 経由で Slack 通知や PagerDuty 連携も自動化できます。
 
 **AWS管理コンソールでの確認手順**
 
@@ -92,7 +95,12 @@ resource "aws_cloudwatch_event_target" "sns" {
 
 ### AWS Direct Connect BGP監視のCloudWatch統合
 
-AWS Direct ConnectでBGPセッションの状態を直接CloudWatchで監視できるようになりました。これまではカスタムソリューションやAPI定期実行が必要でしたが、標準的なCloudWatchメトリクスとして3つの新しい指標が提供されます。
+![BGP監視 CloudWatch メトリクス構成](/tech-pulse/images/aws-updates-20260331/bgp-monitoring-flow.png)
+
+> **BGP（Border Gateway Protocol）とは？**
+> インターネットやネットワーク間でルーティング情報を交換するプロトコルです。Direct Connect では、オンプレミスと AWS 間の経路制御に使われます。BGP セッションが切れると通信不能になるため、監視が欠かせません。
+
+Direct Connect の BGP セッション状態を CloudWatch で直接監視できるようになりました。これまではカスタムスクリプトや API の定期実行が必要でしたが、標準の CloudWatch メトリクスとして3つの新指標が追加されています。
 
 **新しく追加されたメトリクス**
 
@@ -176,37 +184,28 @@ resource "aws_cloudwatch_metric_alarm" "bgp_prefix_anomaly" {
 }
 ```
 
-> **Note:** BGPメトリクスは5分間隔で更新されます。ネットワーク障害の早期検知には、他の監視手法との組み合わせを推奨します。
+> **Note:** BGPメトリクスは5分間隔で更新されます。瞬断検知には ping 監視との併用を検討してください。
 
 ## SRE視点での活用ポイント
 
-今回のアップデートは、いずれも**可観測性の向上**と**運用自動化**の促進に直結します。
+**OpenSearch Cluster Insights の使いどころ**
 
-**OpenSearch Cluster Insightsの活用シナリオ**
+複数環境（本番・ステージング・開発）や複数チームで OpenSearch を共有している場合に効きます。EventBridge 連携で Slack 通知や PagerDuty アラートを自動化し、Cluster Insights の推奨事項を Terraform 設定に反映させる判断材料にできます。小規模クラスターや開発環境のみの場合は、設定コストに見合わないかもしれません。
 
-大規模なログ検索基盤やメトリクス分析システムでOpenSearchを運用している場合、クラスターの健全性監視は継続的な課題です。EventBridgeとの連携により、パフォーマンス劣化の兆候を検知した際に、自動的にSlack通知やPagerDutyアラートを発火させるワークフローが構築できます。また、Cluster Insightsの推奨事項をTerraformの設定変更に反映させる際の判断材料として活用することで、計画的なクラスター最適化が可能になります。
+**Direct Connect BGP 監視の使いどころ**
 
-導入時の判断基準として、OpenSearchクラスターが複数環境（本番・ステージング・開発）にまたがって存在する場合や、複数のチームが共有利用している場合に特に効果的です。一方で、小規模なクラスターや開発環境のみでの利用では、設定コストに対する効果が限定的になる可能性があります。
-
-**Direct Connect BGP監視の運用改善**
-
-ハイブリッドクラウド環境やマルチリージョン構成では、ネットワーク接続の可視化が運用品質を左右します。従来のpingやtracerouteベースの監視では検知できないBGP経路の問題（部分的な経路喪失、経路フラップなど）を、CloudWatchの標準機能で監視できるようになります。
-
-障害対応のランブックに組み込む際は、BGPセッション状態とプレフィックス数の両方を監視することで、接続断とルーティング異常を区別して対応できます。Terraformでインフラを管理している環境であれば、Direct Connect接続の作成と同時にBGP監視設定も自動化できるため、運用の標準化が促進されます。
-
-ただし、BGPメトリクスの監視間隔は5分であるため、瞬断的な問題の検知には限界があることを考慮し、他の監視手法と組み合わせた多層的な監視設計が重要です。
+ハイブリッドクラウド環境では、ping や traceroute では検知できない BGP 経路の問題（部分的な経路喪失、フラップなど）を CloudWatch で拾えるようになります。ランブックには BGP セッション状態とプレフィックス数の両方を入れておくと、接続断とルーティング異常を区別して対応できます。Terraform で Direct Connect を管理しているなら、接続作成と同時に BGP 監視も自動化してしまうのがよいでしょう。
 
 ## 全アップデート一覧
 
 | サービス | タイトル | 概要 |
 |---------|----------|------|
-| Amazon SageMaker | [Amazon SageMaker Data Agent is now available in the Amazon SageMaker Unified Studio Query Editor](https://aws.amazon.com/about-aws/whats-new/2026/03/amazon-sagemaker-data-agent-query-editor/) | SageMaker Unified Studio Query Editorで、自然言語からSQLクエリを生成するData Agentが利用可能に |
-| AWS Direct Connect | [AWS Direct Connect adds CloudWatch metrics for BGP monitoring](https://aws.amazon.com/about-aws/whats-new/2026/03/aws-direct-connect-cloudwatch-bgp-monitoring/) | BGPセッションの健全性を監視する3つの新しいCloudWatchメトリクスを追加 |
-| AWS Elemental MediaTailor | [AWS Elemental MediaTailor now available in Europe (London)](https://aws.amazon.com/about-aws/whats-new/2026/03/aws-elemental-mediatailor-london-region/) | 動的広告挿入サービスがロンドンリージョンで利用開始 |
 | Amazon OpenSearch Service | [Access Cluster Insights through the Amazon OpenSearch Service Console and Amazon EventBridge events](https://aws.amazon.com/about-aws/whats-new/2026/03/access-cluster-insights-opensearch/) | Cluster InsightsがAWS管理コンソールからアクセス可能になり、EventBridgeイベント連携も追加 |
+| AWS Direct Connect | [AWS Direct Connect adds CloudWatch metrics for BGP monitoring](https://aws.amazon.com/about-aws/whats-new/2026/03/aws-direct-connect-cloudwatch-bgp-monitoring/) | BGPセッションの健全性を監視する3つの新しいCloudWatchメトリクスを追加 |
+| Amazon SageMaker | [Amazon SageMaker Data Agent is now available in the Amazon SageMaker Unified Studio Query Editor](https://aws.amazon.com/about-aws/whats-new/2026/03/amazon-sagemaker-data-agent-query-editor/) | SageMaker Unified Studio Query Editorで、自然言語からSQLクエリを生成するData Agentが利用可能に |
+| AWS Elemental MediaTailor | [AWS Elemental MediaTailor now available in Europe (London)](https://aws.amazon.com/about-aws/whats-new/2026/03/aws-elemental-mediatailor-london-region/) | 動的広告挿入サービスがロンドンリージョンで利用開始 |
+| Amazon Athena | [Amazon Athena launches Capacity Reservations in additional regions](https://aws.amazon.com/about-aws/whats-new/2026/03/amazon-athena-adding-cap-reservation-regions/) | Athena Capacity Reservationsが追加リージョンで利用可能に |
 
 ## まとめ
 
-今回のアップデートは、**運用監視の標準化**と**自動化の促進**というテーマで一貫しています。特にOpenSearch ServiceとDirect Connectの監視機能強化は、従来カスタムソリューションが必要だった領域をAWSの標準機能で解決できるようになった点で意義深いものです。
-
-SRE業務においては、こうした標準監視機能の活用により、独自実装の保守コストを削減しつつ、より高度な運用自動化にリソースを集中できるようになります。一方で、SageMakerのData AgentやMediaTailorのリージョン拡大など、特定領域での機能強化も着実に進んでおり、AWSエコシステム全体の成熟度向上を感じさせる週となりました。
+OpenSearch Cluster Insights と Direct Connect BGP 監視の2つは、従来カスタムスクリプトで対応していた領域が AWS 標準機能でカバーされるようになった点で、運用負荷の削減に直結します。どちらも Terraform で IaC 管理しているなら、監視設定も一緒にコード化しておくのがおすすめです。SageMaker Data Agent や MediaTailor のリージョン拡大、Athena の Capacity Reservations 拡大も含め、着実な機能拡充が続いています。
