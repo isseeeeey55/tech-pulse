@@ -30,7 +30,7 @@ export CLAUDE_CODE_NO_FLICKER=1
 
 ### PermissionDenied hook
 
-自動モードのクラシファイアが拒否した際に発火する `PermissionDenied` hook が追加されました。`{retry: true}` を返すとモデルにリトライを指示できます。
+自動モード（`--auto`）で、コマンド実行の可否を判定する内部の分類器（クラシファイア）が「危険」と判断して拒否した際に発火する `PermissionDenied` hook が追加されました。`{retry: true}` を返すとモデルにリトライを指示できます。
 
 ```json
 {
