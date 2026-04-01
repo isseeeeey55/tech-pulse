@@ -1,8 +1,32 @@
 # Tech Pulse
 
-AWS と Claude Code の最新アップデートを、SRE視点でわかりやすく解説する技術ブログです。
+AWS・Claude Code・New Relic の最新アップデートを、SRE視点でわかりやすく解説する技術ブログです。
 
 **https://isseeeeey55.github.io/tech-pulse/**
+
+## 記事カテゴリ
+
+| カテゴリ | 内容 | 更新頻度 |
+|---------|------|---------|
+| AWS Updates | AWS What's New のアップデートまとめ | 毎日 |
+| Claude Code Updates | Claude Code リリースノートまとめ | リリース時 |
+| New Relic Updates | New Relic プラットフォーム・Agent アップデートまとめ | 月次 |
+
+## 記事生成パイプライン
+
+```
+RSS / Release Feed
+    ↓ 毎時取得（EventBridge + Lambda）
+Slack 通知チャンネル
+    ↓ 毎朝 8:00 JST（EventBridge + Lambda）
+Tech Pulse リポジトリに draft: true で push
+    ↓ Claude Code でレビュー・精査・公開
+GitHub Pages にデプロイ
+```
+
+- **RSS-Notifier**: RSS フィードを毎時チェックし、新着を Slack に通知
+- **Article-Publisher (x3)**: Slack の通知を集約し、Bedrock (Claude) で記事を生成して `draft: true` で push
+- **レビュー・公開**: Claude Code のブログ公開スキルで精査・画像生成・公開
 
 ## Tech Stack
 
@@ -12,6 +36,8 @@ AWS と Claude Code の最新アップデートを、SRE視点でわかりやす
 | Theme | [PaperMod](https://github.com/adityatelange/hugo-PaperMod) |
 | Hosting | GitHub Pages |
 | CI/CD | GitHub Actions |
+| 記事自動生成 | AWS Lambda + EventBridge + Bedrock |
+| ヘッダー画像 | Playwright (HTML → PNG) |
 
 ## Local Development
 
