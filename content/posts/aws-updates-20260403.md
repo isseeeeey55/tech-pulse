@@ -1,134 +1,63 @@
 ---
 title: "【AWS】2026/04/03 のアップデートまとめ"
 date: 2026-04-03T08:01:12+09:00
-draft: true
-tags: ["aws", "cloudwatch", "elasticache", "directconnect", "ecs", "sagemaker", "ses", "eks", "bedrock"]
+draft: false
+tags: ["aws", "cloudwatch", "elasticache", "directconnect", "ecs", "sagemaker", "ses", "eks", "lightsail", "deadline-cloud"]
 categories: ["AWS Updates"]
-summary: "2026/04/03 のAWSアップデートまとめ"
+summary: "2026/04/03 のAWSアップデートまとめ。ElastiCache ServerlessのIPv6対応、CloudWatch OTelメトリクス、Lightsailコンピュート最適化インスタンスなど10件"
 ---
 
-# 2026年4月3日のAWSアップデート情報
+![](/tech-pulse/images/aws-updates-20260403/header.png)
 
 ## はじめに
 
-本日は8件のAWSアップデートが発表されました。特に注目すべきは、OpenTelemetryを活用したモニタリング機能の強化、ElastiCache ServerlessでのIPv6対応、そしてSageMaker Data Agentの地域特化機能です。これらのアップデートは、クラウドネイティブアプリケーションの可観測性向上と、地域コンプライアンス要件への対応という、現代のエンタープライズITが直面する重要な課題に対するソリューションを提供しています。
+2026年4月3日のAWSアップデートは10件です。ElastiCache ServerlessのIPv6・デュアルスタック対応、CloudWatchのOpenTelemetryメトリクスサポート、SageMaker Data Agentの日本・オーストラリア向け地域推論などが含まれます。Lightsailにコンピュート最適化インスタンスが追加されたのも地味に便利です。
 
 ## 注目アップデート深掘り
 
 ### Amazon ElastiCache Serverless の IPv6・デュアルスタック接続対応
 
-ElastiCache Serverless が IPv6 およびデュアルスタック接続をサポートしたことで、従来の IPv4 のみの制約から解放され、より柔軟なネットワークアーキテクチャの構築が可能になりました。このアップデートが重要な理由は、政府機関や金融機関などでIPv6移行が進む中、キャッシュレイヤーも含めた包括的なIPv6対応が求められているためです。
+![ElastiCache Serverless IPv6 移行パス](/tech-pulse/images/aws-updates-20260403/ipv6-migration.png)
 
-各ネットワークタイプの違いを確認するために、実際にElastiCache Serverlessクラスターを作成してみましょう。まずは従来のIPv4設定での作成方法です：
+ElastiCache Serverless が IPv6 およびデュアルスタック接続をサポートしました。従来の IPv4 のみという制約がなくなり、IPv6 移行を進めている環境でもキャッシュレイヤーが足枷になりません。
+
+デュアルスタック接続では IPv4 と IPv6 の両方のエンドポイントが提供されます。レガシーシステムを維持しつつ、新しい IPv6 対応アプリケーションも同時に接続可能。段階的な移行に向いています。
 
 ```bash
+# デュアルスタックでServerlessキャッシュを作成
 $ aws elasticache create-serverless-cache \
-  --serverless-cache-name my-ipv4-cache \
+  --serverless-cache-name my-dualstack-cache \
   --engine redis \
   --major-engine-version 7 \
   --cache-usage-limits DataStorage={Maximum=10,Unit=GB} \
   --subnet-ids subnet-12345678 \
-  --security-group-ids sg-abcdef12
+  --security-group-ids sg-abcdef12 \
+  --network-type dual-stack
 ```
 
-次に、新たにサポートされたIPv6のみの設定：
+IPv4 → デュアルスタック → IPv6 のように段階的に切り替えれば、ダウンタイムなしで移行できます。CloudWatch で IPv4/IPv6 それぞれのトラフィックを監視しておくと、移行の進捗が可視化できて安心です。
 
-```bash
-$ aws elasticache create-serverless-cache \
-  --serverless-cache-name my-ipv6-cache \
-  --engine redis \
-  --major-engine-version 7 \
-  --cache-usage-limits DataStorage={Maximum=10,Unit=GB} \
-  --subnet-ids subnet-87654321 \
-  --security-group-ids sg-21fedcba \
-  --ip-discovery ipv6
-```
+### SageMaker Data Agent の日本・オーストラリア向け地域推論
 
-デュアルスタック接続では、IPv4とIPv6の両方のエンドポイントが提供されます。これにより、段階的なIPv6移行が可能になり、レガシーシステムを維持しながら新しいIPv6対応アプリケーションも同時に接続できます。
+> **SageMaker Data Agentとは？**
+> Amazon Bedrockのモデルと連携して、構造化・非構造化データに対する推論を実行するマネージドサービスです。データソースへの接続とプロンプト実行をサーバーレスで処理します。
 
-アプリケーションからの接続テストでは、Python のredisクライアントを使って両方のプロトコルでの接続確認が可能です：
+SageMaker Data Agent が日本（ap-northeast-1）とオーストラリア向けの地域特化推論に対応しました。データが各地域内で処理され、クロスボーダーでのデータ移転を回避できます。
 
-```python
-import redis
-
-# IPv4 接続
-redis_client_v4 = redis.Redis(
-    host='my-cache.abc123.cache.amazonaws.com',
-    port=6379,
-    socket_family=socket.AF_INET
-)
-
-# IPv6 接続（デュアルスタック時）
-redis_client_v6 = redis.Redis(
-    host='my-cache.abc123.cache.amazonaws.com',
-    port=6379,
-    socket_family=socket.AF_INET6
-)
-```
-
-### Amazon SageMaker Data Agent の地域特化推論機能
-
-SageMaker Data Agentが日本とオーストラリア向けの地域特化推論機能を提供開始したことは、データ主権とコンプライアンス要件がますます重要になる中で、極めて戦略的なアップデートです。JP-CRIS（Japan Compliance and Regulatory Infrastructure Service）とAU-CRIS（Australia Compliance and Regulatory Infrastructure Service）により、データが各地域内で処理され、クロスボーダーでのデータ移転を回避できます。
-
-地域特化推論を有効にするには、まずSageMaker Data Agentの設定でリージョン制限を指定します：
-
-```python
-import boto3
-
-sagemaker = boto3.client('sagemaker', region_name='ap-northeast-1')
-
-# JP-CRIS設定でのData Agent作成
-response = sagemaker.create_data_agent(
-    DataAgentName='japan-compliant-agent',
-    RegionalInferenceConfig={
-        'Region': 'ap-northeast-1',
-        'ComplianceProfile': 'JP-CRIS',
-        'DataResidencyEnforcement': True
-    },
-    BedrockModelConfig={
-        'ModelId': 'anthropic.claude-v2',
-        'RegionRestricted': True
-    }
-)
-```
-
-Terraformを使用した場合の設定例：
-
-```hcl
-resource "aws_sagemaker_data_agent" "japan_agent" {
-  name = "japan-compliant-agent"
-  
-  regional_inference_config {
-    region = "ap-northeast-1"
-    compliance_profile = "JP-CRIS"
-    data_residency_enforcement = true
-  }
-  
-  bedrock_model_config {
-    model_id = "anthropic.claude-v2"
-    region_restricted = true
-  }
-  
-  tags = {
-    Compliance = "JP-CRIS"
-    DataClass = "Restricted"
-  }
-}
-```
-
-この機能により、金融機関や医療機関などの規制産業では、データガバナンス要件を満たしながらAIモデルの恩恵を受けることが可能になります。特に、個人情報保護法や金融庁のガイドラインに準拠する必要がある日本企業にとって、データが確実に日本国内で処理される保証は重要な価値提案となります。
+個人情報保護法や金融庁ガイドラインに準拠する必要がある場合、データが日本国内で処理される保証は実務上の必須要件。SageMaker コンソールまたは API でリージョン制限付きの Data Agent を作成することで、地域内処理を強制できます。ただし地域制限により利用可能なモデルや機能に制約が生じる場合があるので、導入前のパフォーマンス検証は忘れずに。
 
 ## SRE視点での活用ポイント
 
-ElastiCache ServerlessのIPv6対応は、インフラストラクチャの段階的移行戦略において重要な意味を持ちます。デュアルスタック接続により、既存のIPv4アプリケーションを稼働させながら新しいIPv6対応サービスを並行して展開できるため、ダウンタイムを最小限に抑えた移行が可能です。Terraformでインフラを管理している場合、ネットワークスタックの変更を段階的にロールアウトでき、各段階でのテストと検証を経て安全に移行を進められます。
+ElastiCache の IPv6 対応は、インフラの段階的移行に使えます。デュアルスタックにしておけば、既存の IPv4 アプリケーションを稼働させたまま新しいサービスを IPv6 で接続可能。Terraform で管理している場合は `network_type` パラメータの変更だけで切り替えられます。
 
-CloudWatchアラームと組み合わせることで、IPv4とIPv6それぞれのトラフィックパターンを監視し、移行プロセスの健全性を定量的に把握できます。特に、接続エラー率やレイテンシーの差異を監視することで、プロトコル固有の問題を早期に発見できるでしょう。
-
-SageMaker Data Agentの地域特化機能は、コンプライアンス要件が厳格な環境でのAI活用において、リスク管理の観点から大きな価値があります。障害対応のランブックにデータ処理の地域制限チェックを組み込むことで、インシデント発生時もコンプライアンス違反を防げます。ただし、地域制限により利用可能なモデルやサービスに制約が生じる可能性があるため、導入前にはパフォーマンステストと機能検証を十分に行う必要があります。
+SageMaker Data Agent の地域制限は、障害対応ランブックにデータ処理の地域チェックを組み込む際に有用です。ただし利用可能なモデルに制約が出る場合があるため、要件に合うかは事前に確認しておくべきです。
 
 ## 全アップデート一覧
 
-| サービス | アップデート内容 | 
+> **AWS Deadline Cloudとは？**
+> VFX、アニメーション、映画制作などのレンダリングワークロードを管理するフルマネージドサービスです。レンダーファームの構築・管理を簡素化し、必要なときだけコンピュートリソースをスケールできます。
+
+| サービス | アップデート内容 |
 |---------|------------------|
 | [Amazon CloudWatch](https://aws.amazon.com/about-aws/whats-new/2026/04/cloudwatch-otel-container-insights-eks/) | OTel Container Insights for Amazon EKS (Preview) |
 | [Amazon ElastiCache](https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-elasticache-serverless-ipv6-dual-stack/) | Serverless で IPv6 およびデュアルスタック接続をサポート |
@@ -138,7 +67,9 @@ SageMaker Data Agentの地域特化機能は、コンプライアンス要件が
 | [Amazon ECS](https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-ecs-managed-daemons/) | ECS Managed Instances向けManaged Daemonsを発表 |
 | [Amazon SageMaker](https://aws.amazon.com/about-aws/whats-new/2026/03/sage-maker-da-infr-jp-au/) | Data Agent が日本・オーストラリア向け地域特化推論をサポート |
 | [Amazon SES](https://aws.amazon.com/about-aws/whats-new/2026/04/ses-mail-manager-introduces-new-features/) | Mail Manager でセキュリティとメール処理の新機能を追加 |
+| [Amazon Lightsail](https://aws.amazon.com/about-aws/whats-new/2026/04/lightsail-compute-optimized-instances/) | コンピュート最適化インスタンスバンドルを提供開始（最大72 vCPU、15リージョン） |
+| [AWS Deadline Cloud](https://aws.amazon.com/about-aws/whats-new/2026/04/deadline-cloud-job-scheduling/) | キューのジョブスケジューリングモード（Priority FIFO / Balanced / Weighted）を設定可能に |
 
 ## まとめ
 
-今回のアップデートでは、OpenTelemetryによる可観測性の標準化、IPv6対応によるネットワーク modernization、そして地域コンプライアンス対応という、エンタープライズ IT の3つの重要なトレンドが反映されています。特に、CloudWatchのOpenTelemetryサポートとElastiCacheのIPv6対応は、クラウドネイティブアプリケーションの運用基盤を現代的な標準に押し上げる重要なステップです。SageMakerの地域特化機能は、AIの民主化とデータガバナンスのバランスを取る AWS の戦略的な取り組みを示しており、規制産業でのクラウド活用を加速する効果が期待されます。
+10件中、ElastiCache ServerlessのIPv6対応とSageMaker Data Agentの地域推論が実務インパクトとしては大きいです。前者はIPv6移行計画にキャッシュレイヤーを組み込めるようになった点、後者はデータ主権要件を満たしながらAI推論を使える点がポイント。Lightsailのコンピュート最適化インスタンス（最大72 vCPU）も、バッチ処理やエンコーディング用途で選択肢が広がります。
