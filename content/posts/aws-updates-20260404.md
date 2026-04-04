@@ -1,98 +1,73 @@
 ---
 title: "【AWS】2026/04/04 のアップデートまとめ"
 date: 2026-04-04T08:01:16+09:00
-draft: true
-tags: ["aws", "glue", "emr", "bedrock", "sagemaker", "secretsmanager", "marketplace", "cloudwatch", "lightsail", "deadline", "kms", "ec2", "rds", "kubernetes", "prometheus", "opentelemetry", "spark"]
+draft: false
+tags: ["aws", "glue", "emr", "bedrock", "sagemaker", "secretsmanager", "marketplace", "cloudwatch", "kms", "prometheus", "opentelemetry", "spark"]
 categories: ["AWS Updates"]
-summary: "2026/04/04 のAWSアップデートまとめ"
+summary: "2026/04/04 のAWSアップデートまとめ。CloudWatch Query StudioでPromQLネイティブサポート、EMRにKiro powersでSparkトラブルシューティング、Bedrock Guardrailsクロスアカウント保護のGA化など8件"
 ---
 
-# AWS Weekly Update: AI・データ活用・運用効率化の大型アップデート
+![](/tech-pulse/images/aws-updates-20260404/header.png)
 
 ## はじめに
 
-2026年4月4日は、AWSから計10件のアップデートがリリースされた、非常に充実した一日となりました。特に注目すべきは、Amazon BedrockのクロスアカウントセーフガードのGA、CloudWatchでのPromQLネイティブサポート、そしてEMRでのAI駆動型Sparkトラブルシューティング機能の追加です。これらのアップデートは、企業のAI活用基盤の強化、運用効率の向上、そして開発者体験の大幅な改善をもたらす内容となっています。
+2026年4月4日のAWSアップデートは8件です。CloudWatch Query StudioがPromQLをネイティブサポート（プレビュー）、EMRにKiro powersによるSparkトラブルシューティングエージェントが追加、Bedrock Guardrailsのクロスアカウント保護がGAになりました。監視まわりの統合が進んだ一日です。
 
 ## 注目アップデート深掘り
 
-### Amazon CloudWatch Query Studio Preview - PromQLがついにネイティブサポート
+### Amazon CloudWatch Query Studio Preview - PromQLネイティブサポート
 
-CloudWatchにおけるPromQLのネイティブサポートは、監視・観測可能性の分野において画期的な進歩です。これまでPrometheusベースの監視とCloudWatch メトリクスを併用している環境では、異なるクエリ言語や管理画面を使い分ける必要がありました。Query Studioの登場により、統一されたインターフェースで両方のメトリクスを扱えるようになります。
+> **PromQLとは？**
+> Prometheusが採用しているクエリ言語です。Kubernetesの監視で広く使われており、`rate()`や`avg_over_time()`といった関数でメトリクスを柔軟に集計できます。CloudWatch Metrics Insightsとは構文が異なるため、これまでは使い分けが必要でした。
 
-**検証手順とポイント**
+![CloudWatch Query Studio：監視統合のBefore/After](/tech-pulse/images/aws-updates-20260404/query-studio-comparison.png)
 
-Query Studioの基本機能を検証するには、まずCloudWatchコンソールで新しいQuery Studioを有効化します：
+CloudWatchにPromQLネイティブサポートが入りました。PrometheusベースのメトリクスとCloudWatchメトリクスを併用している環境では、別々の画面とクエリ言語を使い分ける必要があった。Query Studioでは両方を1つのインターフェースで扱えます。
 
-```bash
-$ aws cloudwatch describe-metric-widgets \
-  --namespace "AWS/EC2" \
-  --metric-name "CPUUtilization" \
-  --region us-east-1
-```
+対応リージョンは現時点で5つ（バージニア、オレゴン、シドニー、シンガポール、アイルランド）。東京リージョンはまだプレビュー対象外ですが、今後の追加に期待です。
 
-PromQLクエリの例として、EC2インスタンスのCPU使用率を5分間の平均で取得する場合：
+**検証ポイント**
+
+PromQLでEC2のCPU使用率を5分間の平均で取得する例：
 
 ```promql
-# 従来のCloudWatch Metrics Insights
+# CloudWatch Metrics Insights
 SELECT AVG(CPUUtilization) FROM "AWS/EC2" WHERE InstanceId = 'i-1234567890abcdef0'
 
-# 新しいPromQL
+# PromQL
 avg_over_time(aws_ec2_cpuutilization{instance_id="i-1234567890abcdef0"}[5m])
 ```
 
-**OpenTelemetryメトリクスとの統合例**
-
-アプリケーションレベルのメトリクスとAWSメトリクスを相関分析する場合：
-
-```python
-# OpenTelemetry メトリクス送信例
-from opentelemetry import metrics
-from opentelemetry.exporter.cloudwatch.metrics import CloudWatchMetricExporter
-
-meter = metrics.get_meter(__name__)
-request_counter = meter.create_counter("http_requests_total")
-request_counter.add(1, {"method": "GET", "endpoint": "/api/users"})
-```
-
-Query Studioでは、このカスタムメトリクスとEC2メトリクスを同一クエリで扱えます：
+OpenTelemetryメトリクスとAWSメトリクスを同一クエリで扱えるのが実用上のポイントです。アプリのリクエスト数とEC2のCPU使用率を相関分析するケース：
 
 ```promql
-# アプリケーションのリクエスト数とEC2のCPU使用率の相関
 rate(http_requests_total[5m]) / on() group_left aws_ec2_cpuutilization
 ```
 
-従来の方法では、CloudWatchとPrometheusの画面を行き来して手動で相関を分析する必要がありましたが、Query Studioによりワンストップで分析できるようになります。
+従来は画面を行き来して手動で突き合わせていた作業が、ワンクエリで済みます。
 
-### Amazon EMR Spark Troubleshooting with Kiro Powers
+### Amazon EMR - Spark トラブルシューティング with Kiro Powers
 
-Apache Sparkのトラブルシューティングは、従来数時間から数日を要する作業でした。Kiroパワーの統合により、AIを活用した自動診断と修正提案が可能になり、大幅な時間短縮が実現されます。
+> **Kiro powersとは？**
+> AWSのAIコーディングアシスタント「Kiro」のプラグイン機能です。IDE上でKiroをインストールし、各種powersを追加することで特定ドメインのAI支援が受けられます。MCP Proxy for AWS経由でIAMロールベースの認証を行い、操作はCloudTrailに記録されます。
 
-**AI駆動型トラブルシューティングの検証**
+Sparkジョブのトラブルシューティングは、ログを追ってメモリ設定やパーティション戦略を手動で調整する地道な作業でした。Kiro powersはログ・メトリクス・設定を横断的に分析し、根本原因の特定から修正案の提示まで自動化してくれます。
 
-実際のSparkジョブエラーに対するKiroの診断能力を検証してみましょう。典型的なメモリ不足エラーの場合：
+対応環境はEMR on EC2とEMR Serverless。PySpark向けには具体的なコード改善案も出力されます。
 
-```python
-# 問題のあるPySparkコード例
-from pyspark.sql import SparkSession
+**トラブルシューティングの例**
 
-spark = SparkSession.builder.appName("MemoryIssueExample").getOrCreate()
-large_df = spark.read.parquet("s3://bucket/large-dataset/")
-result = large_df.groupBy("category").agg({"amount": "sum"}).collect()
-```
-
-従来のトラブルシューティングでは、Sparkの実行ログを手動で解析し、メモリ設定やパーティション戦略を調整する必要がありました：
+メモリ不足エラーが発生した場合、従来は手動でログを追う必要がありました：
 
 ```bash
 $ aws emr describe-step --cluster-id j-1234567890ABC --step-id s-1234567890ABC
 $ aws logs get-log-events --log-group-name /aws/emr/j-1234567890ABC/spark
 ```
 
-**Kiroパワーによる自動修正提案**
-
-Kiroは、エラーログを分析して以下のような具体的な修正案を提示します：
+Kiroはこれらを自動解析し、以下のような改善案を提示します：
 
 ```python
-# Kiro推奨の改良版コード
+# Kiro が提案する修正例
 spark = SparkSession.builder \
     .appName("OptimizedExample") \
     .config("spark.sql.adaptive.enabled", "true") \
@@ -100,61 +75,47 @@ spark = SparkSession.builder \
     .getOrCreate()
 
 large_df = spark.read.parquet("s3://bucket/large-dataset/") \
-    .repartition(200)  # Kiroが最適なパーティション数を提案
+    .repartition(200)  # 最適なパーティション数をKiroが提案
 result = large_df.groupBy("category").agg({"amount": "sum"}) \
     .write.mode("overwrite").parquet("s3://output-bucket/")
 ```
 
-**バージョンアップグレードの自動化**
-
-Sparkバージョンのアップグレードは、依存関係の解決やAPIの変更対応が複雑でした。Kiroは、既存コードベースを分析して必要な変更を特定し、自動的にマイグレーション計画を作成します：
-
-```bash
-# Kiroによる依存関係分析
-$ aws emr describe-cluster --cluster-id j-1234567890ABC --query 'Cluster.Applications'
-# Kiroが推奨するアップグレードパス
-# Spark 3.2 → 3.5 への段階的移行プランを生成
-```
+Sparkバージョンのアップグレード支援も別のpowerとして提供されています。EMR 6.5 → 7.12 のような大きなジャンプでも、コード変換・依存関係の解決・データ品質比較まで対応。全商用リージョンで利用可能です。
 
 ## SRE視点での活用ポイント
 
-これらのアップデートは、SREの日常業務において複数の場面で活用できます。
-
 **CloudWatch Query Studioの運用活用**
 
-Kubernetesクラスター上で動作するマイクロサービスの監視において、従来はPrometheusでアプリケーションメトリクスを、CloudWatchでAWSリソースメトリクスを別々に監視していました。Query Studioにより、障害対応時の根本原因分析を単一のダッシュボードで実行できるようになります。
+Kubernetesクラスター上のマイクロサービス監視では、PrometheusでアプリケーションメトリクスをCloudWatchでAWSリソースメトリクスを別々に見ていたケースが多いはずです。Query Studioで統合できれば、障害対応時の根本原因分析がシンプルになります。
 
-例えば、レスポンス時間の劣化が発生した際、アプリケーションのレイテンシメトリクスとRDSの接続数、EC2のCPU使用率を同時に分析し、相関関係を即座に特定できます。CloudWatchアラームとの統合により、PromQLベースの複雑な条件でアラートを設定することも可能になります。
+レスポンス時間の劣化が起きた際、アプリのレイテンシとRDSの接続数、EC2のCPU使用率を同時に分析して相関を特定できる。PromQLベースの複雑な条件でCloudWatchアラートを設定することも可能です。ただしプレビュー段階なので、本番アラートへの組み込みはGA後が無難でしょう。
 
-**EMR Spark運用の自動化推進**
+**EMR Spark運用の自動化**
 
-データパイプラインの運用において、Sparkジョブの失敗は往々にして深夜や休日に発生します。KiroパワーによるAI駆動型の自動診断は、オンコール対応の負荷を大幅に軽減します。ランブックに「Kiroによる初期診断を実行し、提案された修正案を適用する」というステップを組み込むことで、一次対応を自動化できます。
+データパイプラインのSparkジョブ失敗は深夜や休日に起きがちです。Kiro powersの自動診断をオンコールランブックに組み込めば、一次対応の負荷を減らせます。「Kiroに初期診断を実行させ、提案された修正案を確認する」というステップを加えるイメージ。
 
-ただし、本番環境での導入には段階的なアプローチが重要です。まず開発・ステージング環境でKiroの提案精度を検証し、誤った修正案が適用されるリスクを評価する必要があります。また、Kiroが提案する設定変更がコストに与える影響も事前に把握しておくべきでしょう。
+ただし本番環境への導入は段階的に。まずdev/staging環境でKiroの提案精度を検証し、誤った修正が適用されるリスクを把握しておくべきです。
 
-**セキュリティとコンプライアンス観点**
+**セキュリティとコンプライアンス**
 
-Bedrock GuardrailsのクロスアカウントサポートとSecrets ManagerのKMSキー柔軟化は、企業全体のセキュリティガバナンスを強化します。Organizations SCPと連携して、AIモデルの利用ポリシーを一元管理し、部門ごとに異なるセキュリティ要件を満たしながら、統一されたガイドラインを適用できます。
+Bedrock GuardrailsのクロスアカウントGA化で、Organizations配下でのAIモデル利用ポリシーを一元管理できるようになりました。有害コンテンツの最大88%をブロックできるとされています。Secrets ManagerのカスタムKMSキー対応と合わせて、暗号化ポリシーの柔軟化にも活用できます。
 
 ## 全アップデート一覧
 
-| サービス | タイトル | 概要 |
-|---------|---------|------|
-| AWS Glue | Schema Registry の3つの新リージョン対応 | スキーマレジストリが新たに3つのリージョンで利用可能 |
-| Amazon EMR | Spark troubleshooting agents (Kiro powers) | AIを活用したSparkトラブルシューティングとアップグレードエージェント |
-| Amazon Bedrock | Guardrails cross-account safeguards GA | クロスアカウント安全制御の一般提供開始 |
-| SageMaker | Data Agent charting & materialized views | チャート機能とマテリアライズドビューのサポート |
-| Secrets Manager | Custom KMS key input support | コンソールでのカスタムKMSキー入力サポート |
-| AWS Marketplace | Partner Revenue Measurement - Metering | パートナー収益測定でMarketplace Meteringサポート |
-| AWS Partner | User Agent string support | 特定AWSサービスでのUser Agent文字列サポート |
-| CloudWatch | Query Studio Preview (PromQL) | PromQLクエリのネイティブサポートプレビュー |
-| Lightsail | Compute-optimized instance bundles | 最大72 vCPUの計算最適化インスタンス |
-| Deadline Cloud | Configurable job scheduling modes | キュー用の設定可能なジョブスケジューリングモード |
+> **SageMaker Data Agentとは？**
+> Amazon Bedrockのモデルと連携して、構造化・非構造化データに対する推論を実行するマネージドサービスです。データソースへの接続とプロンプト実行をサーバーレスで処理します。
+
+| サービス | アップデート内容 |
+|---------|------------------|
+| [AWS Glue](https://aws.amazon.com/about-aws/whats-new/2026/04/aws-gsr-3-more-regions/) | Schema Registry が新たに3リージョンで利用可能に |
+| [Amazon EMR](https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-emr-spark-troubleshooting-upgrade-kiro-power/) | Kiro powers による Spark トラブルシューティング・アップグレードエージェント |
+| [Amazon Bedrock](https://aws.amazon.com/about-aws/whats-new/2026/04/bedrock-guardrails-cross-account-safeguards/) | Guardrails のクロスアカウント保護が GA |
+| [Amazon SageMaker](https://aws.amazon.com/about-aws/whats-new/2026/03/amazon-sgmkr-dataagent-chart-mv/) | Data Agent にチャート機能とマテリアライズドビューを追加 |
+| [AWS Secrets Manager](https://aws.amazon.com/about-aws/whats-new/2026/04/aws-secrets-manager-console-custom-kms-key-input/) | コンソールでカスタムKMSキーの入力が可能に |
+| [AWS Marketplace](https://aws.amazon.com/about-aws/whats-new/2026/04/partner-revenue-supports-mp-metering/) | Partner Revenue Measurement で Marketplace Metering をサポート |
+| [AWS Partner](https://aws.amazon.com/about-aws/whats-new/2026/04/partner-revenue-measurement-user-agent-support/) | 特定サービスで User Agent 文字列をサポート |
+| [Amazon CloudWatch](https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-cloudwatch-query-studio-preview/) | Query Studio で PromQL ネイティブサポート（プレビュー） |
 
 ## まとめ
 
-今回のアップデート群は、AWSがAI・機械学習、運用効率化、開発者体験向上に強く注力していることを示しています。特にCloudWatchのPromQLサポートとEMRのAI駆動型トラブルシューティングは、エンタープライズ環境での運用品質向上に直結する重要な機能です。
-
-BedrockのクロスアカウントセーフガードGA化により、大規模組織でのAI活用基盤も整いつつあります。これらの新機能を段階的に導入し、既存の運用フローに組み込んでいくことで、より効率的で安全なクラウド運用が実現できるでしょう。
-
-来週以降も、これらの機能の詳細な検証結果や実装例について続報をお届けしていく予定です。
+8件中、CloudWatch Query StudioのPromQLサポートとEMRのKiro powersが実務へのインパクトが大きいです。前者はPrometheus + CloudWatchの二重管理から脱却できる可能性があり、後者はSparkジョブの障害対応を自動化する手段を提供しています。Bedrock Guardrailsのクロスアカウント保護GA化も、マルチアカウント環境でAIを運用しているチームに効くアップデートです。
