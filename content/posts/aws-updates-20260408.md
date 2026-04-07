@@ -1,25 +1,29 @@
 ---
 title: "【AWS】2026/04/08 のアップデートまとめ"
 date: 2026-04-08T08:01:25+09:00
-draft: true
+draft: false
 tags: ["aws", "bedrock", "sagemaker", "lambda", "acm", "s3", "cost-explorer", "lightsail", "iot-greengrass"]
 categories: ["AWS Updates"]
 summary: "2026/04/08 のAWSアップデートまとめ"
 ---
 
+![](/tech-pulse/images/aws-updates-20260408/header.png)
+
 # AWS週次アップデート：2026年4月8日
 
 ## はじめに
 
-2026年4月8日のAWSアップデートでは、合計10件の新機能やサービス拡張が発表されました。特に注目すべきは、AWS Certificate Manager（ACM）の証明書検索機能強化と、Amazon Lightsailのマレーシアリージョン展開です。また、Amazon BedrockのClaude Mythos Previewや、LambdaのResponse Streaming全リージョン展開など、AI・機械学習とサーバーレス分野での機能拡充も目立ちます。今回は証明書管理の効率化とグローバル展開の観点から、特に実践的な価値の高い2つのアップデートを深掘りしていきます。
+2026年4月8日のAWSアップデートは9件です。ACMへのSearchCertificates API追加、S3バケットをファイルシステムとしてマウントできるAmazon S3 Files、LambdaのResponse Streaming全商用リージョン展開など、運用改善系の更新が中心でした。今回はACMの検索機能とLightsailのマレーシアリージョン展開を深掘りします。
 
 ## 注目アップデート深掘り
 
 ### AWS Certificate Manager の証明書検索機能強化
 
-AWS Certificate Manager（ACM）に新しい検索機能が追加され、大規模な証明書管理がより効率的になりました。この機能強化は、複数のドメインや証明書を管理する企業にとって、運用負荷の大幅な軽減を意味します。
+![ACM証明書検索ワークフロー比較](/tech-pulse/images/aws-updates-20260408/acm-search-workflow.png)
 
-従来のACMコンソールでは、証明書の一覧表示と基本的なフィルタリングに留まっていましたが、今回のアップデートにより、ドメイン名、証明書ARN、有効期限などの複数パラメータを組み合わせた高度な検索が可能になりました。特に重要なのは、新たに提供されたSearchCertificates APIです。
+AWS Certificate Manager（ACM）にSearchCertificates APIが追加されました。ドメイン名・ARN・有効期限で証明書を絞り込めます。数百枚の証明書を管理している環境だと、期限切れの見落とし防止に直結する機能です。
+
+従来はコンソールでの一覧表示と基本フィルタリングしかなく、CLIやスクリプトから特定条件の証明書を探すには `list-certificates` の結果を自前でフィルタリングする必要がありました。
 
 ```bash
 # 特定のドメインの証明書を検索
@@ -40,32 +44,7 @@ $ aws acm search-certificates \
     --region us-east-1
 ```
 
-Terraformでの証明書管理においても、このAPIを活用したdata sourceの実装が可能になります：
-
-```hcl
-data "aws_acm_certificate_search" "expiring_soon" {
-  domain   = "*.example.com"
-  statuses = ["ISSUED"]
-  
-  # 30日以内に期限切れとなる証明書を検索
-  expires_before = timeadd(timestamp(), "720h")
-}
-
-resource "aws_cloudwatch_metric_alarm" "certificate_expiry" {
-  count = length(data.aws_acm_certificate_search.expiring_soon.certificates)
-  
-  alarm_name          = "certificate-expiry-${count.index}"
-  comparison_operator = "LessThanThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "DaysToExpiry"
-  namespace           = "AWS/CertificateManager"
-  period              = "86400"
-  statistic           = "Maximum"
-  threshold           = "30"
-}
-```
-
-Python SDKを使用した自動化スクリプトの例も見てみましょう：
+boto3での活用例として、期限切れが近い証明書を検索するスクリプトを見てみます：
 
 ```python
 import boto3
@@ -97,13 +76,13 @@ def monitor_certificate_expiry():
     return expiring_certs
 ```
 
-> **Note:** SearchCertificates APIは、AWS CLI version 2.15以降、または boto3 version 1.34以降で利用可能です。
+> **Note:** SearchCertificates APIはすべてのパブリックAWSリージョン、AWS China、AWS GovCloudリージョンで利用可能です。CLIやSDKのバージョンが古い場合はアップデートしてください。
 
 ### Amazon Lightsail マレーシアリージョン展開
 
-Amazon Lightsailがアジアパシフィック（マレーシア）リージョンで利用開始となり、東南アジア地域での低レイテンシーアプリケーション展開が現実的になりました。マレーシアは地理的にシンガポールとインドネシア、タイの中間に位置し、この地域をターゲットとするアプリケーションにとって戦略的に重要な拠点となります。
+Amazon Lightsailが ap-southeast-5（マレーシア）で利用可能になりました。シンガポール（ap-southeast-1）に加えて、東南アジア向けアプリケーションのデプロイ先が増えた形です。
 
-レイテンシーの実測比較を行うと、クアラルンプールからの接続において、従来のシンガポールリージョン（ap-southeast-1）と比較して約15-25%の遅延改善が期待できます：
+Lightsailは定額料金なので、リージョナルなステージング環境や小規模サービスには使いやすい選択肢です。マレーシアリージョンでのインスタンス作成例を見てみましょう：
 
 ```bash
 # マレーシアリージョンでのLightsailインスタンス作成
@@ -120,7 +99,7 @@ $ aws lightsail create-key-pair \
     --region ap-southeast-5
 ```
 
-コスト効率の観点でも、Lightsailの定額料金モデルは予算管理を単純化します。マレーシアリージョンでの料金体系を確認してみましょう：
+リージョンごとの料金差を確認するスクリプト例です：
 
 ```python
 import boto3
@@ -191,21 +170,24 @@ resource "aws_lightsail_lb_attachment" "app_attachment" {
 }
 ```
 
-データレジデンシー要件への対応も重要な考慮点です。マレーシアには Personal Data Protection Act (PDPA) があり、特定のデータ種別について国内保存が推奨されるケースがあります。
+マレーシアにはPersonal Data Protection Act（PDPA）があるため、データレジデンシー要件がある場合にもこのリージョンが選択肢に入ります。ただし、サービス開始直後は一部のAWSサービスが未対応の場合があるので、利用予定のサービスの対応状況は事前に確認してください。
 
-> **Note:** マレーシアリージョンの正式なリージョンコードは `ap-southeast-5` ですが、サービス開始直後は一部のAWSサービスで利用できない場合があります。
+## 活用ポイント
 
-## SRE視点での活用ポイント
+**証明書の棚卸し自動化**: SearchCertificates APIをCloudWatch Events（EventBridge）と組み合わせれば、「期限切れ30日前の証明書一覧」を定期的にSlackへ通知する仕組みが作れます。マイクロサービスでサブドメインごとに証明書を発行している環境では、手動の棚卸しから解放されるのが地味に効きます。既存システムへの影響もないので、すぐに試せる類のアップデートです。
 
-今回のアップデートは、SREの日常業務において複数の改善機会をもたらします。
-
-**証明書管理の自動化強化**において、ACMの検索機能は証明書のライフサイクル管理を大幅に改善できます。Terraform管理下のインフラであれば、証明書の自動更新フローにSearchCertificates APIを組み込むことで、期限切れリスクを事前に検知し、アラート機能と連携できます。CloudWatch Eventsと組み合わせれば、証明書期限の30日前、7日前、1日前といった段階的な通知システムを構築可能です。特に、マイクロサービス環境で多数のサブドメイン証明書を管理している場合、従来の手動確認作業から解放される効果は大きいでしょう。
-
-**グローバル展開時のレイテンシー最適化**では、Lightsailのマレーシアリージョン追加により、東南アジア地域でのエッジ戦略を再検討する価値があります。既存の監視システムでレイテンシーメトリクスを収集している場合、地域別のパフォーマンス改善を定量的に評価できます。ただし、リージョン追加に伴うコスト増加や、データ同期の複雑性については慎重な検討が必要です。災害復旧の観点では、シンガポールリージョンの単一障害点リスクを軽減できる一方で、運用手順書やランブックの更新、監視設定の複製作業が発生します。
-
-導入判断においては、既存のアプリケーションアーキテクチャとの整合性を重視すべきです。証明書検索機能は既存システムへの影響が minimal で導入しやすい一方、新リージョン展開は DNS設定、CDN構成、データベースレプリケーションなど、システム全体への影響を慎重に評価する必要があります。
+**マレーシアリージョンの使いどころ**: Lightsailは定額モデルなので、まずはステージング環境やリージョナルなヘルスチェック用エンドポイントから試すのが手軽です。本番ワークロードを移すなら、DNS・CDN・データ同期の設計変更が必要になるので、段階的に進めるのがよいでしょう。
 
 ## 全アップデート一覧
+
+> **Amazon S3 Filesとは？**
+> Amazon EFSをベースに、S3バケットをファイルシステムとしてマウントできる新機能です。数千のコンピュートリソースから同時に同じS3データへアクセスでき、コード変更なしで既存のファイルベースツールがそのまま使えます。
+
+> **AWS IoT Greengrassとは？**
+> エッジデバイス上でAWS Lambdaやコンテナを実行するためのIoTランタイムです。今回、C/C++/Rust向けのコンポーネントSDKが追加され、リソース制約の厳しいデバイスでもネイティブ言語でGreengrassコンポーネントを開発できるようになりました。
+
+> **Claude Mythosとは？**
+> Anthropicの研究段階の新モデルで、サイバーセキュリティや大規模コードベースの脆弱性検出に特化しています。現在はゲート付きリサーチプレビューで、ホワイトリスト登録された組織のみ利用可能です。
 
 | サービス | アップデート内容 | リンク |
 |---------|----------------|--------|
@@ -221,6 +203,4 @@ resource "aws_lightsail_lb_attachment" "app_attachment" {
 
 ## まとめ
 
-今回のアップデートは、運用効率化とグローバル展開支援という2つの大きなテーマが見えてきます。ACMの検索機能強化やCost Explorerの自然言語対応は、日々の運用作業をより直感的で効率的にする取り組みです。一方、LightsailのマレーシアリージョンやIoT GreengrassのネイティブSDK対応は、新しい市場や技術領域への展開を支援する機能拡張といえるでしょう。
-
-特にSREの観点では、これらの機能を既存の自動化パイプラインに組み込むことで、従来の手動作業を大幅に削減できる可能性があります。ただし、新機能の導入は段階的に行い、既存システムへの影響を慎重に評価しながら進めることが重要です。次週以降も、これらの機能の実用化事例や、組み合わせて使用する際のベストプラクティスに注目していきたいと思います。
+ACMのSearchCertificates APIは、証明書管理のスクリプト化・自動化を一段楽にしてくれるアップデートです。S3 Filesも、EFSベースでS3バケットをファイルシステムとしてマウントできるという、データパイプライン周りで気になる新機能でした。Cost Explorerの自然言語クエリ（Amazon Q連携）やBedrockのClaude Mythos Previewなど、AI系の更新も地道に進んでいます。
