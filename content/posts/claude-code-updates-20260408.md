@@ -1,118 +1,107 @@
 ---
 title: "【Claude Code】v2.1.94 リリースノートまとめ"
 date: 2026-04-08T08:01:15+09:00
-draft: true
-tags: ["claude-code", "amazon-bedrock", "aws", "slack", "plugins", "skills", "cli", "infrastructure", "sre", "terraform", "iam", "security", "enterprise"]
+draft: false
+tags: ["claude-code", "amazon-bedrock", "slack", "plugins", "hooks", "cjk", "vscode"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.94 のClaude Codeリリースノートまとめ"
 ---
 
+![](/tech-pulse/images/claude-code-updates-20260408/header.png)
+
 ## はじめに
 
-Claude Code v2.1.94 がリリースされました。本バージョンでは、Amazon Bedrock対応という大きなアップデートをはじめ、デフォルト作業レベルの変更、Slackインテグレーションの改善、プラグインスキルの安定性向上など、開発者の生産性向上に直結する機能強化が多数含まれています。
-
-特に注目すべきは、AWS環境での統合が大幅に強化されたことで、SREやインフラエンジニアにとって運用自動化やトラブルシューティングの効率が飛躍的に向上する点です。また、プラグインシステムの安定性改善により、カスタムスキルを活用した複雑なワークフローもより信頼性高く実行できるようになりました。
+Claude Code v2.1.94 がリリースされました。Amazon Bedrock対応、デフォルトeffortレベルのhigh化、CJKテキストの文字化け修正など、計25項目の変更が含まれています。
 
 ## 注目アップデート深掘り
 
-### Amazon Bedrock対応の実装
+### Amazon Bedrock対応
 
-今回の最大の目玉機能は Amazon Bedrock との統合対応です。これにより、AWS環境で運用しているチームが Claude Code をより自然にインフラストラクチャに組み込むことが可能になりました。
+![Bedrock対応セットアップフロー](/tech-pulse/images/claude-code-updates-20260408/bedrock-setup-flow.png)
 
-従来、Claude Code を AWS環境で利用する際は、別途APIエンドポイントを設定し、認証情報を管理する必要がありました。しかし、Bedrock対応により、既存のAWS認証情報とIAMロールを活用して、シームレスに AI アシスタント機能を利用できるようになります。
+環境変数 `CLAUDE_CODE_USE_MANTLE=1` を設定するだけで、Amazon Bedrock経由でClaude Codeを利用できるようになりました。
 
 ```bash
-# Bedrock設定の例
-$ claude-code config set --provider bedrock
-$ claude-code config set --region us-east-1
-$ claude-code config set --model anthropic.claude-3-sonnet-20240229-v1:0
+# Bedrock経由での利用を有効化
+export CLAUDE_CODE_USE_MANTLE=1
 
-# 既存のAWS認証情報を使用して接続テスト
-$ claude-code auth test
-✓ Bedrock connection successful
-✓ Model access verified
+# あとは通常どおり起動するだけ
+claude
 ```
 
-この変更の真価は、特にマルチアカウント環境やコンプライアンス要件の厳しい企業環境で発揮されます。VPC内でのプライベート接続、CloudTrailによるログ監査、AWS KMSによる暗号化など、エンタープライズレベルのセキュリティ要件を満たしながらAIアシスタントを活用できる点は、従来のクラウドベースAPIでは実現困難でした。
+> **Mantleとは？**
+> AWSがBedrock基盤として提供しているインフラ層の名称です。既存のAWS認証情報（IAMロール、AWS SSO等）をそのまま使えるため、別途APIキーを管理する必要がなくなります。
 
-実際の活用シーンとして、Terraformコードの生成やAWS CLIスクリプトの自動作成において、Bedrockの地理的制約やデータ所在地要件を満たしながら作業を進められるメリットは計り知れません。
+AWS環境で運用しているチームにとっては、VPC内プライベート接続やCloudTrailでの監査ログ、KMS暗号化といったエンタープライズ要件を満たしたまま、Claude Codeを使えるようになった点が大きいです。CI/CDパイプラインでIAMロールを使っている場合、追加の認証設定なしで組み込めます。
 
-### プラグインスキルの安定性向上
-
-もう一つの重要な改善点は、プラグインスキルシステムの安定性向上です。これまで、複雑なカスタムスキルを実行する際に、メモリリークやタイムアウトエラーが発生するケースが報告されていましたが、今回のアップデートでこれらの問題が大幅に改善されました。
-
-> **Note:** スキルとは、Claude Code で利用可能なカスタム機能モジュールのことで、特定のタスクやワークフローを自動化するためのプラグイン機能です。
-
-改善前は、長時間実行されるスキル（例：大規模なログ解析や複数のAPIエンドポイント監視）において、途中で処理が中断されたり、メモリ使用量が異常に増加したりする問題がありました。
-
-```javascript
-// 改善後のスキル実装例：堅牢なエラーハンドリング
-export default {
-  name: "infrastructure-health-check",
-  async execute(context) {
-    const results = [];
-    const services = await context.aws.listServices();
-    
-    for (const service of services) {
-      try {
-        // タイムアウト制御とリトライ機能が強化
-        const health = await context.monitor.checkHealth(service, {
-          timeout: 30000,
-          retries: 3
-        });
-        results.push({ service: service.name, status: health });
-      } catch (error) {
-        // エラー情報の構造化とログ出力の改善
-        context.logger.warn(`Health check failed for ${service.name}`, {
-          error: error.message,
-          service: service.name,
-          timestamp: new Date().toISOString()
-        });
-      }
-    }
-    
-    return results;
-  }
-};
+```bash
+# CI/CD環境での利用例（IAMロール認証）
+export CLAUDE_CODE_USE_MANTLE=1
+export AWS_REGION=us-east-1
+claude --print "このPRの変更点をレビューして"
 ```
 
-この改善により、インフラ監視スクリプトやデプロイメント自動化など、ミッションクリティカルな運用タスクにおいて、Claude Code をより安心して活用できるようになりました。
+なお、Bedrock経由でSonnet 3.5 v2を呼び出す際の推論プロファイルIDが修正されるバグフィックスも同時に入っています。
+
+### デフォルトeffortレベルのhigh化
+
+API-key、Bedrock/Vertex/Foundry、Team、Enterpriseユーザーのデフォルトeffortレベルが `medium` から `high` に変更されました。
+
+```bash
+# 従来の手動切替は引き続き可能
+/effort medium  # コスト重視で下げたい場合
+/effort high    # デフォルト（v2.1.94〜）
+```
+
+> **effortレベルとは？**
+> Claude Codeが回答を生成する際の推論の深さを制御するパラメータです。highにすると、より複雑なタスクで精度が上がる一方、トークン消費も増えます。`/effort` コマンドで切り替えられます。
+
+体感としては、コード生成やリファクタリングの精度が上がるケースが多いはずです。トークン消費が気になる場合は `/effort medium` で戻せます。
+
+### CJKテキストの文字化け修正
+
+stream-jsonの入出力で、UTF-8シーケンスがチャンク境界で分割された際にCJK（日本語・中国語・韓国語）やマルチバイト文字が `U+FFFD`（�）に化ける問題が修正されました。
+
+日本語環境でClaude Codeを使っている場合、長い出力の途中で文字化けが発生するケースがあった方は、このバージョンで解消されているはずです。
 
 ## 実用的な活用ポイント
 
-今回のアップデートは、日常の開発ワークフローに即座に活用できる改善が多数含まれています。
+**Bedrock対応の試し方**: まずは `export CLAUDE_CODE_USE_MANTLE=1` を `.bashrc` や `.zshrc` に追加するだけで試せます。Bedrockのモデルアクセス許可が事前に必要なので、AWSコンソールのBedrock設定で対象モデルを有効化しておいてください。
 
-**AWS環境での統合開発**では、Bedrock対応により、既存のDevOpsパイプラインに Claude Code を組み込む際の認証設定が大幅に簡素化されました。CI/CD環境でIAMロールを使用している場合、追加の認証情報管理なしで AI アシスタント機能を利用できます。
+**プラグイン開発者向け**: スキルの呼び出し名がディレクトリ名ではなくfrontmatterの `name` フィールドに基づくよう変更されました。インストール方法によって呼び出し名が変わる問題が解消されています。`keep-coding-instructions` フィールドや `hookSpecificOutput.sessionTitle` の追加もあるので、プラグインを自作している方はリリースノートを確認してください。
 
-```bash
-# CI/CD環境での利用例
-$ export AWS_ROLE_ARN="arn:aws:iam::123456789012:role/ClaudeCodeRole"
-$ claude-code generate terraform --resource ec2 --environment production
-```
-
-**Slackインテグレーションの改善**により、チーム内でのコードレビューやトラブルシューティングの効率が向上します。特に、エラーログの自動解析や修正提案の共有がよりスムーズになりました。
-
-**SREの観点**では、プラグインスキルの安定性向上により、アラート対応の自動化やインシデント分析において、Claude Code を第一線のツールとして活用できる信頼性が確保されました。オンコール対応時の迅速な問題診断や、過去のインシデントデータベースとの照合作業など、高度な運用業務における実用性が大幅に向上しています。
-
-また、デフォルト作業レベルの変更により、初期設定でより実践的なコード生成が可能になり、新規プロジェクトの立ち上げ時間を短縮できます。
+**VS Code利用者**: セッション起動時のサブプロセス処理が軽量化されたほか、`settings.json` のパース失敗時に警告バナーが出るようになりました。パーミッション設定が効いていないのに気づけなかった問題の対策です。
 
 ## 全変更点一覧
 
 | カテゴリ | 内容 | 概要 |
 |---------|------|------|
-| Feature | Amazon Bedrock対応 | AWS Bedrock経由でのClaude利用が可能に。企業環境でのセキュリティ要件に対応 |
-| Improvement | デフォルト作業レベル変更 | 初期設定でより実用的なコード生成レベルに調整 |
-| Improvement | Slackインテグレーション改善 | チーム連携機能の安定性とレスポンス速度を向上 |
-| Fix | プラグインスキル安定性向上 | メモリリーク修正とエラーハンドリング強化 |
-| Improvement | CLIツール機能強化 | コマンド実行速度の改善と新オプション追加 |
-| Fix | レートリミット処理改善 | API呼び出し制限の適切な処理とユーザー通知 |
-| Fix | 認証エラーハンドリング強化 | 認証失敗時の詳細なエラーメッセージと復旧手順の提示 |
-| Improvement | ログ出力の構造化 | デバッグとトラブルシューティングの効率化 |
+| Feature | Amazon Bedrock対応 | `CLAUDE_CODE_USE_MANTLE=1` でBedrock経由の利用が可能に |
+| Feature | デフォルトeffortレベル変更 | API-key/Bedrock/Vertex/Team/Enterpriseユーザーのデフォルトをmedium→highに |
+| Improvement | Slack MCP表示改善 | send-message時にコンパクトな `Slacked #channel` ヘッダーを表示 |
+| Improvement | keep-coding-instructions対応 | プラグイン出力スタイル用のfrontmatterフィールド追加 |
+| Improvement | sessionTitleフック対応 | `UserPromptSubmit` フックで `hookSpecificOutput.sessionTitle` が利用可能に |
+| Improvement | スキル呼び出し名の安定化 | プラグインスキルの呼び出し名がディレクトリ名ではなくfrontmatter `name` に基づくよう変更 |
+| Improvement | --resume改善 | 他のworktreeからのセッション再開が直接可能に（`cd` コマンドの表示ではなく） |
+| Fix | レートリミット応答の改善 | 429応答で長いRetry-Afterが返った際にエージェントがスタックする問題を修正 |
+| Fix | macOSログイン修正 | キーチェーンがロック時にConsoleログインが無言で失敗する問題を修正。`claude doctor` で診断可能に |
+| Fix | プラグインスキルフック修正 | YAMLフロントマターで定義されたフックが無視される問題を修正 |
+| Fix | CLAUDE_PLUGIN_ROOT修正 | 未設定時に "No such file or directory" で失敗する問題を修正 |
+| Fix | プラグインルートパス修正 | `${CLAUDE_PLUGIN_ROOT}` がlocal-marketplaceプラグインで誤ったディレクトリに解決される問題を修正 |
+| Fix | スクロールバック修正 | 長時間セッションで同じdiffが繰り返し表示される問題、空白ページの問題を修正 |
+| Fix | 複数行プロンプト修正 | 折り返し行が `❯` キャレットの下にインデントされる問題を修正 |
+| Fix | Shift+Space修正 | 検索入力でスペースの代わりに "space" という文字列が挿入される問題を修正 |
+| Fix | tmuxハイパーリンク修正 | xterm.jsベースターミナル（VS Code, Hyper, Tabby）内のtmuxでリンクが2タブ開く問題を修正 |
+| Fix | alt-screen描画修正 | スクロール中のコンテンツ高さ変更でゴーストラインが残る問題を修正 |
+| Fix | FORCE_HYPERLINK修正 | settings.jsonのenvで設定した値が無視される問題を修正 |
+| Fix | ターミナルカーソル修正 | ダイアログのタブ選択時にネイティブカーソルが追従しない問題を修正（スクリーンリーダー対応） |
+| Fix | Bedrock Sonnet 3.5 v2修正 | `us.` 推論プロファイルIDを使用するよう修正 |
+| Fix | SDK/printモード修正 | ストリーム中断時に部分的なアシスタント応答が会話履歴に保存されない問題を修正 |
+| Fix | CJKテキスト修正 | UTF-8シーケンスのチャンク分割でマルチバイト文字がU+FFFDに化ける問題を修正 |
+| VS Code | セッション起動の軽量化 | コールドオープン時のサブプロセス処理を削減 |
+| VS Code | ドロップダウン修正 | キーボード操作中にマウス位置で誤った項目が選択される問題を修正 |
+| VS Code | settings.jsonパース警告 | パース失敗時に警告バナーを表示（パーミッション設定の未適用を防止） |
 
 ## まとめ
 
-Claude Code v2.1.94 は、エンタープライズ環境での実用性を大幅に向上させるアップデートとなりました。特に Amazon Bedrock 対応は、AWS エコシステムとの統合において画期的な進歩であり、セキュリティとコンプライアンス要件を満たしながら AI アシスタント機能を活用したいチームにとって待望の機能と言えるでしょう。
-
-プラグインスキルの安定性向上とあわせて、運用自動化やインフラ管理における Claude Code の信頼性が格段に向上しており、SRE やインフラエンジニアにとって日常業務の強力なパートナーとしての地位を確立しつつあります。
-
-今回のリリースは、単なる機能追加ではなく、実際のエンタープライズ環境での課題解決を意識した堅実な改善が多く、Claude Code が開発ツールから運用ツールへと進化していることを示しています。次期バージョンでのさらなる発展が期待されます。
+Bedrock対応とeffortレベルのデフォルト変更が目玉です。Bedrock対応は環境変数1つで試せるので、AWS環境がある方はすぐに試してみてください。バグ修正も粒度の細かいものが多く、特にCJKテキストの文字化け修正とtmux内のハイパーリンク修正は、日本語環境・ターミナルマルチプレクサ環境での使い勝手を地味に改善してくれます。
