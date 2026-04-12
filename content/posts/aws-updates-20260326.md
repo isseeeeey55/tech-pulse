@@ -7,7 +7,7 @@ categories: ["AWS Updates"]
 summary: "2026/03/26 のAWSアップデートまとめ"
 ---
 
-![](/tech-pulse/images/aws-updates-20260326/header.png)
+![](/images/aws-updates-20260326/header.png)
 
 # 2026年3月26日 AWS アップデート情報まとめ
 
@@ -19,7 +19,7 @@ summary: "2026/03/26 のAWSアップデートまとめ"
 
 ### Amazon SageMaker Unified StudioのCursor IDE連携で変わるML開発体験
 
-![SageMaker Unified Studio — Cursor IDE リモート接続アーキテクチャ](/tech-pulse/images/aws-updates-20260326/sagemaker-cursor-architecture.png)
+![SageMaker Unified Studio — Cursor IDE リモート接続アーキテクチャ](/images/aws-updates-20260326/sagemaker-cursor-architecture.png)
 
 Amazon SageMaker Unified StudioがCursor IDEからのリモート接続をサポートしたことで、機械学習開発のワークフローが大きく変わります。Cursor IDEのAIアシスト機能を活用しながら、クラウドの強力なコンピューティングリソースにシームレスにアクセスできるこの機能は、特にローカル環境のリソース制約に悩むデータサイエンティストにとって画期的です。
 
@@ -64,7 +64,7 @@ estimator.fit({'train': 's3://your-bucket/train-data'})
 
 ### Amazon Bedrock AgentCoreがエンタープライズ環境で本格運用可能に
 
-![Bedrock AgentCore — エンタープライズ環境でのAIエージェント運用](/tech-pulse/images/aws-updates-20260326/agentcore-enterprise.png)
+![Bedrock AgentCore — エンタープライズ環境でのAIエージェント運用](/images/aws-updates-20260326/agentcore-enterprise.png)
 
 > **Amazon Bedrock AgentCoreとは？**
 > Bedrock上でAIエージェントを構築・実行するためのマネージドランタイム環境です。LLMにツール呼び出しやブラウザ操作などの「行動」能力を持たせ、複雑なタスクを自律的に実行するエージェントをデプロイできます。従来のBedrock APIが「問いに答える」だけだったのに対し、AgentCoreは「実際に操作する」AIを実現するサービスです。

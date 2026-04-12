@@ -7,7 +7,7 @@ categories: ["AWS Updates"]
 summary: "2026/04/01 のAWSアップデートまとめ。CloudWatchマルチアカウントログ一元化、Aurora DSQL .NET/Rustコネクタ、DevOpsエージェントGA、Security Agentペネトレーションテストなど13件"
 ---
 
-![](/tech-pulse/images/aws-updates-20260401/header.png)
+![](/images/aws-updates-20260401/header.png)
 
 ## はじめに
 

@@ -7,7 +7,7 @@ categories: ["Claude Code Updates"]
 summary: "v2.1.97・v2.1.96 のClaude Codeリリースノートまとめ"
 ---
 
-![](/tech-pulse/images/claude-code-updates-20260409/header.png)
+![](/images/claude-code-updates-20260409/header.png)
 
 ## はじめに
 
@@ -25,7 +25,7 @@ v2.1.97 は Feature 5件、Fix 20件超、Improvement 10件超という、修正
 
 ### MCP HTTP/SSE バッファリークの修正
 
-![MCP バッファリーク修正の Before/After](/tech-pulse/images/claude-code-updates-20260409/mcp-buffer-leak.png)
+![MCP バッファリーク修正の Before/After](/images/claude-code-updates-20260409/mcp-buffer-leak.png)
 
 MCP サーバーが HTTP/SSE で接続している場合、再接続のたびに約50MB/hのペースでバッファが蓄積し続ける問題が修正されました。
 

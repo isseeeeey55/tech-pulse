@@ -7,7 +7,7 @@ categories: ["Claude Code Updates"]
 summary: "v2.1.84/v2.1.85 のClaude Codeリリースノートまとめ。PowerShellツール、3Pモデル制御環境変数、Hooks条件フィルタ等"
 ---
 
-![](/tech-pulse/images/claude-code-updates-20260327/header.png)
+![](/images/claude-code-updates-20260327/header.png)
 
 ## はじめに
 
@@ -56,7 +56,7 @@ $ export ANTHROPIC_DEFAULT_OPUS_MODEL_DESCRIPTION="us-east-1 endpoint"
 
 ### Hooks の条件フィルタ（v2.1.85）
 
-![フック条件フィルタ Before/After](/tech-pulse/images/claude-code-updates-20260327/hooks-filter.png)
+![フック条件フィルタ Before/After](/images/claude-code-updates-20260327/hooks-filter.png)
 
 v2.1.85で追加された`if`フィールドにより、フックの発火条件をパーミッションルール構文で指定できるようになりました。
 

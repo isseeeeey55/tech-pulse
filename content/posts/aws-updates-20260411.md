@@ -7,7 +7,7 @@ categories: ["AWS Updates"]
 summary: "2026/04/11 のAWSアップデートまとめ"
 ---
 
-![](/tech-pulse/images/aws-updates-20260411/header.png)
+![](/images/aws-updates-20260411/header.png)
 
 ## はじめに
 
@@ -19,7 +19,7 @@ summary: "2026/04/11 のAWSアップデートまとめ"
 
 ### Amazon CloudWatch パイプライン：条件付き処理とDrop Eventsプロセッサの活用
 
-![CloudWatch パイプラインの条件付き処理によるログコスト削減](/tech-pulse/images/aws-updates-20260411/cloudwatch-pipeline.png)
+![CloudWatch パイプラインの条件付き処理によるログコスト削減](/images/aws-updates-20260411/cloudwatch-pipeline.png)
 
 CloudWatch パイプラインで、条件に基づいてプロセッサの適用を分岐できるようになりました。加えて Drop Events プロセッサが追加され、パイプライン段階で不要なログを捨てられるようになっています。従来はログが取り込まれてからフィルタリングしていたので、捨てるログにもストレージ料金がかかっていました。
 

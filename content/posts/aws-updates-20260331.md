@@ -7,7 +7,7 @@ categories: ["AWS Updates"]
 summary: "2026/03/31 のAWSアップデートまとめ。OpenSearch Cluster Insightsのコンソール統合、Direct ConnectのBGP監視CloudWatch対応、Athenaリージョン拡大など5件"
 ---
 
-![](/tech-pulse/images/aws-updates-20260331/header.png)
+![](/images/aws-updates-20260331/header.png)
 
 ## はじめに
 
@@ -95,7 +95,7 @@ resource "aws_cloudwatch_event_target" "sns" {
 
 ### AWS Direct Connect BGP監視のCloudWatch統合
 
-![BGP監視 CloudWatch メトリクス構成](/tech-pulse/images/aws-updates-20260331/bgp-monitoring-flow.png)
+![BGP監視 CloudWatch メトリクス構成](/images/aws-updates-20260331/bgp-monitoring-flow.png)
 
 > **BGP（Border Gateway Protocol）とは？**
 > インターネットやネットワーク間でルーティング情報を交換するプロトコルです。Direct Connect では、オンプレミスと AWS 間の経路制御に使われます。BGP セッションが切れると通信不能になるため、監視が欠かせません。

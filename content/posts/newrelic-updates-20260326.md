@@ -7,7 +7,7 @@ categories: ["New Relic Updates"]
 summary: "Infrastructure Agent 3リリース（CVE修正・nr-control統合・EOL OS削除）と、2月のプラットフォームアップデート11件（SRE Agent・No Code Parsing・Pipeline Control等）をまとめて解説。"
 ---
 
-![](/tech-pulse/images/newrelic-updates-20260326/header.png)
+![](/images/newrelic-updates-20260326/header.png)
 
 ## はじめに
 
@@ -19,7 +19,7 @@ summary: "Infrastructure Agent 3リリース（CVE修正・nr-control統合・EO
 
 ### Infrastructure Agent v1.72.8 — CVE-2026-22184 セキュリティ修正
 
-![Infrastructure Agent v1.72.7→v1.72.9 リリースタイムライン](/tech-pulse/images/newrelic-updates-20260326/infra-agent-timeline.png)
+![Infrastructure Agent v1.72.7→v1.72.9 リリースタイムライン](/images/newrelic-updates-20260326/infra-agent-timeline.png)
 
 Infrastructure Agent v1.72.8では、[CVE-2026-22184](https://github.com/advisories/GHSA-7687-3v4j-49fr)への対応が行われました。このセキュリティ修正は、エージェントの安全な運用を維持するために早急なアップグレードが推奨されます。
 
@@ -51,7 +51,7 @@ v1.72.7ではEOL（End of Life）OSのサポートが削除されています。
 
 ### SRE Agent — AIによる障害調査の自律自動化
 
-![SRE Agent 障害対応フローの Before / After](/tech-pulse/images/newrelic-updates-20260326/sre-agent-before-after.png)
+![SRE Agent 障害対応フローの Before / After](/images/newrelic-updates-20260326/sre-agent-before-after.png)
 
 > **SRE Agentとは？**
 > New Relicが提供するAIエージェント機能で、テレメトリデータに自然言語でアクセスし、障害の根本原因分析（RCA）と復旧推奨を自動的に行います。従来は人間が手動で行っていたダッシュボード確認→ログ調査→原因特定のプロセスを、AIが数分で自律的に実行します。

@@ -7,7 +7,7 @@ categories: ["Claude Code Updates"]
 summary: "v2.1.86 のClaude Codeリリースノートまとめ。Session IDヘッダー追加、Readツールのトークン削減、Bedrock/Vertexキャッシュ改善、多数のバグ修正"
 ---
 
-![](/tech-pulse/images/claude-code-updates-20260328/header.png)
+![](/images/claude-code-updates-20260328/header.png)
 
 ## はじめに
 
@@ -34,7 +34,7 @@ $ grep "X-Claude-Code-Session-Id" /var/log/proxy/access.log \
 
 ### Read ツールのトークン使用量を大幅削減
 
-![Read ツールのトークン使用量削減](/tech-pulse/images/claude-code-updates-20260328/read-tool-optimization.png)
+![Read ツールのトークン使用量削減](/images/claude-code-updates-20260328/read-tool-optimization.png)
 
 Read ツールに2つの最適化が入りました：
 1. **コンパクト行番号フォーマット**: 行番号の表示形式を最適化し、トークン消費を削減

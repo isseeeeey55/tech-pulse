@@ -7,7 +7,7 @@ categories: ["Claude Code Updates"]
 summary: "v2.1.101 のClaude Codeリリースノートまとめ"
 ---
 
-![](/tech-pulse/images/claude-code-updates-20260411/header.png)
+![](/images/claude-code-updates-20260411/header.png)
 
 ## はじめに
 

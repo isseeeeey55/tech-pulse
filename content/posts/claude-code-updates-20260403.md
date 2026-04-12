@@ -7,7 +7,7 @@ categories: ["Claude Code Updates"]
 summary: "v2.1.90 のClaude Codeリリースノートまとめ。/powerupで対話型レッスン、パフォーマンス3件のO(n²)→O(n)改善、自動モードのユーザー境界尊重など19件"
 ---
 
-![](/tech-pulse/images/claude-code-updates-20260403/header.png)
+![](/images/claude-code-updates-20260403/header.png)
 
 ## はじめに
 
@@ -27,7 +27,7 @@ Claude Code の機能をアニメーション付きデモで学べる `/powerup`
 
 ### パフォーマンス改善 — 3つの O(n²) → O(n) 修正
 
-![パフォーマンス改善の比較](/tech-pulse/images/claude-code-updates-20260403/performance.png)
+![パフォーマンス改善の比較](/images/claude-code-updates-20260403/performance.png)
 
 今回のリリースで地味に効くのが、3箇所の二次時間計算量を線形に改善したパフォーマンス修正です。
 

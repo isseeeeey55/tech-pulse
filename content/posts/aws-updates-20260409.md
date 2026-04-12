@@ -7,7 +7,7 @@ categories: ["AWS Updates"]
 summary: "2026/04/09 のAWSアップデートまとめ"
 ---
 
-![](/tech-pulse/images/aws-updates-20260409/header.png)
+![](/images/aws-updates-20260409/header.png)
 
 ## はじめに
 
@@ -17,7 +17,7 @@ summary: "2026/04/09 のAWSアップデートまとめ"
 
 ### Amazon EKSマネージドノードグループでのEC2ウォームプール対応
 
-![EKS ウォームプールによるスケールアウト時間の比較](/tech-pulse/images/aws-updates-20260409/warm-pool-comparison.png)
+![EKS ウォームプールによるスケールアウト時間の比較](/images/aws-updates-20260409/warm-pool-comparison.png)
 
 EKSのオートスケーリングでは、インスタンス起動からPodスケジューリングまで3〜5分かかることがあります。初期化スクリプトが重い場合はさらに伸びる。今回のウォームプール対応で、事前に初期化済みのインスタンスをプールしておけるようになりました。
 

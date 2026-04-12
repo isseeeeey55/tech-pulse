@@ -1,4 +1,4 @@
-baseURL = "https://isseeeeey55.github.io/tech-pulse/"
+baseURL = "https://tech-pulse.dev/"
 languageCode = "ja"
 title = "Tech Pulse"
 theme = "PaperMod"
@@ -20,7 +20,7 @@ paginate = 10
 
   [params.homeInfoParams]
     Title = "Tech Pulse"
-    Content = "![Tech Pulse](/tech-pulse/images/hero.png)\n\nAWS、Claude Code、New Relic の最新アップデートを、SRE視点でわかりやすく解説する技術ブログです。\n\n毎日のアップデート情報を自動収集し、注目ポイントの深掘り・コード例・活用Tipsをまとめてお届けします。インフラエンジニア・SREの日々のキャッチアップにご活用ください。"
+    Content = "![Tech Pulse](/images/hero.png)\n\nAWS、Claude Code、New Relic の最新アップデートを、SRE視点でわかりやすく解説する技術ブログです。\n\n毎日のアップデート情報を自動収集し、注目ポイントの深掘り・コード例・活用Tipsをまとめてお届けします。インフラエンジニア・SREの日々のキャッチアップにご活用ください。"
 
 
 [outputs]

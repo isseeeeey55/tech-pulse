@@ -7,7 +7,7 @@ categories: ["AWS Updates"]
 summary: "2026/04/08 のAWSアップデートまとめ"
 ---
 
-![](/tech-pulse/images/aws-updates-20260408/header.png)
+![](/images/aws-updates-20260408/header.png)
 
 # AWS週次アップデート：2026年4月8日
 
@@ -19,7 +19,7 @@ summary: "2026/04/08 のAWSアップデートまとめ"
 
 ### AWS Certificate Manager の証明書検索機能強化
 
-![ACM証明書検索ワークフロー比較](/tech-pulse/images/aws-updates-20260408/acm-search-workflow.png)
+![ACM証明書検索ワークフロー比較](/images/aws-updates-20260408/acm-search-workflow.png)
 
 AWS Certificate Manager（ACM）にSearchCertificates APIが追加されました。ドメイン名・ARN・有効期限で証明書を絞り込めます。数百枚の証明書を管理している環境だと、期限切れの見落とし防止に直結する機能です。
 

@@ -7,7 +7,7 @@ categories: ["Claude Code Updates"]
 summary: "v2.1.91・v2.1.92 のClaude Codeリリースノートまとめ。Bedrock対話型セットアップウィザード、MCPツール結果500K対応、/costのモデル別内訳、forceRemoteSettingsRefreshなど計32件"
 ---
 
-![](/tech-pulse/images/claude-code-updates-20260404/header.png)
+![](/images/claude-code-updates-20260404/header.png)
 
 ## はじめに
 
@@ -17,7 +17,7 @@ Claude Code v2.1.91 と v2.1.92 がリリースされました。v2.1.92 では 
 
 ### Bedrock 対話型セットアップウィザード（v2.1.92）
 
-![Bedrock セットアップウィザードのフロー](/tech-pulse/images/claude-code-updates-20260404/bedrock-wizard.png)
+![Bedrock セットアップウィザードのフロー](/images/claude-code-updates-20260404/bedrock-wizard.png)
 
 ログイン画面で「3rd-party platform」を選択した際に、Bedrock 向けの対話型セットアップウィザードが起動するようになりました。AWS 認証、リージョン設定、クレデンシャル検証、モデルピニングまでガイド付きで進められます。
 

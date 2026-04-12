@@ -7,7 +7,7 @@ categories: ["AWS Updates"]
 summary: "2026/03/27 のAWSアップデートまとめ"
 ---
 
-![](/tech-pulse/images/aws-updates-20260327/header.png)
+![](/images/aws-updates-20260327/header.png)
 
 ## はじめに
 
@@ -89,7 +89,7 @@ cloudwatch.put_metric_data(
 
 ### AWS Advanced JDBC WrapperでのValkeyキャッシング機能
 
-![JDBC Wrapper Valkey キャッシング アーキテクチャ](/tech-pulse/images/aws-updates-20260327/valkey-caching.png)
+![JDBC Wrapper Valkey キャッシング アーキテクチャ](/images/aws-updates-20260327/valkey-caching.png)
 
 AWS Advanced JDBC WrapperにValkeyキャッシング機能が追加されたことで、頻繁に実行されるクエリの読み取りパフォーマンスを大幅に改善できるようになりました。この機能が重要な理由は、従来のデータベース接続において発生していたレイテンシとスループットのボトルネックを、アプリケーションレベルでのキャッシング機能により解決できる点にあります。
 

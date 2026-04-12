@@ -7,7 +7,7 @@ categories: ["AWS Updates"]
 summary: "2026/04/02 のAWSアップデートまとめ。VPC暗号化コントロールGovCloud対応、OpenSearchエージェント型AIログ分析、CloudFront SHA-256署名URL、Sustainabilityコンソールなど11件"
 ---
 
-![](/tech-pulse/images/aws-updates-20260402/header.png)
+![](/images/aws-updates-20260402/header.png)
 
 ## はじめに
 

@@ -7,7 +7,7 @@ summary: "Bedrock AgentCore RuntimeへのWebRTC追加、EKS Provisioned Control 
 draft: false
 ---
 
-![](/tech-pulse/images/aws-updates-20260321/header.png)
+![](/images/aws-updates-20260321/header.png)
 
 ## はじめに
 
@@ -19,7 +19,7 @@ draft: false
 
 AgentCore Runtimeに、既存のWebSocketに加えてWebRTCプロトコルが追加されました。ブラウザやモバイルアプリでの音声AIエージェント構築で、UDPベースの低レイテンシー双方向ストリーミングが使えるようになります。
 
-![Bedrock AgentCore Runtime WebRTC構成図](/tech-pulse/images/aws-updates-20260321/bedrock-webrtc-architecture.png)
+![Bedrock AgentCore Runtime WebRTC構成図](/images/aws-updates-20260321/bedrock-webrtc-architecture.png)
 
 **WebSocketとの違い**
 

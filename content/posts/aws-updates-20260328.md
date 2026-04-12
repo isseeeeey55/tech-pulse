@@ -7,7 +7,7 @@ categories: ["AWS Updates"]
 summary: "2026/03/28 のAWSアップデートまとめ"
 ---
 
-![](/tech-pulse/images/aws-updates-20260328/header.png)
+![](/images/aws-updates-20260328/header.png)
 
 ## はじめに
 
@@ -17,7 +17,7 @@ summary: "2026/03/28 のAWSアップデートまとめ"
 
 ### AWS Management Consoleのサービス・リージョン可視性制御機能
 
-![](/tech-pulse/images/aws-updates-20260328/console-visibility.png)
+![](/images/aws-updates-20260328/console-visibility.png)
 
 この新機能は、AWS Management Consoleの「Unified Settings」からサービスやリージョンの表示/非表示をコントロールできるUI設定です。IAMポリシーやSCPとは異なり、コンソール画面上の表示そのものを制御します。
 

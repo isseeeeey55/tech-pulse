@@ -7,7 +7,7 @@ categories: ["AWS Updates"]
 summary: "2026/04/04 のAWSアップデートまとめ。CloudWatch Query StudioでPromQLネイティブサポート、EMRにKiro powersでSparkトラブルシューティング、Bedrock Guardrailsクロスアカウント保護のGA化など8件"
 ---
 
-![](/tech-pulse/images/aws-updates-20260404/header.png)
+![](/images/aws-updates-20260404/header.png)
 
 ## はじめに
 
@@ -20,7 +20,7 @@ summary: "2026/04/04 のAWSアップデートまとめ。CloudWatch Query Studio
 > **PromQLとは？**
 > Prometheusが採用しているクエリ言語です。Kubernetesの監視で広く使われており、`rate()`や`avg_over_time()`といった関数でメトリクスを柔軟に集計できます。CloudWatch Metrics Insightsとは構文が異なるため、これまでは使い分けが必要でした。
 
-![CloudWatch Query Studio：監視統合のBefore/After](/tech-pulse/images/aws-updates-20260404/query-studio-comparison.png)
+![CloudWatch Query Studio：監視統合のBefore/After](/images/aws-updates-20260404/query-studio-comparison.png)
 
 CloudWatchにPromQLネイティブサポートが入りました。PrometheusベースのメトリクスとCloudWatchメトリクスを併用している環境では、別々の画面とクエリ言語を使い分ける必要があった。Query Studioでは両方を1つのインターフェースで扱えます。
 

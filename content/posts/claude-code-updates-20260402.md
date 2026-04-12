@@ -7,7 +7,7 @@ categories: ["Claude Code Updates"]
 summary: "v2.1.89 のClaude Codeリリースノートまとめ。パーミッションフック拡張による動的アクセス制御、LSPサーバー自動復旧、ヘッドレスセッション制御強化、メモリリーク修正など7件"
 ---
 
-![](/tech-pulse/images/claude-code-updates-20260402/header.png)
+![](/images/claude-code-updates-20260402/header.png)
 
 ## はじめに
 

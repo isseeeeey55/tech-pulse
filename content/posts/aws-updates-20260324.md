@@ -7,7 +7,7 @@ summary: "Amazon PollyのGenerative TTSエンジン大幅拡張（新音声10個
 draft: false
 ---
 
-![](/tech-pulse/images/aws-updates-20260324/header.png)
+![](/images/aws-updates-20260324/header.png)
 
 ## はじめに
 

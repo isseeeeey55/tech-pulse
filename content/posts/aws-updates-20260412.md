@@ -11,7 +11,7 @@ summary: "2026/04/12 のAWSアップデートまとめ"
 
 2026年4月12日、AWS から2件のアップデートがリリースされました。メモリ最適化インスタンス X8i の欧州リージョン拡大と、CloudWatch Pipelines の新たなコンプライアンス機能の追加です。CloudWatch Pipelines のガバナンス強化は、規制業界でのログ運用を楽にしてくれそうです。
 
-![](/tech-pulse/images/aws-updates-20260412/header.png)
+![](/images/aws-updates-20260412/header.png)
 
 ## 注目アップデート深掘り
 
@@ -89,7 +89,7 @@ resource "aws_cloudwatch_log_pipeline" "compliance_pipeline" {
 
 #### 従来の方法との比較
 
-![CloudWatch Pipelines コンプライアンス機能 Before/After](/tech-pulse/images/aws-updates-20260412/compliance-before-after.png)
+![CloudWatch Pipelines コンプライアンス機能 Before/After](/images/aws-updates-20260412/compliance-before-after.png)
 
 **従来の方法:**
 - 手動での監査ログ管理

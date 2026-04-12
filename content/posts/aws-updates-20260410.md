@@ -7,7 +7,7 @@ categories: ["AWS Updates"]
 summary: "2026/04/10 のAWSアップデートまとめ"
 ---
 
-![](/tech-pulse/images/aws-updates-20260410/header.png)
+![](/images/aws-updates-20260410/header.png)
 
 ## はじめに
 
@@ -111,7 +111,7 @@ def monitor_marketplace_prices(product_categories):
 
 ### EC2 Capacity Manager のタグベースディメンション
 
-![EC2 Capacity Manager のタグベースディメンション](/tech-pulse/images/aws-updates-20260410/capacity-manager-tags.png)
+![EC2 Capacity Manager のタグベースディメンション](/images/aws-updates-20260410/capacity-manager-tags.png)
 
 > **EC2 Capacity Manager とは？**
 > EC2 のオンデマンド・スポット・予約インスタンスのキャパシティを横断的に可視化・管理するサービスです。AWS Compute Optimizer と異なり、推奨ではなく現在の使用状況の集計とアラートに特化しています。
