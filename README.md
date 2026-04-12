@@ -2,7 +2,7 @@
 
 AWS・Claude Code・New Relic の最新アップデートを、SRE視点でわかりやすく解説する技術ブログです。
 
-**https://isseeeeey55.github.io/tech-pulse/**
+**https://tech-pulse.dev/**
 
 ## 記事カテゴリ
 
