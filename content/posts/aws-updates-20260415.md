@@ -1,65 +1,49 @@
 ---
 title: "【AWS】2026/04/15 のアップデートまとめ"
 date: 2026-04-15T08:01:25+09:00
-draft: true
-tags: ["aws", "secrets-manager", "ec2", "sagemaker", "quicksight", "redshift", "cloudwatch", "transform"]
+draft: false
+tags: ["aws", "secrets-manager", "post-quantum", "ec2", "graviton4", "ebs", "sagemaker", "redshift", "cloudwatch-logs"]
 categories: ["AWS Updates"]
-summary: "2026/04/15 のAWSアップデートまとめ"
+summary: "Secrets Manager の post-quantum TLS（ML-KEM）対応、EC2 C8gn/M8gn/R8gn の EBS 帯域 2 倍化、CloudWatch Logs Insights の parameterized saved queries など 7 件のアップデートを紹介します。"
 ---
 
-# AWS アップデート情報 (2026/04/15)
+![](/images/aws-updates-20260415/header.png)
 
 ## はじめに
 
-2026年4月15日、AWSから7件のアップデートが発表されました。特に注目すべきは、AWS Secrets Managerが量子コンピュータ脅威に対応した post-quantum TLS をサポートしたことと、EC2の最新インスタンスファミリーでEBSパフォーマンスが大幅に向上したことです。また、CloudWatch Logs Insightsにパラメータ機能が追加され、運用効率の向上が期待されます。
+2026年4月15日のAWSアップデートは7件です。うち5件が本日分（Secrets Manager の post-quantum TLS、AWS Transform の Kiro/VS Code 対応、EC2 C8gn/M8gn/R8gn の EBS 性能向上、SageMaker JumpStart の新モデル追加、Amazon Quick の Google Drive ドキュメントレベル ACL）、2件が前日遅れて通知された分（Redshift Top-K 最適化、CloudWatch Logs Insights の parameterized saved queries）です。目玉は **EBS 帯域 2 倍化** と **parameterized saved queries** の2つ。
 
 ## 注目アップデート深掘り
 
-### Amazon EC2 C8gn/M8gn/R8gn インスタンスの EBS パフォーマンス向上
+### EC2 C8gn / M8gn / R8gn — 48xlarge / metal-48xl で EBS 帯域 2 倍
 
-AWS Graviton4プロセッサを搭載したEC2インスタンスファミリー（C8gn: コンピューティング最適化・ネットワーク強化型、M8gn: 汎用バランス型・ネットワーク強化、R8gn: メモリ最適化・ネットワーク強化型）の48xlargeおよびmetal-48xlサイズにおいて、EBSパフォーマンスが劇的に向上しました。
+![EC2 EBS 性能向上 Before/After](/images/aws-updates-20260415/ebs-perf-compare.png)
 
-#### 性能向上の詳細比較
+AWS Graviton4 プロセッサ搭載の C8gn / M8gn / R8gn のうち、**48xlarge** と **metal-48xl** サイズに限って EBS 最適化性能が 2 倍になりました。公式の数値は次の通りです。
 
-従来と比較した性能向上は以下の通りです：
+| 指標 | Before | After |
+|---|---|---|
+| EBS 帯域幅 | 60 Gbps | **120 Gbps** |
+| EBS IOPS | 240,000 | **480,000** |
 
-- **EBS帯域幅**: 60 Gbps → 120 Gbps（2倍）
-- **IOPS**: 240,000 → 480,000（2倍）
+この改善は AWS Nitro System の **6 世代目 Nitro カード**への更新によるもので、追加料金はありません。2026-04-14 以降に新規起動または再起動したインスタンスから自動的に適用されます。
 
-この改善は AWS Nitro システムの強化によるもので、追加コストなしで利用できます。
+対象インスタンスサイズ:
 
-#### 実際の検証手順
+- **c8gn** (Compute-optimized, network-enhanced): 48xlarge, metal-48xl
+- **m8gn** (General-purpose, network-enhanced): 48xlarge, metal-48xl
+- **r8gn** (Memory-optimized, network-enhanced): 48xlarge, metal-48xl
 
-EBSパフォーマンスの向上を検証するには、以下のステップで実測できます：
+> **EC2 の "gn" 系列とは？**
+> Graviton (arm64) ベースインスタンスのうち、ネットワークとストレージの両方を強化したバリアントです。同じ世代の無印 (c8g / m8g / r8g) と比べて、EBS 帯域・IOPS・ネットワーク帯域の上限が広がっています。高スループット DB、高速ログ処理、大規模並列 IO を扱うワークロード向けです。
 
-```bash
-# C8gn.48xlargeインスタンスでEBSボリュームのIOPS性能をテスト
-$ aws ec2 run-instances \
-    --image-id ami-12345678 \
-    --instance-type c8gn.48xlarge \
-    --block-device-mappings '[{
-        "DeviceName": "/dev/sdf",
-        "Ebs": {
-            "VolumeSize": 1000,
-            "VolumeType": "gp3",
-            "Iops": 16000,
-            "Throughput": 1000
-        }
-    }]'
-
-# インスタンス起動後、fioツールでベンチマーク実行
-$ sudo fio --name=random-write --ioengine=libaio --rw=randwrite \
-    --bs=4k --size=10g --numjobs=16 --iodepth=64 \
-    --runtime=300 --group_reporting --filename=/dev/nvme1n1
-```
-
-Terraformでの実装例：
+Terraform での利用例（既存の c8gn.48xlarge をそのまま使えば性能向上を受けられます）:
 
 ```hcl
-resource "aws_instance" "high_performance_compute" {
-  ami           = data.aws_ami.amazon_linux.id
+resource "aws_instance" "high_io" {
+  ami           = data.aws_ami.al2023_arm64.id
   instance_type = "c8gn.48xlarge"
-  
+
   ebs_block_device {
     device_name = "/dev/sdf"
     volume_type = "gp3"
@@ -68,135 +52,57 @@ resource "aws_instance" "high_performance_compute" {
     throughput  = 1000
   }
 
-  tags = {
-    Name = "high-iops-workload"
-  }
-}
-
-# EBS最適化インスタンスの設定
-resource "aws_ebs_volume" "high_performance" {
-  availability_zone = aws_instance.high_performance_compute.availability_zone
-  size             = 2000
-  type             = "io2"
-  iops             = 64000  # 新しい上限を活用
-  
-  tags = {
-    Name = "high-performance-storage"
-  }
+  tags = { Name = "high-io-workload" }
 }
 ```
 
-この性能向上により、データベースワークロード、大規模なログ処理、リアルタイム分析などの用途で大幅な処理時間短縮が期待できます。特に、I/Oバウンドなワークロードにおいては、従来の半分の時間で処理が完了する可能性があります。
+既に c8gn.48xlarge / m8gn.48xlarge / r8gn.48xlarge を運用しているチームは、**インスタンスを再起動するだけで新しい性能プロファイルに切り替わります**。アプリ側が IO バウンドなら効きが早く出る変更です。逆に CPU バウンドのワークロードでは目立った差は出ません。
 
-### CloudWatch Logs Insights の保存クエリパラメータ機能
+### CloudWatch Logs Insights — parameterized saved queries
 
-CloudWatch Logs Insightsに、最大20個のパラメータを持つ保存クエリ機能が追加されました。これまでは類似したクエリを複数管理する必要がありましたが、テンプレート化により運用効率が大幅に改善されます。
+![CloudWatch Logs Insights Parameterized Query の実行フロー](/images/aws-updates-20260415/logs-insights-params.png)
 
-#### パラメータ付きクエリの実装例
+CloudWatch Logs Insights の保存クエリ（saved queries）に **パラメータ定義** が追加されました。1 つのクエリテンプレートに対してパラメータを最大 **20 個** まで定義でき、呼び出し時に値を差し込んで実行できます。
 
-従来は異なるログレベルごとに個別のクエリを保存していましたが、今回のアップデートでパラメータ化が可能になりました：
+パラメータの書き方は、クエリを保存したあとに **クエリ名の前に `$` を付けて関数呼び出し風に値を渡す** 形式です。
 
-```sql
--- パラメータ付きクエリの例
-fields @timestamp, @message, level, service
-| filter level = ?{log_level}
-| filter service like ?{service_pattern}
-| filter @timestamp >= ?{start_time}
-| sort @timestamp desc
-| limit ?{result_limit}
+```
+$ErrorsByService(logLevel="ERROR", serviceName="OrderEntry")
 ```
 
-AWS CLIでのパラメータ付きクエリ実行：
+各パラメータにはオプションでデフォルト値も指定できます。AWS Console、AWS CLI、AWS CDK、AWS SDKs のいずれからも利用可能です（現時点では OpenSearch PPL 等、他のログ分析系との互換性は公式情報なし）。
 
-```bash
-# パラメータ付きクエリの保存
-$ aws logs put-query-definition \
-    --name "service-error-analysis" \
-    --query-string 'fields @timestamp, @message, level, service
-| filter level = ?{log_level}
-| filter service like ?{service_pattern}
-| sort @timestamp desc
-| limit ?{result_limit}' \
-    --log-group-names "/aws/lambda/my-function"
+従来は「障害レベルごと」「サービスごと」に別々のクエリを保存して運用していたところを、1 本のテンプレートに寄せられるようになります。特にオンコールのランブックで、同じクエリ構造を `logLevel` や `timeRange` だけ変えて呼び出すケースに効きます。
 
-# パラメータを指定してクエリ実行
-$ aws logs start-query \
-    --log-group-names "/aws/lambda/my-function" \
-    --start-time 1735689600 \
-    --end-time 1735693200 \
-    --query-string 'fields @timestamp, @message, level, service
-| filter level = "ERROR"
-| filter service like "payment-*"
-| sort @timestamp desc
-| limit 100'
-```
-
-Python SDKでの実装例：
-
-```python
-import boto3
-from datetime import datetime, timedelta
-
-def execute_parameterized_query(log_level="ERROR", service_pattern="*", hours_back=1, limit=50):
-    client = boto3.client('logs')
-    
-    end_time = datetime.now()
-    start_time = end_time - timedelta(hours=hours_back)
-    
-    query_string = f"""
-    fields @timestamp, @message, level, service
-    | filter level = "{log_level}"
-    | filter service like "{service_pattern}"
-    | sort @timestamp desc
-    | limit {limit}
-    """
-    
-    response = client.start_query(
-        logGroupNames=['/aws/lambda/my-function'],
-        startTime=int(start_time.timestamp()),
-        endTime=int(end_time.timestamp()),
-        queryString=query_string
-    )
-    
-    return response['queryId']
-
-# 使用例
-query_id = execute_parameterized_query(
-    log_level="WARN", 
-    service_pattern="auth-*", 
-    hours_back=24, 
-    limit=100
-)
-```
-
-このパラメータ機能により、1つのクエリテンプレートで複数のシナリオに対応でき、クエリ管理の複雑さが大幅に軽減されます。
+> **CloudWatch Logs Insights とは？**
+> CloudWatch Logs に対してクエリ言語で検索・集計を実行するサービスです。`fields`、`filter`、`stats`、`sort` などの構文で SQL 風の操作ができ、ダッシュボードやアラームから呼び出せます。今回の parameterized saved queries は、その保存クエリに動的パラメータを注入できるようにした機能拡張です。
 
 ## SRE視点での活用ポイント
 
-### EBSパフォーマンス向上の運用改善効果
+**EBS 性能向上** は、既に c8gn / m8gn / r8gn の最大サイズで運用しているチームにそのまま効きます。DB のバックアップ時間、ログ集約基盤の同時処理数、リアルタイム分析での I/O レイテンシなどに直結する変更で、特に 48xlarge を選んでいた時点で「EBS 帯域がボトルネック」と認識していた環境では体感差があります。逆に CPU バウンドなワークロードや、48xlarge 未満のサイズを使っている環境では恩恵なしなので、サイズダウンを検討中のチームは判断材料に。
 
-C8gn/M8gn/R8gnインスタンスのEBS性能向上は、SREにとって以下の運用改善をもたらします。データベースのバックアップ・復旧時間が半減することで、RTOの大幅な短縮が期待できます。また、ログ集約基盤やメトリクス収集システムでは、より多くのデータを同時処理できるため、監視の粒度を向上させながらコストを抑制できます。
+**parameterized saved queries** は、オンコール用のランブック整備に効きます。「エラー調査クエリ」「遅延リクエスト抽出クエリ」などを 1 本のテンプレートに寄せ、パラメータで `logLevel` や `serviceName` を差し替える運用が書きやすくなります。CDK から定義できるので、IaC に載せてチーム全員で共有するのが素直です。
 
-Terraformでインフラ管理している環境では、インスタンスタイプの変更により追加コストなしで性能向上の恩恵を受けられます。ただし、アプリケーションがI/Oバウンドでない場合、性能向上の効果は限定的であるため、事前にボトルネックの特定が重要です。移行時は段階的なロールアウトを行い、CloudWatchメトリクスでEBS使用率とレイテンシーを継続監視することを推奨します。
+**Secrets Manager の post-quantum TLS** は、**ML-KEM** を使った X25519 とのハイブリッド鍵交換が導入された変更です。Secrets Manager Agent 2.0.0 以上、Lambda Extension v19 以上、Secrets Manager CSI Driver 2.0.0 以上、および対応する AWS SDK（Rust / Go / Node.js / Kotlin / Python (OpenSSL 3.5+) / Java v2 2.35.11+）では、アップグレードするだけで自動的にハイブリッド鍵交換に切り替わります。コード変更は不要（Java v2 のみ一部例外）。CloudTrail では `X25519MLKEM768` として記録されるので、本番で有効化されたかの確認はそこで取れます。
 
-### CloudWatchパラメータクエリによる障害対応効率化
+**AWS Transform の Kiro / VS Code 対応** は、レガシーコードのモダナイゼーション支援ツールが AWS Kiro（Amazon 版 IDE エージェント）と VS Code 拡張として使えるようになった変更です。既存の Transform ユーザーで Web UI から降りたかったチーム向けです。
 
-保存クエリのパラメータ機能は、障害対応のランブック標準化に大きく貢献します。従来は障害レベルやサービスごとに個別のクエリを管理していましたが、パラメータ化により一つのテンプレートで多様な調査パターンに対応できます。
+**SageMaker JumpStart の新モデル**（Nemotron-3-Super-120B、Qwen3.5-9B、Qwen3.5-27B）は、エージェント推論と多言語コーディング用途の選択肢追加です。JumpStart から直接デプロイできるので、評価段階のチームは PoC を立てやすくなります。
 
-特に、オンコール対応では時間範囲やログレベルを動的に変更しながら原因調査を行うため、この機能により調査時間の短縮が期待できます。CloudWatchアラームと連携し、アラート発生時に自動でパラメータ付きクエリを実行するワークフローを構築すれば、初動対応の自動化も可能です。導入時は既存のクエリをパラメータ化し、チーム内でテンプレートを共通化することで、属人性を排除した運用体制を構築できます。
+**Amazon Quick の Google Drive ドキュメントレベル ACL** は、Google Drive をナレッジソースにするときに「ドキュメント単位の権限」を Google Drive 側の実権限と同期して保てるようになった変更です。インデックス済み ACL と、クエリ時の Google Drive への実時間権限確認の二重チェック方式で、権限変更が反映されない問題を避けます。
 
 ## 全アップデート一覧
 
-| タイトル | 概要 |
-|---------|------|
-| [AWS Secrets Manager now supports hybrid post-quantum TLS](https://aws.amazon.com/about-aws/whats-new/2026/04/aws-secrets-manager-post-quantum-tls/) | 量子コンピュータ脅威に対応したpost-quantum TLSをサポート、機密情報の長期的保護を強化 |
-| [AWS Transform is now available in Kiro and VS Code](https://aws.amazon.com/about-aws/whats-new/2026/04/aws-transform-kiro-vscode/) | レガシーアプリケーションの最新化とSDKマイグレーションを支援するツールを拡張 |
-| [Amazon EC2 C8gn, M8gn, and R8gn instances now support higher Amazon EBS-optimized performance](https://aws.amazon.com/about-aws/whats-new/2026/04/ec2-c8gn-m8gn-r8gn-ebs/) | Graviton4搭載インスタンスでEBS帯域幅とIOPSを2倍に向上、追加コストなし |
-| [NVIDIA Nemotron-3-Super-120B, Qwen3.5-9B, and Qwen3.5-27B models now available on Amazon SageMaker JumpStart](https://aws.amazon.com/about-aws/whats-new/2026/04/nemotron3super-120b-qwen3.5-9b-qwen3.5-27b-on-sagemaker-jumpstart/) | 3つの新しい基盤モデルを追加、エージェント推論と多言語コーディング能力を強化 |
-| [Amazon Quick now supports document-level access controls for Google Drive knowledge bases](https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-quick-document-level-access-controls-google-drive/) | Google Driveとの統合でドキュメントレベルのアクセス制御をサポート |
-| [Amazon Redshift introduces key performance optimization for Top-K queries](https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-redshift-topk-optimization/) | Top-Kクエリの性能最適化により、大規模データから上位K件の抽出を高速化 |
-| [Amazon CloudWatch Logs Insights now supports saved queries with parameters](https://aws.amazon.com/about-aws/whats-new/2026/03/cloudwatch-logs-insights-query-params/) | 保存クエリに最大20個のパラメータをサポート、クエリテンプレート化により運用効率を向上 |
+| サービス | タイトル | 概要 |
+|---------|---------|------|
+| [AWS Secrets Manager](https://aws.amazon.com/about-aws/whats-new/2026/04/aws-secrets-manager-post-quantum-tls/) | Hybrid post-quantum TLS 対応 | ML-KEM (X25519MLKEM768) によるハイブリッド鍵交換。Agent/Extension/CSI/SDK アップグレードで自動有効化 |
+| [AWS Transform](https://aws.amazon.com/about-aws/whats-new/2026/04/aws-transform-kiro-vscode/) | Kiro および VS Code で利用可能に | レガシーコードのモダナイゼーション支援が IDE 側で動くように |
+| [Amazon EC2](https://aws.amazon.com/about-aws/whats-new/2026/04/ec2-c8gn-m8gn-r8gn-ebs/) | C8gn/M8gn/R8gn 48xlarge・metal-48xl の EBS 性能 2 倍 | Graviton4 + Nitro 6世代、60→120 Gbps / 240K→480K IOPS、追加料金なし |
+| [Amazon SageMaker JumpStart](https://aws.amazon.com/about-aws/whats-new/2026/04/nemotron3super-120b-qwen3.5-9b-qwen3.5-27b-on-sagemaker-jumpstart/) | Nemotron-3-Super-120B / Qwen3.5-9B / Qwen3.5-27B 追加 | エージェント推論・多言語コーディング向けの新基盤モデル 3 種 |
+| [Amazon Quick](https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-quick-document-level-access-controls-google-drive/) | Google Drive ナレッジベースの document-level ACL | インデックス ACL + 実時間権限チェックで Google Drive 権限と同期 |
+| [Amazon Redshift](https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-redshift-topk-optimization/) | Top-K クエリ最適化 | `ORDER BY ... LIMIT N` 系クエリの内部実行効率を改善 |
+| [Amazon CloudWatch Logs Insights](https://aws.amazon.com/about-aws/whats-new/2026/03/cloudwatch-logs-insights-query-params/) | parameterized saved queries | 保存クエリに最大 20 個のパラメータを定義、`$QueryName(key="value")` で呼び出し |
 
 ## まとめ
 
-本日のアップデートは、性能向上とセキュリティ強化の両面で重要な進歩を示しています。特にEC2インスタンスのEBS性能向上は、I/O集約的なワークロードに immediate な恩恵をもたらし、CloudWatchのパラメータクエリ機能は日々の運用効率を大幅に改善するでしょう。量子コンピュータ脅威への対応も含め、AWSが長期的な視点でサービスを強化し続けていることが伺えます。これらのアップデートを活用することで、より効率的で安全なクラウド運用が実現できそうです。
+目玉は EC2 C8gn/M8gn/R8gn の EBS 性能 2 倍化と、CloudWatch Logs Insights の parameterized saved queries の 2 つです。前者は対象サイズを既に使っているチームに即効で効く無料アップグレード、後者はオンコール運用のクエリ整備を一段進められる機能追加です。Secrets Manager の post-quantum TLS は、Agent/SDK の更新だけで自動的にハイブリッド鍵交換に切り替わるので、コンプライアンス要件で量子耐性を要求される組織は次のリリースサイクルで取り込んでおくと良さそうです。
