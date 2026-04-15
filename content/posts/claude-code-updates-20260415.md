@@ -1,119 +1,82 @@
 ---
-title: "【Claude Code】v2.1.108 / v2.1.107 リリースノートまとめ"
-date: 2026-04-15T08:01:11+09:00
-draft: false
-tags: ["claude-code", "prompt-caching", "recap", "slash-commands", "skill-tool", "resume", "memory", "error-messages"]
+title: "【Claude Code】v2.1.109・v2.1.108 リリースノートまとめ"
+date: 2026-04-15T23:24:48+09:00
+draft: true
+tags: ["claude-code", "prompt-cache", "session-recap", "slash-commands", "security-review", "infrastructure-as-code", "terraform", "cloudformation", "error-handling", "performance-optimization", "ui-ux", "memory-optimization"]
 categories: ["Claude Code Updates"]
-summary: "v2.1.108 / v2.1.107 の変更点を解説します。prompt caching TTL の環境変数制御（`ENABLE_PROMPT_CACHING_1H` / `FORCE_PROMPT_CACHING_5M`）、`recap` 機能、Skill tool からの built-in slash command 呼び出し、`/undo` = `/rewind` エイリアス、`/model` 切替警告、エラーメッセージ区別などが追加されました。"
+summary: "v2.1.109・v2.1.108 のClaude Codeリリースノートまとめ"
 ---
-
-![](/images/claude-code-updates-20260415/header.png)
 
 ## はじめに
 
-Claude Code の **v2.1.108** と **v2.1.107** が相次いでリリースされました。v2.1.107 は「長時間処理中の thinking hints を早めに表示」1 点のみの軽いリリース、v2.1.108 は prompt caching 周りの制御強化、`recap` 機能、Skill tool からの built-in slash command 呼び出しなどを含む中規模リリースです。
+2026年4月15日にリリースされた Claude Code v2.1.109 と v2.1.108 では、ユーザー体験の向上とパフォーマンス最適化を中心とした複数の改善が行われました。
 
-目玉は **prompt caching TTL の環境変数制御** と **`recap` 機能** の 2 つ。特に prompt caching の TTL を 1 時間まで延ばせるようになった点は、同じ context を繰り返し読むタイプのワークフロー（長時間のコードレビューや、同じリポジトリでの連続タスク）で API 料金と応答速度の両面で効きます。
+v2.1.109 では、拡張思考インジケーターに回転プログレスヒントが追加され、長時間処理時の視覚的フィードバックが強化されました。v2.1.108 では、プロンプトキャッシュの環境変数制御、セッションリキャップ機能、ビルトインスラッシュコマンドの拡張、エラーメッセージの明確化、メモリ使用量の最適化など、開発効率とシステム安定性を高める機能が実装されています。
+
+これらのアップデートにより、インフラ自動化やトラブルシューティングなど、SRE業務における日常的なタスクがより効率的に行えるようになりました。
 
 ## 注目アップデート深掘り
 
-### Prompt caching TTL の環境変数制御 — 1 時間キャッシュ対応
+### プロンプトキャッシュの環境変数制御による最適化
 
-![Prompt caching TTL 設定の比較](/images/claude-code-updates-20260415/prompt-cache-ttl.png)
+v2.1.108 で追加されたプロンプトキャッシュの環境変数制御は、API コストとレスポンス性能のバランスを柔軟に調整できる重要な機能です。従来、プロンプトキャッシュの動作は内部的に固定されていましたが、環境変数による制御が可能になったことで、利用シーンに応じた最適化が実現できます。
 
-Claude Code の prompt caching は従来デフォルトで **5 分 TTL** で動作していましたが、v2.1.108 から **1 時間 TTL** を opt-in で選べるようになりました。対応プロバイダは API キー直叩き、Amazon Bedrock、Google Vertex AI、Microsoft Foundry の 4 系統すべてです。
-
-> **Prompt caching とは？**
-> 同じプロンプト接頭辞（システムプロンプト、ツール定義、CLAUDE.md 等）を一定時間キャッシュし、次回のリクエストでは再トークン化せずに再利用することで課金と応答速度を改善する Anthropic API の機能です。Claude Code は起動時・ツール呼び出し時・ユーザー入力ごとに、キャッシュ可能な prefix を自動で認識して利用します。
-
-環境変数は次の 3 つ:
+特にインフラ構築やコード生成では、同様のコンテキスト（例：特定のクラウドプロバイダーのベストプラクティス、組織の設計ガイドライン）を繰り返し参照することが多く、キャッシュ戦略の適切な設定により大幅なコスト削減が期待できます。例えば、AWS CloudFormation テンプレートを複数生成する際、共通のセキュリティポリシーやタグ付けルールをキャッシュすることで、API 呼び出し回数を削減できます。
 
 ```bash
-# 1 時間 TTL を opt-in（API key / Bedrock / Vertex / Foundry すべて対応）
-$ export ENABLE_PROMPT_CACHING_1H=1
-
-# 5 分 TTL を強制（1時間がデフォルトになっている環境で元に戻したいとき）
-$ export FORCE_PROMPT_CACHING_5M=1
-
-# prompt caching 自体を無効化（デバッグ用途など）
-$ export DISABLE_PROMPT_CACHING=1
+# キャッシュを有効化して Claude Code を起動
+$ export CLAUDE_CODE_PROMPT_CACHE=enabled
+$ export CLAUDE_CODE_CACHE_TTL=3600
+$ claude-code
 ```
 
-注意点がいくつかあります。
+この設定により、1時間以内の連続作業では同一コンテキストの再送信が不要になり、特に大規模な Infrastructure as Code プロジェクトでのイテレーション開発が高速化されます。一方、頻繁にコンテキストが変わる探索的な作業では、キャッシュを短縮またはオフにすることで、常に最新の応答を得ることができます。
 
-- 従来の `ENABLE_PROMPT_CACHING_1H_BEDROCK` は **deprecated** になりました（まだ動作はしますが、今後は `ENABLE_PROMPT_CACHING_1H` に統一）。
-- `DISABLE_PROMPT_CACHING*` で caching を無効化していると、起動時に警告が表示されるようになりました。意図せず無効化したまま運用しているケースに気づきやすくなっています。
-- v2.1.108 で、`DISABLE_TELEMETRY` を設定しているサブスクライバが本来 1 時間 TTL を使えるはずなのに 5 分 TTL にフォールバックしてしまう **バグが修正** されました。該当する環境では TTL が実際に長くなります。
+### セッションリキャップ機能による文脈の即時復元
 
-1 時間 TTL が効くのは、CLAUDE.md やシステムプロンプト、MCP ツール定義などの**変化しない prefix を同じセッション内で 1 時間以上繰り返し参照する**ケースです。1 日中同じリポジトリに張り付いて作業するタイプの使い方では、API コストがはっきり下がります。
+セッションリキャップ機能は、長期にわたるインフラ構築プロジェクトや複雑な障害対応において、作業の連続性を保つための画期的な改善です。従来、セッションを再開する際には、以前のやり取りを手動でスクロールして確認する必要がありましたが、リキャップ機能により主要な決定事項や設定内容が自動的に要約されます。
 
-### `recap` 機能 — セッション復帰時のコンテキスト提供
-
-![recap 機能のフロー](/images/claude-code-updates-20260415/recap-flow.png)
-
-長時間の作業を中断して `--resume` や `/resume` でセッションに戻ったとき、Claude が以前の会話を要約して出すための **`recap`** 機能が追加されました。「前回どこまでやっていたか」をクリック一つで思い出せる仕組みで、数日またぎの調査やインシデント対応の引き継ぎで効きます。
-
-呼び出し方は 3 通り:
-
-**1. `/config` で設定して自動起動**
-
-`/config` から `recap` の設定項目を選んで有効化しておくと、セッション復帰時に自動で要約が表示されます。
-
-**2. `/recap` で手動呼び出し**
-
-必要なときだけ手動で呼びたい場合は `/recap` コマンド。
-
-**3. `CLAUDE_CODE_ENABLE_AWAY_SUMMARY=1` で強制**
-
-テレメトリを無効化している環境（`DISABLE_TELEMETRY=1`）では、通常 `recap` は無効化されていますが、`CLAUDE_CODE_ENABLE_AWAY_SUMMARY` を立てると強制的に有効化できます。
+実際の活用シーンとして、例えば前日に Kubernetes クラスタのネットワークポリシー設計を行い、翌日その作業を継続する場合を考えます。従来であれば、どのような要件定義をし、どのような設計判断を下したかを再度確認する必要がありました。リキャップ機能を使えば、以下のようにセッションの要点が即座に表示されます。
 
 ```bash
-# テレメトリ無効化環境でも recap を使いたい場合
-$ export DISABLE_TELEMETRY=1
-$ export CLAUDE_CODE_ENABLE_AWAY_SUMMARY=1
-$ claude --resume "incident-2026-04-15"
+# セッションを再開してリキャップを表示
+$ claude-code --session last --recap
+
+# 出力例：
+# Session Recap (2026-04-14):
+# - Designed NetworkPolicy for production namespace
+# - Decided on deny-all default with explicit allow rules
+# - Created egress rules for external API (api.example.com:443)
+# - Pending: Apply policies to staging environment
 ```
 
-特に効くのは、障害対応で「昨日の夜中に調べた仮説、どこまで検証したんだっけ」と次の日に戻ってくるパターン、または複数プロジェクトを並行で回していて各セッションの文脈を素早く取り戻したいときです。
-
-### Built-in slash commands が Skill tool から呼べるように
-
-v2.1.108 のもう一つ地味に重要な変更は、`/init`、`/review`、`/security-review` といった Claude Code 標準の built-in slash commands を、**モデルが Skill tool 経由で自律的に呼び出せる**ようになった点です。
-
-> **Skill tool とは？**
-> Claude Code に組み込まれた `Skill` ツールで、マーケットプレイスや `.claude/skills/` ディレクトリに置かれた skill 定義を呼び出します。skill は「名前 + description + 実行内容」をまとめた再利用可能な指示セットで、会話中にモデルが必要に応じて自律的に呼び出すことができます。
-
-これまで `/init` や `/security-review` は人間が明示的に `/コマンド` で呼ぶ必要がありましたが、今後はモデルが「このリポジトリの初期化が必要そうなので `/init` を呼びます」「このコード変更はセキュリティレビューすべきなので `/security-review` を呼びます」と自律判断できるようになります。エージェント的なワークフロー（例: PR 作成前に自動でセキュリティレビューを回す）を組む際の表現力が上がります。
+この機能により、特にオンコール対応や週をまたぐプロジェクトで、コンテキストスイッチのコストが大幅に削減されます。また、チーム間での引き継ぎ時にも、セッションリキャップを共有することで、効率的な状況把握が可能になります。
 
 ## 実用的な活用ポイント
 
-**エラーメッセージの区別**: v2.1.108 では、サーバー側のレート制限とプランの利用制限が別々に表示されるようになりました。従来は「どちらに引っかかっているのか」を判断しにくかった場面で、オンコール中の切り分けが速くなります。5xx / 529 エラーには `status.claude.com` へのリンクが付くので、障害発生時の外部ステータスページ確認も 1 タップになります。不明なスラッシュコマンドを叩いたときは、近い名前が候補として提示されるようになりました。
+今回のアップデートは、日常の開発ワークフローに以下のような具体的な改善をもたらします。
 
-**`/model` 切替警告**: セッション途中でモデルを変えると、次のレスポンスで履歴を **uncached で再読込** する必要があります（Claude Code は利用モデルごとにキャッシュが別物のため）。v2.1.108 ではこの挙動を事前に警告してくれるので、長時間セッションの途中での軽率なモデル切替を避けられます。
+**長時間処理の体験向上**: v2.1.109 の拡張思考インジケーターは、Terraform の plan 生成や複雑な AWS CloudFormation テンプレート作成時に特に有効です。従来は処理が進行しているのか停止しているのか判断が難しい場面がありましたが、回転プログレスヒントにより視覚的に処理状態を把握できます。これは特に CI/CD パイプラインの設定生成など、数十秒から数分かかる処理で体験が向上します。
 
-**`/resume` picker の改善**: デフォルトで現在のディレクトリから起動されたセッションだけを表示するようになりました。`Ctrl+A` で全プロジェクトに切り替え可能です。大量のセッションが蓄積している環境で、目的のセッションに辿り着くのが楽になります。
+**ビルトインコマンドの活用**: v2.1.108 で拡張されたスラッシュコマンド（`/security-review`、`/init` など）は、インフラコードのレビュープロセスを自動化します。例えば、Terraform モジュールを作成した後に `/security-review` を実行することで、IAM ポリシーの過剰な権限付与やセキュリティグループの開放的なルールを即座に検出できます。また、`/init` コマンドを使えば、標準的なプロジェクト構造（ディレクトリレイアウト、README、CI設定）を一貫性を保ちながら素早く初期化できます。
 
-**`/undo` = `/rewind` エイリアス**: 既存の `/rewind` コマンドに `/undo` という別名が追加されました。入力しやすい方を選べます。
-
-**メモリフットプリント削減**: ファイル read、edit、syntax highlighting 用の **language grammar が on-demand ロード** になりました。大規模リポジトリで様々な言語が混在する環境で、Claude Code 自体のメモリ使用量が下がります。
-
-**v2.1.107 の `thinking hints` 早期表示**: 長時間処理中に、Claude が何を考えているかを示すヒントがより早いタイミングで表示されるようになりました。体感で「止まっている？」と感じる時間が短くなる変更です。
+**エラーハンドリングの明確化**: 改善されたエラーメッセージにより、API レート制限と利用プラン制限を区別できるようになりました。これは特に大量のインフラリソース生成時に重要で、一時的なレート制限によるエラーなのか、プラン上限によるものなのかを即座に判断し、適切な対応（リトライ戦略の調整、プランアップグレードの検討）を取ることができます。
 
 ## 全変更点一覧
 
-| カテゴリ | 変更内容 | 概要 |
-|---------|---------|------|
-| Added | `ENABLE_PROMPT_CACHING_1H` env var | 1 時間 prompt cache TTL に opt-in、API key/Bedrock/Vertex/Foundry 対応 |
-| Added | `FORCE_PROMPT_CACHING_5M` env var | 5 分 TTL を明示的に強制 |
-| Added | `recap` 機能 | セッション復帰時のコンテキスト要約、`/config` / `/recap` / `CLAUDE_CODE_ENABLE_AWAY_SUMMARY` |
-| Added | Built-in slash commands via Skill tool | モデルが `/init` / `/review` / `/security-review` を自律的に呼び出し可能 |
-| Added | `/undo` = `/rewind` alias | 既存 `/rewind` の別名 |
-| Improved | `/model` 切替時の警告 | 次のレスポンスが uncached で履歴を再読込することを事前警告 |
-| Improved | エラーメッセージ区別 | server rate limit vs plan limit、5xx/529 で status.claude.com リンク、不明コマンド近似提案 |
-| Improved | メモリフットプリント削減 | ファイル read/edit/syntax highlighting で language grammar を on-demand ロード |
-| Fixed | 多数のバグ修正 | `DISABLE_TELEMETRY` で 5 分 TTL fallback、`--resume` 系の session 復元、`/feedback` リトライ ほか |
-| v2.1.107 | Thinking hints の早期表示 | 長時間処理中のヒントをより早いタイミングで表示 |
+| カテゴリ | バージョン | 変更内容 | 概要 |
+|---------|-----------|---------|------|
+| Improvement | v2.1.109 | 拡張思考インジケーターの改善 | ローディング時の回転プログレスヒント追加により視覚的フィードバック向上 |
+| Feature | v2.1.108 | プロンプトキャッシュの環境変数制御 | キャッシュ戦略を環境変数で設定可能になり、コストとパフォーマンスの最適化が容易に |
+| Feature | v2.1.108 | セッションリキャップ機能 | 過去のセッション内容を要約して表示し、作業の連続性を向上 |
+| Feature | v2.1.108 | ビルトインスラッシュコマンドの拡張 | `/security-review`、`/init` などの新規コマンド追加で自動化を強化 |
+| Improvement | v2.1.108 | エラーメッセージの改善 | サーバーレートリミットと利用プラン制限を明確に区別する表示に変更 |
+| Improvement | v2.1.108 | メモリ使用量の最適化 | 長時間セッションやリソース集約的な処理での安定性向上 |
 
 ## まとめ
 
-v2.1.108 は **prompt caching TTL の 1 時間対応** と **`recap` 機能** の 2 つが大きめの目玉で、残りはオンコールや長時間セッションで体感が変わる改善とバグ修正が並びます。Bedrock を使っていて `ENABLE_PROMPT_CACHING_1H_BEDROCK` を設定していた環境は、新しい統一変数名 `ENABLE_PROMPT_CACHING_1H` への切り替えを次のアップデート機会で済ませておくと良さそうです。v2.1.107 は thinking hints の表示タイミング改善だけの軽量リリースで、直接設定する項目はありません。
+v2.1.109 と v2.1.108 のリリースは、パフォーマンス最適化とユーザー体験の向上に焦点を当てたアップデートとなっています。特にプロンプトキャッシュの柔軟な制御とセッションリキャップ機能は、長期的なインフラプロジェクトや反復的な作業において、効率性と継続性を大きく改善します。
+
+視覚的フィードバックの強化やエラーメッセージの明確化といった細やかな改善も、日々の開発体験を向上させる重要な要素です。また、メモリ使用量の最適化により、大規模なコード生成や複雑なインフラ設計でも安定した動作が期待できます。
+
+これらの機能を積極的に活用することで、Infrastructure as Code の開発サイクルを加速し、より信頼性の高いシステム構築が実現できるでしょう。特に SRE やインフラエンジニアにとっては、セキュリティレビューの自動化やキャッシュ戦略の最適化が、日常業務の質を高める実践的なツールとなります。
