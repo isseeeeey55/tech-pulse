@@ -1,202 +1,98 @@
 ---
-title: "【Claude Code】v2.1.110・v2.1.109 リリースノートまとめ"
+title: "【Claude Code】v2.1.110 / v2.1.109 リリースノートまとめ"
 date: 2026-04-16T08:01:53+09:00
-draft: true
-tags: ["claude-code", "tui", "bash", "mcp", "terraform", "iac", "distributed-tracing", "traceparent", "plugin", "doctor", "remote-client", "editor-integration", "timeout", "autocompact", "focus", "aws-xray", "cloudformation", "observability"]
+draft: false
+tags: ["claude-code", "tui", "fullscreen", "focus", "traceparent", "otel", "bash", "mcp", "remote-control", "session-recap"]
 categories: ["Claude Code Updates"]
-summary: "v2.1.110・v2.1.109 のClaude Codeリリースノートまとめ"
+summary: "v2.1.110 / v2.1.109 の変更点を解説します。`/tui fullscreen` でちらつきのない全画面モード、`/focus` コマンド新設、SDK/headless での TRACEPARENT/TRACESTATE 対応、Bash tool の最大 timeout 強制、Session recap の telemetry 無効環境対応、Remote Control からの `/autocompact` 等の呼び出しなど。"
 ---
+
+![](/images/claude-code-updates-20260416/header.png)
 
 ## はじめに
 
-2026年4月16日、Claude Codeの2つのバージョンがリリースされました。v2.1.110では大規模なTUI（ターミナルUI）改善とMCPサーバー管理の強化が、v2.1.109では思考プロセスの可視化改善が行われています。
+Claude Code の **v2.1.110** が昨日夜（JST）にリリースされました。目玉は `/tui fullscreen` による flicker-free レンダリングの追加と、`Ctrl+O` の役割分離に伴う **`/focus` コマンドの新設** です。加えて SDK / headless セッションで **`TRACEPARENT` / `TRACESTATE` 環境変数**を使った分散トレース連携が可能になり、SRE 側の可観測性基盤と Claude Code の自動化ワークフローが一本でつながるようになりました。
 
-v2.1.110の主な変更点は以下の通りです：
-
-- **TUIフルスクリーンモード**の追加（`/tui`コマンド）
-- **Bash実行タイムアウト**の強制化による安全性向上
-- **MCPサーバー管理機能**の拡充（`/plugin`強化、`/doctor`改善）
-- **リモートクライアント対応**の拡張
-- **分散トレーシング対応**（TRACEPARENT/TRACESTATE）
-
-v2.1.109では、拡張思考インジケーターに回転プログレスヒントが追加され、長時間処理の進捗把握が容易になりました。
-
-特に運用エンジニアにとって重要なのは、Bash実行の安全性向上とMCP接続の安定性改善です。これにより、自動化スクリプトの暴走防止と長時間実行タスクの信頼性が大きく向上しています。
+一方で **v2.1.109** は「拡張思考インジケーターに rotating progress hint を追加」の 1 行だけの軽量リリースで、中身は v2.1.110 がほぼすべてです。
 
 ## 注目アップデート深掘り
 
-### TUIフルスクリーンモードによる開発体験の革新
+### `/tui fullscreen` — ちらつきのないフルスクリーンモード
 
-今回追加された`/tui`コマンドは、Claude Codeのターミナルインターフェースをフルスクリーンモードで起動する機能です。従来のインラインモードではターミナルのスクロールやちらつきが発生し、特にIaCコードのような大規模な生成物を扱う際に集中力が削がれる問題がありました。
+![/tui fullscreen の Before/After](/images/claude-code-updates-20260416/tui-fullscreen.png)
 
-**なぜ重要なのか**
+v2.1.110 で **`/tui` コマンド**と **`tui` 設定**が追加されました。会話の途中で `/tui fullscreen` と入力すると、同じセッションを維持したまま flicker-free のフルスクリーン表示に切り替わります。
 
-Infrastructure as Code（Terraform、AWS CDK、Pulumi等）の開発では、数百行にわたるリソース定義を生成・レビューすることが日常的です。従来のモードでは画面のスクロールとClaudeの出力が混在し、差分確認やコメントの見落としが発生しやすい状況でした。フルスクリーンモードでは専用の画面領域で作業できるため、コードレビューの品質が向上します。
+これまでのインラインモードは、長文出力やツール実行が重なるとターミナルのスクロールと再描画が頻繁に発生し、特に大きなリファクタリングや多数のファイル編集を伴う作業で視線が散る問題がありました。フルスクリーンモードではこのちらつきが解消されます。
 
-**具体的な使い方**
+関連する設定として:
 
-```bash
-# フルスクリーンモードで起動
-$ claude-code /tui
+- **`autoScrollEnabled`**（`/config` から設定）: fullscreen mode での会話 auto-scroll を無効化。自分でスクロールしながら読みたい場面で便利
+- **`Ctrl+G`**: 外部エディタで開くときに、Claude の前回レスポンスを**コメントとして含める**オプション（`/config` で有効化）
 
-# または既存セッションから切り替え
-# セッション中に /tui と入力
-```
+また、v2.1.110 で `Ctrl+O` の役割が整理されました。これまで「normal / verbose transcript の切り替え + focus view トグル」という複合的な働きをしていましたが、**`Ctrl+O` は transcript モードの切り替えだけ**に絞られ、focus view は新しく追加された **`/focus` コマンド**で切り替える形に分離されました。キーボードショートカットを複雑にしていたユーザーには嬉しい整理です。
 
-フルスクリーンモード内では、Claudeの提案内容が専用ペインに表示され、ちらつきなしで操作できます。さらに、`/config`で外部エディタ連携を有効化すると、生成されたコードが自動的にエディタで開き、Claudeのコメントも含めて確認できます：
+### TRACEPARENT / TRACESTATE — SDK/headless セッションで分散トレース連携
 
-```bash
-# 外部エディタ連携を有効化
-/config set editor.enabled true
-/config set editor.command "code --wait"
-```
+![TRACEPARENT / TRACESTATE 連携の流れ](/images/claude-code-updates-20260416/traceparent-flow.png)
 
-この設定により、Terraformのリソース定義を生成した際、VS Codeで開かれたファイルにClaudeの意図や注意点がコメントとして記載されるため、レビュー時の理解が深まります。
+v2.1.110 で SDK / headless セッションが **`TRACEPARENT` / `TRACESTATE` 環境変数を読み込む**ようになりました。これは W3C Trace Context 仕様のヘッダーと同じ形式で、親トレースから引き継いだ trace context を Claude Code のセッションに紐付けるためのものです。
 
-**Before/After**
+> **W3C Trace Context とは？**
+> 分散トレーシングでサービス間の trace context を伝搬するための W3C 標準仕様です。`traceparent` には trace ID / parent span ID / sampling flag が、`tracestate` にはベンダー固有の追加情報が入ります。OpenTelemetry、AWS X-Ray、Datadog APM などほぼ全ての APM ツールがこの形式を相互運用できます。
 
-- **Before**: ターミナルスクロールとClaudeの出力が混在し、300行のTerraformコードのレビューに10分以上かかる
-- **After**: フルスクリーンモードで専用領域にコードが表示され、外部エディタでコメント付きレビューが可能。レビュー時間が半分に短縮
+何が嬉しいかというと、CI/CD パイプラインや Lambda 実行の中から Claude Code の SDK / headless モードを呼ぶとき、**親の trace にそのまま Claude Code のスパンを紐付けられる**点です。例えば、GitHub Actions の中で Claude Code を headless で実行して自動 PR レビューを走らせている場合、ワークフロー側で採番した trace context を環境変数で渡せば、APM 上で「PR レビュージョブ全体 → Claude Code セッション → 実行ツール」の順にフラットにトレースがつながります。
 
-### Bash実行タイムアウト強制化による運用安全性の向上
-
-v2.1.110では、Bash実行時のタイムアウトが強制化されました。これは一見地味な変更に見えますが、自動化スクリプトの暴走を防ぐ重要な安全装置です。
-
-**なぜこの変更が重要なのか**
-
-SRE業務では、ログ解析、メトリクス集計、障害調査など、様々な自動化スクリプトをClaude Codeに生成させることがあります。従来は無限ループや想定外の大量データ処理により、スクリプトが暴走してシステムリソースを圧迫するリスクがありました。特に本番環境に近いステージング環境で実行する際、このリスクは看過できません。
-
-**具体的な動作**
-
-タイムアウトはデフォルトで設定されており、長時間実行が必要な場合は明示的に延長できます：
+使い方の基本形:
 
 ```bash
-# デフォルトタイムアウト（通常300秒）で実行
-$ claude-code --execute script.sh
+# OpenTelemetry SDK 等で採番した context を環境変数経由で渡す
+$ export TRACEPARENT="00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"
+$ export TRACESTATE="mycompany=span_attrs"
 
-# タイムアウトを延長（600秒）
-$ claude-code --execute script.sh --timeout 600
-
-# 無制限（非推奨、開発環境のみ）
-$ claude-code --execute script.sh --timeout 0
+# SDK / headless セッションを起動
+$ claude --print "このPRの差分をレビューして"
 ```
 
-また、スクリプト内でタイムアウト値を確認・調整する仕組みも提供されています：
-
-```bash
-# Claude Code内でのスクリプト生成例
-# Claudeに以下のように依頼
-"CloudWatch Logsから過去1時間のエラーログを集計するスクリプトを生成してください。
-タイムアウトは600秒に設定してください。"
-
-# 生成されるスクリプトには自動的にタイムアウトヒントが付与される
-#!/bin/bash
-# CLAUDE_TIMEOUT=600
-# AWS CloudWatch Logsからエラーログを集計
-aws logs filter-log-events \
-  --log-group-name /aws/lambda/my-function \
-  --start-time $(($(date +%s) - 3600))000 \
-  --filter-pattern "ERROR"
-```
-
-**実運用での効果**
-
-- 障害調査中に生成したログ解析スクリプトが暴走し、踏み台サーバーのCPUを圧迫する事故を防止
-- CI/CDパイプライン内でClaude生成スクリプトを使用する際、タイムアウトによりビルド全体の遅延を回避
-- 新人エンジニアが生成したスクリプトの安全性を担保（レビュー前の暴走リスク低減）
-
-> **Note:** Claude Codeは外部ツールと連携するためのMCP（Model Context Protocol）をサポートしています。MCPサーバーを通じてAWS CLI、kubectl、Terraformなどを安全に実行できます。
+対象は **SDK と headless（`-p`/`--print`）セッション**で、通常の対話モードではありません。CI 自動化寄りの機能です。
 
 ## 実用的な活用ポイント
 
-### 日常の開発ワークフローへの影響
+**`/plugin` Installed タブの整理**: プラグイン一覧で「要注意（更新あり等）」と「お気に入り」が上部にまとまるようになり、`f` キーで選択中の項目をお気に入り登録できます。インストール済みプラグインが多いユーザーでも重要な項目を見失いません。
 
-今回のアップデートは、特にインフラコードのレビュープロセスを変革します。`/tui`によるフルスクリーンモードと外部エディタ連携により、Terraformモジュールのリファクタリングや新規リソース追加時のレビューが劇的に効率化されます。従来は生成されたコードをコピー＆ペーストしてエディタで確認する手間がありましたが、自動的にエディタで開かれるため、シームレスなワークフローが実現します。
+**`/doctor` で MCP 設定の重複検出**: 同じ MCP サーバーが複数の config scope（プロジェクト / ユーザー / システム）で異なる endpoint で定義されているとき、警告を出してくれるようになりました。MCP の設定スコープが増えてくると混線しやすいポイントなので、ここで事前に検出できるのは助かります。
 
-Bash実行タイムアウトの強制化により、障害対応時のスクリプト実行がより安全になります。深夜のインシデント対応で焦っている状況でも、暴走によるセカンダリ障害のリスクが低減されるため、精神的な負担も軽減されます。
+**Bash tool の max timeout 強制**: 従来、Bash tool に任意の大きな timeout 値を渡せてしまっていたのが、**ドキュメントに記載された上限を強制するように**なりました。暴走スクリプトで時間を浪費するリスクが小さくなります。既存の合理的な timeout 設定には影響しません。
 
-### すぐに試せるTips
+**Session recap が Bedrock / Vertex / Foundry でも有効**: v2.1.108 で追加された `recap` 機能（セッション復帰時に前回のコンテキストを要約表示）が、telemetry 無効化環境でも使えるようになりました。具体的には Bedrock / Vertex / Foundry ユーザーと、`DISABLE_TELEMETRY` を設定しているユーザー向けの対応拡張です。opt out は `/config` か `CLAUDE_CODE_ENABLE_AWAY_SUMMARY=0`。
 
-**Tip 1: フルスクリーンモード＋外部エディタでIaCレビュー効率化**
+**Remote Control 対応拡張**: モバイル / Web クライアントから `/autocompact`、`/context`、`/exit`、`/reload-plugins` が実行可能になりました。出先で動いているセッションの context を圧縮したり、プラグインを再読み込みしたりするときの選択肢が増えます。
 
-```bash
-# VS Codeを外部エディタとして設定
-$ claude-code
-> /config set editor.enabled true
-> /config set editor.command "code --wait"
+**Write tool: IDE diff 編集の通知**: IDE 側の diff ビューでユーザーが提案内容を編集して accept したとき、**その編集内容が Claude に通知される**ようになりました。これまでは「accept ボタン押されたかどうか」しか見えていなかったので、エージェント的な挙動の精度が上がります。
 
-# フルスクリーンモードで起動
-> /tui
-
-# Terraformコードを生成
-> "AWS ECS Fargateのサービス定義をTerraformで生成してください"
-# → 自動的にVS Codeでファイルが開き、Claudeのコメント付きでレビュー可能
-```
-
-**Tip 2: MCP接続の健全性チェック**
-
-新しい`/doctor`コマンドで、MCPサーバーの重複定義や接続問題を早期発見できます：
-
-```bash
-$ claude-code
-> /doctor
-
-# 出力例
-# ✓ MCP server 'aws-cli' is responding
-# ⚠ MCP server 'kubectl' is defined twice in config
-# ✗ MCP server 'terraform' connection timeout
-```
-
-これにより、プロジェクト開始前に環境の健全性を確認し、作業中のトラブルを防止できます。
-
-**Tip 3: リモートクライアントで緊急対応**
-
-リモートクライアント対応が拡張され、`/autocompact`などのコマンドがモバイルやWebクライアントから実行可能になりました。外出先から緊急の設定変更が必要な場合、スマートフォンでもClaude Codeにアクセスし、必要な操作を実行できます。
-
-### SRE/インフラエンジニアの視点での活用シーン
-
-**シーン1: インシデント対応の自動化**
-
-障害発生時、CloudWatch LogsやDatadogのメトリクスを解析するスクリプトをClaude Codeに生成させる際、タイムアウト保護により安全に実行できます。分散トレーシング対応（TRACEPARENT/TRACESTATE）により、AWS X-RayやJaegerと連携し、Claude Codeが生成したスクリプトの実行トレースを可視化できるため、インシデント後のポストモーテムで詳細な分析が可能です。
-
-**シーン2: マルチクラウド環境の統合管理**
-
-複数のMCPサーバー（AWS CLI、gcloud、az、kubectl）を統合管理する際、`/plugin`の依存関係自動インストール機能により、セットアップ時間が大幅に短縮されます。新しいチームメンバーのオンボーディング時、環境構築手順が簡素化され、初日からClaude Codeを活用した開発が可能になります。
+**主なバグ修正**:
+- MCP tool call が SSE/HTTP transport でサーバー接続が切れたとき無限 hang する問題
+- non-streaming fallback のリトライで API 到達不可時に数分 hang する問題
+- focus mode で session recap や local slash-command 出力が表示されない問題
+- fullscreen でテキスト選択中にツール実行すると CPU 使用率が高騰する問題
+- `PermissionRequest` hook の `updatedInput` が `permissions.deny` ルールで再チェックされない問題（セキュリティ関連）
+- Open in editor のコマンドインジェクション対策（セキュリティ強化）
 
 ## 全変更点一覧
 
-### v2.1.110
-
 | カテゴリ | 変更内容 | 概要 |
 |---------|---------|------|
-| Feature | TUIフルスクリーンモード追加 | `/tui`コマンドでちらつきなしの専用UI起動。IaCレビュー効率化 |
-| Feature | `/focus`コマンド追加 | 特定ファイル/ディレクトリに作業範囲を限定。大規模プロジェクトでの集中力向上 |
-| Feature | 分散トレーシング対応 | TRACEPARENT/TRACESTATE環境変数サポート。AWS X-Ray等と連携可能 |
-| Improvement | `/plugin`コマンド強化 | 依存関係の自動インストール。MCPサーバー管理の手作業削減 |
-| Improvement | `/doctor`コマンド改善 | MCPサーバー重複定義の警告機能追加。設定ミスの早期発見 |
-| Improvement | リモートクライアント対応拡張 | `/autocompact`等がモバイル/Webから操作可能。緊急対応の柔軟性向上 |
-| Improvement | 外部エディタ連携強化 | 生成コードをコメント付きでエディタに自動展開。レビュー品質向上 |
-| Fix | Bash実行タイムアウト強制化 | スクリプト暴走の防止。運用自動化の安全性向上 |
-| Fix | MCP接続ドロップ時のハング修正 | 長時間実行タスクの信頼性向上。ログ解析等の安定化 |
-| Fix | TUI描画のちらつき解消 | フルスクリーンモードでの視認性改善 |
-
-### v2.1.109
-
-| カテゴリ | 変更内容 | 概要 |
-|---------|---------|------|
-| Improvement | 拡張思考インジケーター改善 | 回転プログレスヒント追加。長時間処理の進捗把握が容易に |
-| Improvement | UI/UXフィードバック向上 | コード生成・問題解決時の視覚的フィードバック強化 |
+| Added (v2.1.110) | `/tui fullscreen` | flicker-free のフルスクリーンモード。`tui` 設定も追加 |
+| Added (v2.1.110) | `/focus` コマンド | focus view の切り替えを `Ctrl+O` から分離 |
+| Added (v2.1.110) | `Ctrl+G` で前回レスポンスをコメント化 | 外部エディタに Claude のコメントを含めて展開（`/config` で有効化） |
+| Added (v2.1.110) | `TRACEPARENT` / `TRACESTATE` 対応 | SDK / headless セッションで W3C Trace Context 連携 |
+| Improved (v2.1.110) | `/doctor` で MCP 重複設定警告 | 複数の config scope で異なる endpoint を警告 |
+| Improved (v2.1.110) | Remote Control 対応拡張 | `/autocompact`, `/context`, `/exit`, `/reload-plugins` が利用可能 |
+| Improved (v2.1.110) | Bash tool の max timeout 強制 | 任意の大きな timeout 値を弾く |
+| Improved (v2.1.110) | Session recap を telemetry 無効環境でも有効化 | Bedrock / Vertex / Foundry / `DISABLE_TELEMETRY` ユーザー対応 |
+| Improved (v2.1.109) | 拡張思考インジケーターに rotating progress hint | 長時間処理中の進捗表現を改善 |
+| Fixed (v2.1.110) | セキュリティ・バグ修正 多数 | MCP hang、non-streaming fallback、`PermissionRequest` hook の再チェック、コマンドインジェクション対策 ほか |
 
 ## まとめ
 
-今回のv2.1.110とv2.1.109のリリースは、Claude Codeの**開発体験と運用安全性**を大きく向上させるアップデートです。
-
-特にv2.1.110のTUIフルスクリーンモードは、Infrastructure as Codeの開発ワークフローを革新する機能であり、外部エディタ連携と組み合わせることで、コードレビューの質と速度が飛躍的に向上します。Bash実行タイムアウトの強制化は、自動化スクリプトの暴走リスクを低減し、本番環境に近い環境での安全な実行を担保します。
-
-MCPサーバー管理の強化（`/plugin`、`/doctor`）は、複雑なツールチェーンを扱うSREチームにとって、環境構築とトラブルシューティングの負担を大幅に軽減します。分散トレーシング対応により、Observabilityの観点からもClaude Codeが生成したスクリプトの動作を詳細に追跡できるようになりました。
-
-v2.1.109の思考インジケーター改善は地味に見えますが、CloudFormationやTerraformの複雑なスタック生成時に「処理が止まっているのか、進行中なのか」を把握できるため、ユーザー体験が大きく改善されています。
-
-全体として、今回のリリースは「実運用での信頼性」と「開発者の生産性」のバランスを重視した成熟したアップデートと言えます。特にインフラエンジニアやSREチームにとって、日常業務の質を向上させる実用的な改善が多く含まれています。
-
-まだフルスクリーンモードや外部エディタ連携を試していない方は、ぜひ今回の機能を活用してみてください。IaCコードのレビュー時間が半減し、より安全な自動化が実現できるはずです。
+v2.1.110 は体験面の改善と CI/CD 連携寄りの機能追加が中心です。目玉は `/tui fullscreen` のフルスクリーン表示と `TRACEPARENT` / `TRACESTATE` 対応の 2 つで、前者は普段使いのちらつきを取る純粋な UX 改善、後者は CI/CD や Lambda 内で Claude Code を headless 実行しているチーム向けの可観測性強化です。Session recap の対応環境拡張（Bedrock / Vertex / Foundry）と、MCP 設定の重複検出（`/doctor`）も、実運用で地味に効く改善です。v2.1.109 は単発の軽量リリースで、`/tui fullscreen` と合わせて progress hint が自然に効いてきます。
