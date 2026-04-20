@@ -1,252 +1,130 @@
 ---
 title: "【Claude Code】v2.1.116 リリースノートまとめ"
 date: 2026-04-21T08:02:01+09:00
-draft: true
-tags: ["claude-code", "mcp", "performance", "security", "bash", "terraform", "infrastructure-as-code", "rate-limiting", "session-management", "plugins", "sre", "automation"]
+draft: false
+tags: ["claude-code", "mcp", "resume", "hooks"]
 categories: ["Claude Code Updates"]
-summary: "v2.1.116 のClaude Codeリリースノートまとめ"
+summary: "v2.1.116 の `/resume` 大規模セッション高速化、MCP stdio 起動の最適化、sandbox の dangerous-path ガード修正などを解説"
 ---
+
+![Claude Code v2.1.116 リリースノートまとめ](/images/claude-code-updates-20260421/header.png)
 
 ## はじめに
 
-Claude Code v2.1.116 がリリースされました。本バージョンは、大規模プロジェクトにおける開発体験の向上とエージェント実行の安定性・セキュリティ強化を中心としたアップデートです。
+Claude Code v2.1.116 がリリースされました。目立つ変更は `/resume` の大規模セッション高速化（40MB 超で最大 67%）と、MCP stdio サーバーの起動時間短縮です。そのほか、thinking スピナー、`/config` 検索、`/doctor` の応答中実行、plugin の依存関係自動インストールといった UX 系の改善と、`rm`/`rmdir` の dangerous-path チェックが sandbox auto-allow でバイパスされていた問題の修正が入っています。
 
-主な変更点は以下の通りです：
-
-- **大規模セッション再開の高速化**：最大67%の速度向上を達成し、複数のMCPサーバー起動時の効率も改善
-- **UI/UX改善**：ターミナルスクロール、思考プロセスの可視化、設定検索機能の強化
-- **エージェント実行の信頼性向上**：Bashツールでのレート制限自動検知、プラグインの自動依存関係インストール
-- **セキュリティ強化**：危険なパス操作（ルートディレクトリやホームディレクトリの削除など）に対する厳格な制限
-
-特にインフラコード管理や運用自動化を行うSREエンジニアにとって、セッション再開の高速化とセキュリティ強化は実務上の大きなメリットとなります。
+バグ修正の割合がやや多く、機能追加というより既存機能の整備・安全性向上に寄ったリリースです。
 
 ## 注目アップデート深掘り
 
-### 大規模セッション再開の最大67%高速化
+### `/resume` の大規模セッション高速化
 
-複雑なインフラストラクチャコードを扱う場合、セッション内のコンテキストは膨大になります。Terraform で数十のリソースを定義したり、Kubernetes のマニフェストを複数管理したりする際、一度セッションを閉じて再開するたびに待ち時間が発生していました。
+![/resume の40MB+セッション高速化と dead-fork 処理改善](/images/claude-code-updates-20260421/resume-speedup.png)
 
-今回のアップデートでは、セッション再開処理が最適化され、最大67%の高速化を実現しています。これは以下のような技術的改善によるものです：
+`/resume` で過去のセッションを再開するとき、40MB を超えるような大規模セッションで最大 67% 高速化しました。同時に、過去の会話履歴に含まれる dead-fork エントリ（途中で分岐して放棄された会話ブランチの痕跡）の処理効率も改善されています。
 
-- **セッション状態の差分読み込み**：前回のセッション状態をキャッシュし、変更があった部分のみを再読み込み
-- **MCP サーバー起動の並列化**：複数の MCP サーバーを順次ではなく並列で起動することで、起動時間を大幅に短縮
-- **メモリ効率の改善**：不要なメタデータを削除し、必要最小限のコンテキストのみをロード
+実際に重たくなる場面は、長時間作業した日の会話を後日 `/resume` するとき、あるいは Terraform 全面改修のような大きなリポジトリで複数ターンを重ねた後です。以前はロードに数秒〜数十秒かかっていた規模でも、体感でストレスが減るレベルになっています。
 
-> **Note:** MCP (Model Context Protocol) は、外部ツールやデータソースを Claude に接続するためのプロトコルです。複数の MCP サーバーを利用することで、AWS CLI、kubectl、データベースクエリなど多様なツールを統合できます。
+関連して、`/resume` が大きなセッションファイルで無言のまま空の会話を表示する不具合（ロードエラーを報告しない）も修正されました。これまで「`/resume` したのに何も出てこない」状態に遭遇していた場合、今回の更新で原因が表示されるようになります。
 
-実務での効果を具体例で示します。例えば、AWS 環境の大規模な Terraform プロジェクト（100以上のリソース定義、複数のモジュール参照）でセッションを再開する場合：
+また、`/branch` が 50MB 超のトランスクリプトを拒否していた問題も解消されています。
 
-**Before（v2.1.115以前）**
-- セッション再開時間：約 15秒
-- 複数 MCP サーバー（aws-cli、terraform、kubectl）起動：約 8秒
-- 合計待ち時間：約 23秒
+### MCP stdio サーバー起動の最適化
 
-**After（v2.1.116）**
-- セッション再開時間：約 5秒（67%削減）
-- 複数 MCP サーバー起動：約 3秒（並列化により62%削減）
-- 合計待ち時間：約 8秒
+複数の stdio ベースの MCP サーバーを設定している環境で、起動が速くなりました。仕組みとしては、起動時に一律で実行していた `resources/templates/list` の呼び出しを、最初の `@`-mention が発生するタイミングまで遅延する形に変更されています。
 
-朝の作業開始時や、ランチ後の作業再開時にこの差は顕著に体感できます。特に IaC の設計レビュー時に頻繁にセッションを切り替える場合、1日あたり数分の時間短縮につながります。
-
-### 危険なパス操作の厳格化によるセキュリティ強化
-
-自動化ツールにおいて最も危険な操作の一つが、意図しないファイル削除です。特にエージェント型ツールでは、AI が生成したコマンドが予期せぬ動作をする可能性があり、慎重な制御が必要です。
-
-今回のアップデートでは、以下のような危険なパス操作に対する保護が強化されました：
-
-- ルートディレクトリ（`/`）の削除操作
-- ホームディレクトリ（`$HOME`、`~`）の削除操作
-- システムディレクトリ（`/usr`、`/etc`、`/var` など）への書き込み
-- 相対パスによる上位ディレクトリへの不正アクセス（`../../` のような操作）
-
-具体的な動作例を見てみましょう：
-
-```bash
-# Claude が誤って危険なコマンドを提案した場合
-$ rm -rf /tmp/myproject/../../../
-
-# v2.1.116 では以下のような警告とブロックが発生
-⚠️  Dangerous path operation detected
-Path traversal detected: /tmp/myproject/../../../
-This operation would affect: /
-Operation blocked for safety
-
-Would you like to:
-1. Specify the exact directory to remove
-2. Review the path and try again
-3. Cancel this operation
-```
-
-これにより、以下のような実務シナリオでの事故を防止できます：
-
-**シナリオ1：クリーンアップスクリプトの暴走防止**
-CI/CD パイプラインで一時ファイルをクリーンアップする際、パス計算ミスで本番データを削除してしまうリスクを軽減します。
-
-```python
-# Python スクリプトでの削除操作も保護される
-import os
-import shutil
-
-# 意図せず広範囲を削除しようとした場合
-temp_dir = os.getenv('TEMP_DIR', '/tmp')
-# 環境変数が空の場合、'/' になってしまう危険性
-if not temp_dir or temp_dir == '/':
-    # Claude Code が警告を発し、実行前に停止
-    shutil.rmtree(temp_dir)  # ブロックされる
-```
-
-**シナリオ2：Terraform 実行時の保護**
-Infrastructure as Code の実行中に、状態ファイルの不整合により予期せぬリソース削除が発生するケースでも、ローカルファイルシステムへの影響を最小化できます。
-
-この機能強化により、エージェント型ツールの自律性と安全性のバランスが改善され、より安心して自動化タスクを任せられるようになりました。
-
-### Bash ツールでのレート制限自動検知
-
-API を多用する運用スクリプトを開発する際、レート制限への対処は常に考慮すべき課題です。AWS API、GitHub API、Datadog API など、多くの外部サービスはレート制限を設けており、これを超えると一時的にサービスが利用できなくなります。
-
-v2.1.116 では、Bash ツール実行時にレート制限エラー（HTTP 429、`Too Many Requests` など）を自動的に検知し、適切な対処方法を提案する機能が追加されました。
-
-```bash
-# AWS CLI で大量の API コールを実行する場合
-$ for i in {1..1000}; do
-    aws ec2 describe-instances --region us-east-1
-  done
-
-# レート制限に達すると Claude が自動検知
-⚠️  Rate limit detected (429 Too Many Requests)
-API: AWS EC2 DescribeInstances
-Current rate: ~50 requests/sec
-AWS limit: 20 requests/sec
-
-Suggested improvements:
-1. Add exponential backoff with jitter
-2. Implement request batching
-3. Use pagination instead of polling
-4. Cache responses for 30 seconds
-
-Would you like me to refactor this script with retry logic?
-```
-
-Claude は検知後、自動的にリトライロジックを組み込んだコードを提案します：
-
-```bash
-# リファクタリング後のスクリプト例
-$ cat improved_script.sh
-#!/bin/bash
-
-MAX_RETRIES=5
-INITIAL_BACKOFF=1
-
-retry_with_backoff() {
-  local retries=0
-  local backoff=$INITIAL_BACKOFF
-  
-  while [ $retries -lt $MAX_RETRIES ]; do
-    if "$@"; then
-      return 0
-    fi
-    
-    local exit_code=$?
-    if [ $exit_code -eq 60 ]; then  # Rate limit error
-      echo "Rate limited. Waiting ${backoff}s before retry..."
-      sleep $backoff
-      backoff=$((backoff * 2))
-      retries=$((retries + 1))
-    else
-      return $exit_code
-    fi
-  done
-  
-  echo "Max retries exceeded"
-  return 1
+```jsonc
+// .mcp.json で複数サーバーを登録している例
+{
+  "mcpServers": {
+    "github": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-github"] },
+    "filesystem": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path"] },
+    "fetch": { "command": "uvx", "args": ["mcp-server-fetch"] }
+  }
 }
-
-# 元のコマンドをリトライロジックでラップ
-for i in {1..1000}; do
-  retry_with_backoff aws ec2 describe-instances --region us-east-1
-done
 ```
 
-この機能は、Lambda 関数や Step Functions のステートマシン開発時に特に有用です。本番環境でレート制限エラーが発生してから慌てて対処するのではなく、開発段階で堅牢なエラーハンドリングを組み込めます。
+このように 3 つ以上の stdio サーバーを使っているプロジェクトでは起動時の待ち時間が目に見えて短くなります。templates リストは `@` で参照するまで取得されないため、普段 resources を使わない運用なら実質コストゼロです。
+
+> **MCP stdio サーバーとは？**
+> MCP (Model Context Protocol) のトランスポートの一つで、標準入出力でプロセス間通信する方式です。`npx` や `uvx` で起動するローカルコマンド型 MCP サーバーの大半はこれに該当します。対して SSE / HTTP 型は常駐する HTTP サーバーに接続する方式です。
+
+### sandbox auto-allow の dangerous-path チェック修正
+
+セキュリティ関連の修正です。sandbox 下で `Bash` ツールの auto-allow が有効な場合に、`rm` / `rmdir` の dangerous-path safety check がバイパスされていた不具合が直りました。
+
+対象となる "dangerous path" は以下です。
+
+- `/`（ルート）
+- `$HOME`（ホームディレクトリ）
+- その他のクリティカルなシステムディレクトリ
+
+これまでも Claude Code 本体にはこのガードがありましたが、sandbox auto-allow 経路では prompt なしで通過する実装パスが存在していました。今回の修正で、auto-allow でもガードは外れず、必ずプロンプトが出るか拒否されるようになります。
+
+sandbox + auto-allow でエージェントを長時間走らせる運用（夜間バッチ的な使い方）をしていた場合、このパッチを当てるまでは未確認の `rm` が通る可能性が僅かに残っていたことになります。`claude --version` で 2.1.116 以上になっているか確認しておくのが安全です。
+
+### Bash ツールが `gh` の GitHub API rate limit を検知
+
+Bash ツールが、`gh` コマンドが GitHub API のレート制限に当たったことを検知してヒントを出すようになりました。エージェントがリトライループに入る代わりに、バックオフなどの対処を選びやすくなります。
+
+```bash
+$ gh api repos/org/big-monorepo/issues?state=all --paginate
+# ... 中略 ...
+gh: API rate limit exceeded for user ID xxxxxxxx
+```
+
+このようなエラーが返ったとき、Claude Code 側で「rate limit に当たっている」とメタ情報として取り込まれ、次のアクションをリトライではなく待機や別アプローチに切り替える判断材料になります。対象は現状 `gh` コマンドで、一般的な HTTP 429 すべてを拾う機能ではない点に注意してください。
 
 ## 実用的な活用ポイント
 
-### 日常の開発ワークフローへの影響
+### すぐに効く改善
 
-今回のアップデートは、以下のような日常的な開発シーンで効果を発揮します：
+- **`/doctor` が Claude の応答中でも開けるように**: 何か長めのタスクを投げている最中でも、別ウィンドウや別セッションに切り替えずに `/doctor` を打てます。トラブル調査時のターン待ちが消えます。
+- **`/config` 検索がオプション値にもマッチ**: 設定名だけでなく値でも検索できるので、「vim」と打てば Editor mode の設定が出ます。「どのキーだっけ」を探す時間が減ります。
+- **thinking スピナーのインライン進捗表示**: 「still thinking」「thinking more」「almost done thinking」が 1 行内で更新される形に変わり、画面のスクロール量が減ります。
+- **VS Code / Cursor / Windsurf のフルスクリーンスクロール**: `/terminal-setup` を流すとエディタ側の scroll sensitivity も設定してくれます。スクロールのもたつきが消える環境があります。
 
-**朝の作業開始時の効率化**
-前日の大規模セッション（複雑な Kubernetes マニフェスト設計やマルチリージョン Terraform 構成など）を再開する際、従来は数十秒待つ必要がありましたが、現在は数秒で作業を再開できます。特に複数の MCP サーバー（kubectl、helm、aws-cli など）を統合している場合、起動待ち時間が大幅に短縮されます。
+### Plugin 使いへの地味に嬉しい変更
 
-**障害対応中のクイック診断**
-`/doctor` コマンドが応答待ち中でも実行可能になったことで、AWS API でログを取得している最中に、別のクイック診断（ネットワーク疎通確認、設定ファイル検証など）を並行して実行できます。障害対応時の数分の短縮は、MTTR（平均復旧時間）の大幅な改善につながります。
+`/reload-plugins` とバックグラウンドでの plugin auto-update が、追加済みマーケットプレイスから欠けている依存関係を自動で取りにいくようになりました。これまでは plugin を差し替えたときに依存が足りず、手で `marketplace install` し直していたケースで、その手間がなくなります。
 
-**安全な自動化スクリプト開発**
-危険なパス操作の保護により、クリーンアップスクリプトやデプロイスクリプトの開発時に、テスト段階で潜在的な危険性を発見できます。特に CI/CD パイプラインに組み込むスクリプトの品質向上に貢献します。
+### Agent 主役運用への影響
 
-### すぐに試せる Tips
-
-**Tip 1: 設定検索の活用**
-設定項目が増えた場合、改善された検索機能を使って素早く目的の設定を見つけられます：
-
-```bash
-# 設定画面で検索キーワードを入力
-"mcp server" → MCP サーバー関連設定のみ表示
-"security" → セキュリティ関連設定のみ表示
-"terminal" → ターミナル表示設定のみ表示
-```
-
-**Tip 2: 思考プロセスの可視化を活用**
-複雑な IaC 設計時、Claude がどのような思考プロセスで設計を進めているかをリアルタイムで確認できます。進捗が見えることで、長時間かかる処理でも安心して待てます。
-
-**Tip 3: プラグイン自動更新の確認**
-バックグラウンドで自動更新されるプラグインの状態を定期的に確認し、最新の機能を活用しましょう：
-
-```bash
-# プラグイン状態の確認（仮想的なコマンド例）
-$ claude-code plugins status
-✓ terraform-helper: v1.2.3 (updated 2 days ago)
-✓ kubectl-assistant: v2.0.1 (updated 1 hour ago)
-✓ aws-iac-patterns: v0.9.5 (updated 3 days ago)
-```
-
-### SRE/インフラエンジニアの視点での活用シーン
-
-**マルチクラウド環境の管理**
-AWS、GCP、Azure など複数のクラウドプロバイダーを管理する場合、各クラウド用の MCP サーバーを並列起動できることで、切り替え時のストレスが軽減されます。
-
-**Infrastructure as Code のレビュープロセス**
-Terraform や CloudFormation のコードレビュー時、セッションを頻繁に切り替えても高速再開できるため、複数の PR を効率的にレビューできます。
-
-**Observability データの分析**
-Datadog、Prometheus、CloudWatch など複数の監視ツールから大量のメトリクスを取得・分析する際、レート制限自動検知により、API クォータを気にせずスクリプトを実行できます。
-
-**Runbook の自動化**
-障害対応手順書（Runbook）を自動化スクリプトに変換する際、安全性が強化されたことで、より積極的に自動化を進められます。特に本番環境に影響を与えうる操作（再起動、スケーリング、リソース削除など）を含むスクリプトでも、誤操作のリスクが低減されます。
+Agent frontmatter の `hooks:` が、`--agent` で main-thread agent として走らせたときにも発火するようになりました。以前はサブエージェント経由でしか効かなかったので、`claude --agent my-agent` を日常的なエントリポイントにしている人にとっては挙動が揃います。
 
 ## 全変更点一覧
 
-| カテゴリ | 変更内容 | 概要 |
-|---------|---------|------|
-| **Performance** | 大規模セッション再開の高速化 | 最大67%の速度向上、セッション状態の効率的な差分読み込み |
-| **Performance** | 複数MCPサーバー起動の並列化 | MCP サーバーの並列起動により、複数ツール統合時の待ち時間を大幅短縮 |
-| **Improvement** | ターミナルスクロール改善 | 長いコマンド出力の閲覧性向上、スムーズなスクロール動作 |
-| **Feature** | 思考プロセス表示の強化 | AI の思考プロセスをリアルタイムで可視化、進捗状況の把握が容易に |
-| **Improvement** | 設定検索機能の改善 | 設定項目の検索精度向上、目的の設定を素早く発見可能 |
-| **Feature** | Bash ツールのレート制限検知 | API レート制限を自動検知し、適切なリトライ戦略を提案 |
-| **Feature** | プラグイン自動依存関係インストール | プラグイン利用時の依存パッケージを自動でインストール、セットアップの手間を削減 |
-| **Security** | 危険なパス操作の厳格化 | ルートディレクトリやホームディレクトリの削除操作をブロック、システム保護を強化 |
-| **Improvement** | エージェント実行の安定性向上 | エラーハンドリングの改善、予期せぬ中断の減少 |
-| **Fix** | `/doctor` コマンドの応答性改善 | 他の処理中でも `/doctor` を実行可能に、障害対応の迅速化 |
+| カテゴリ | 変更内容 |
+|---------|---------|
+| Performance | `/resume` が 40MB 超の大規模セッションで最大 67% 高速化、dead-fork エントリの処理も効率化 |
+| Performance | 複数 stdio MCP サーバー設定時の起動高速化（`resources/templates/list` を `@`-mention 時まで遅延） |
+| Improvement | VS Code / Cursor / Windsurf でフルスクリーンスクロールを改善。`/terminal-setup` がエディタ側の scroll sensitivity も設定 |
+| Improvement | thinking スピナーがインラインで進捗表示（"still thinking" / "thinking more" / "almost done thinking"） |
+| Improvement | `/config` 検索がオプション値にもマッチ（例: "vim" で Editor mode 設定がヒット） |
+| Improvement | `/doctor` が Claude の応答中でも開けるように |
+| Improvement | `/reload-plugins` とバックグラウンド plugin auto-update で、追加済みマーケットプレイスから欠けている依存を自動インストール |
+| Feature | Bash ツールが `gh` の GitHub API rate limit 到達を検知し、エージェントがバックオフできるようヒントを表示 |
+| Improvement | Settings の Usage タブが 5 時間枠と週単位の使用量を即時表示、usage エンドポイントが rate-limited でも動作 |
+| Feature | Agent frontmatter の `hooks:` が `--agent` 経由の main-thread agent 実行時にも発火 |
+| Improvement | Slash command メニューで絞り込み結果 0 件のとき "No commands match" を表示（以前はメニューが消えていた） |
+| Security | sandbox auto-allow が `rm` / `rmdir` の `/`, `$HOME`, クリティカルシステムディレクトリ向け dangerous-path チェックをバイパスしないよう修正 |
+| Fix | Devanagari やその他 Indic scripts がターミナル UI で列幅ずれしていた問題を修正 |
+| Fix | Kitty keyboard protocol 対応ターミナル（iTerm2, Ghostty, kitty, WezTerm, Windows Terminal）で Ctrl+- が undo にならなかった問題を修正 |
+| Fix | Kitty keyboard protocol 利用時（Warp fullscreen, kitty, Ghostty, WezTerm）で Cmd+Left/Right が行頭/行末に飛ばなかった問題を修正 |
+| Fix | `npx`, `bun run` などラッパー経由で Claude Code を起動したとき Ctrl+Z でターミナルがハングする問題を修正 |
+| Fix | inline モードでのスクロールバック重複（ターミナルリサイズや大量出力で過去の会話履歴が繰り返されていた）を修正 |
+| Fix | モーダル検索ダイアログが短い画面高でオーバーフローし、検索ボックスやキーボードヒントが隠れる問題を修正 |
+| Fix | VS Code 統合ターミナルのスクロール中に空白セルが散ったり composer chrome が消えていた問題を修正 |
+| Fix | リクエスト準備中に並列リクエストが完了した際、cache control TTL の順序起因で発生していた 400 エラーを修正 |
+| Fix | `/branch` が 50MB 超のトランスクリプトを拒否していた問題を修正 |
+| Fix | `/resume` が大規模セッションファイルでロードエラーを出さず空の会話を表示していた問題を修正 |
+| Fix | `/plugin` の Installed タブで、Needs attention / Favorites にも載っている項目が二重表示されていた問題を修正 |
+| Fix | ワークツリーに入るセッション中に `/update` と `/tui` が動かなくなる問題を修正 |
 
 ## まとめ
 
-Claude Code v2.1.116 は、**パフォーマンス**、**セキュリティ**、**開発者体験**の3つの軸で大きく進化したバージョンです。
+今回の焦点は「既存機能の重さを削る」方向です。`/resume` の 40MB+ 高速化と MCP stdio 起動の遅延ロード化は、日常のリズムにそのまま効きます。小さめのセッションしか扱わない環境ではあまり変化を感じませんが、長時間走らせた会話を翌日に持ち越す使い方をしているなら、`/resume` の待ち時間が明確に縮みます。
 
-特に注目すべきは、大規模プロジェクトにおける実用性の向上です。セッション再開の67%高速化は、日々の開発サイクルで確実に時間短縮効果を実感できるでしょう。また、複雑なインフラストラクチャを管理する SRE エンジニアにとって、複数 MCP サーバーの並列起動は、マルチクラウド環境やマイクロサービスアーキテクチャでの作業効率を大きく改善します。
+セキュリティ面では、sandbox auto-allow での dangerous-path バイパスが塞がれたのが地味に重要です。auto-allow を前提にエージェントを夜間走らせている構成なら、2.1.116 まで上げておくのが安全側の選択です。
 
-セキュリティ強化については、エージェント型 AI ツールの実用化における重要なマイルストーンと言えます。自律的にコマンドを実行するツールにおいて、危険な操作を事前に防止する仕組みは、本番環境での利用を安心して進めるための基盤となります。
-
-レート制限の自動検知とリトライ提案機能は、API を多用する現代のクラウドネイティブな開発において、実に実践的な機能です。開発段階で堅牢なエラーハンドリングを組み込むことで、本番環境での信頼性が向上します。
-
-今回のアップデートを機に、より複雑なインフラストラクチャコードの管理や、より大胆な運用自動化に挑戦してみてはいかがでしょうか。特に、これまでセッション再開の遅さや安全性の懸念から躊躇していたユースケースに、改めて取り組んでみる価値があります。
+機能追加はほぼなく、バグ修正が大半を占めるリリースなので、様子見する理由もあまりないタイプの更新です。
