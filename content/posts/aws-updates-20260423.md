@@ -1,27 +1,39 @@
 ---
 title: "【AWS】2026/04/23 のアップデートまとめ"
 date: 2026-04-23T08:02:36+09:00
-draft: true
+draft: false
 tags: ["aws", "ec2", "eks", "lambda", "ecs", "workspaces", "bedrock", "sagemaker", "opensearch", "cloudwatch", "corretto", "network-firewall", "secrets-manager", "ebs", "eni", "terraform", "kubernetes", "confluent", "mongodb"]
 categories: ["AWS Updates"]
 summary: "2026/04/23 のAWSアップデートまとめ"
 ---
 
+![AWS アップデート 2026/04/23 ヘッダー](/images/aws-updates-20260423/header.png)
+
 # 2026年4月23日 AWS アップデート情報
 
 ## はじめに
 
-2026年4月23日、AWSから14件のアップデートが発表されました。今回のアップデートでは、**マネージドリソースの可視性制御**や**ハイブリッドKubernetes環境のネットワーク自動化**、**生成AIを活用した運用自動化**など、運用の複雑性を軽減する機能が多数登場しています。特に注目すべきは、Amazon EC2のマネージドリソース可視性設定、Amazon EKS Hybrid Nodes gateway、そしてCloudWatch pipelinesのAI支援設定機能です。これらは共通して「運用負荷の削減」と「責任範囲の明確化」というテーマを持っており、SREチームにとって実用的な改善をもたらします。
+2026年4月23日の AWS アップデートは 14件。EC2・EKS・CloudWatch まわりに「運用の認知負荷を減らす」系の変更がまとまって入った日でした。
+
+今回取り上げるのは次の 3 つ。
+
+- **Amazon EC2 マネージドリソース可視性設定** — EKS/ECS/Lambda/WorkSpaces が裏で作る EC2 リソースをコンソール/API から隠せる
+- **Amazon EKS Hybrid Nodes Gateway** — オンプレと AWS にまたがる Kubernetes のルーティングを Helm chart で自動化
+- **CloudWatch Pipelines の AI 支援設定** — 自然言語でログパイプラインのプロセッサ設定を生成
+
+共通しているのは「今まで自前で頑張っていた部分を AWS 側で引き取る」方向の変更です。責任分界の整理、運用の自動化、マネージド化の一段深い適用、どれもここ数年の流れの延長線上にあります。
 
 ## 注目アップデート深掘り
 
 ### Amazon EC2 マネージドリソース可視性設定
 
-#### 背景と重要性
+![EC2 マネージドリソース可視性 BEFORE/AFTER](/images/aws-updates-20260423/ec2-visibility.png)
 
-これまで、EKS、ECS、Lambda、WorkSpacesなどのマネージドサービスが自動的にプロビジョニングするEC2リソース（インスタンス、EBSボリューム、ENIなど）は、ユーザーが直接管理するリソースと区別なくEC2コンソールやAPI応答に表示されていました。これにより、「管理すべきリソース」と「AWSが管理するリソース」が混在し、リソース棚卸しやコスト分析、自動化スクリプトの精度に影響を与えていました。
+#### 何が変わるのか
 
-今回のアップデートでは、**共有責任モデルとの整合性**を重視し、新規のマネージドリソースはデフォルトで非表示になります。これにより、運用チームは自分たちが責任を持つリソースに集中でき、誤操作のリスクも低減されます。
+これまで EKS / ECS / Lambda / WorkSpaces などのマネージドサービスが裏で作る EC2 リソース（インスタンス、EBS ボリューム、ENI など）は、自分で作ったリソースと区別なく EC2 コンソールや API 応答に並んでいました。棚卸し・コスト分析・自動化スクリプトのフィルタリングで、毎回「これは AWS 管理だから触らない」という判別を人手でやる必要があったわけです。
+
+今回のアップデートでは、新規のマネージドリソースがデフォルトで非表示（`HIDDEN`）になります。共有責任モデル上「AWS 側が管理しているリソース」は、そもそも自分のコンソールに出てこない状態が標準になります。
 
 #### 実装と検証手順
 
@@ -91,9 +103,11 @@ for reservation in response['Reservations']:
 
 ### Amazon EKS Hybrid Nodes Gateway
 
-#### ハイブリッドKubernetesの課題
+![EKS Hybrid Nodes Gateway 構成図](/images/aws-updates-20260423/eks-hybrid-gateway.png)
 
-オンプレミスとAWSクラウドにまたがるKubernetes環境では、Pod間通信のために複雑なネットワーク設定が必要でした。従来は以下のような手作業が発生していました：
+#### ハイブリッド Kubernetes の課題
+
+オンプレミスと AWS にまたがる Kubernetes 環境では、Pod 間通信のためにネットワーク設定を手で回す必要があります。従来の流れはこんな感じでした。
 
 - VPCルートテーブルの手動更新
 - オンプレミスルーターでの静的ルート設定
@@ -183,13 +197,13 @@ resource "aws_instance" "hybrid_gateway" {
 
 ---
 
-### CloudWatch Pipelines AI支援設定機能
+### CloudWatch Pipelines AI 支援設定機能
 
-#### ログパイプライン設定の課題
+#### ログパイプライン設定の痛み
 
-従来、CloudWatch Logsでログを加工・変換するには、複雑なプロセッサ設定（Grokパターン、JSON解析、フィールド抽出、データ型変換など）を手動で組み合わせる必要がありました。特に非標準フォーマットのログや、ネストされたJSONフィールドの解析は試行錯誤が必要で、設定ミスによるログ欠損のリスクもありました。
+CloudWatch Logs でログを加工・変換するには、プロセッサ設定（Grok パターン、JSON 解析、フィールド抽出、データ型変換など）を組み合わせる必要があります。非標準フォーマットのログや、ネストされた JSON フィールドの解析は試行錯誤になりがちで、設定ミスでログが欠損するリスクも付きまとっていました。
 
-今回のAI支援機能により、**自然言語でやりたいことを説明するだけ**で、AIが適切なプロセッサ構成を自動生成します。
+AI 支援機能では、**自然言語でやりたいことを書くだけ**で、AI がプロセッサ構成を生成します。
 
 #### 実装例
 
@@ -322,38 +336,49 @@ print(f"Processed logs: {test_response['ProcessedLogs']}")
 
 ### マネージドリソース可視性設定の活用
 
-Terraformやインフラ自動化を行っているチームでは、`aws_instance`リソースのdata sourceクエリに影響が出る可能性があります。例えば、「すべてのEC2インスタンスにタグを適用する」といった処理を行っている場合、マネージドリソースを除外する明示的なフィルタリングを追加することで、意図しないリソースへの操作を防げます。
+Terraform やインフラ自動化を組んでいるチームでは、`aws_instance` の data source クエリに影響が出ることに注意が必要です。「すべての EC2 インスタンスにタグを適用する」といった一括処理を書いている場合、マネージドリソースを除外する明示的なフィルタを足しておくと、意図しないリソースへの操作を防げます。
 
-CloudWatch Alarmsやコスト監視ダッシュボードでは、マネージドリソースが非表示になっても、実際のコストとメトリクスは正確に集計されるため、Cost Explorerとの整合性は保たれます。ただし、リソースタグベースのレポーティングを行っている場合は、マネージドリソースのタグ付けルールをAWS側で標準化されているかを確認しておくと良いでしょう。
+CloudWatch Alarms やコスト監視ダッシュボードでは、マネージドリソースが非表示になってもメトリクスとコストは従来どおり集計されます。Cost Explorer との整合性も保たれる作り。ただしリソースタグベースでレポートを回している場合、AWS 側のマネージドリソースのタグ付けルールに合わせて、レポート側のロジックを見直すのが無難です。
 
-障害対応のランブックでは、「EC2コンソールで異常なインスタンスを特定する」といった手順がある場合、設定変更後は自己管理インスタンスのみが表示されるため、調査範囲が明確になり、MTTR（平均修復時間）の短縮が期待できます。
+障害対応のランブックで「EC2 コンソールから異常なインスタンスを特定する」手順がある場合、設定変更後は自己管理インスタンスだけが表示されるため、調査範囲が最初から絞り込まれた状態になります。MTTR の短縮に効いてくる変更です。
 
-### EKS Hybrid Nodes Gatewayの運用改善
+### EKS Hybrid Nodes Gateway の運用改善
 
-ハイブリッドKubernetes環境を運用する際の大きな課題は、ネットワークチームとアプリケーションチームの調整コストです。Pod追加のたびにルート変更依頼を出すのは非効率的で、自動化の妨げになります。EKS Hybrid Nodes Gatewayを導入すると、DevOpsチームがKubernetesマニフェストをデプロイするだけで、ネットワーク設定が自動的に追従します。
+ハイブリッド Kubernetes 環境の運用で地味に重いのが、ネットワークチームとアプリケーションチームの調整コストです。Pod 追加のたびにルート変更依頼、というフローは自動化とは相性が悪い。Hybrid Nodes Gateway を入れると、DevOps チームが Kubernetes マニフェストをデプロイするだけでネットワーク設定が追従する状態になります。
 
-注意点として、オンプレミス側のファイアウォールルールやセキュリティグループは、引き続き手動設定が必要です。特に、ゲートウェイEC2インスタンスへの通信許可（通常はTCP/443、UDP/500など）を事前に確認しておきましょう。また、ゲートウェイインスタンスはSingle Point of Failureになり得るため、Auto Scaling GroupやMulti-AZ配置を検討することが推奨されます。
+注意点は 2 つ。1つ目は、オンプレ側のファイアウォールルールやセキュリティグループは引き続き手動設定が必要な点。ゲートウェイ EC2 インスタンスへの通信許可（TCP/443、UDP/500 など）を事前に確認しておきます。2つ目は、ゲートウェイインスタンスは SPOF になり得るので、ASG や Multi-AZ 配置での冗長化を検討したほうがいい点。
 
-災害復旧シナリオでは、オンプレミス側で障害が発生した場合、AWS側のPodは影響を受けずに稼働し続けられます。逆に、AWS側で障害が発生した場合も、オンプレミスのワークロードは独立して動作します。このような部分的な冗長性を活かした障害対応手順を整備しておくと、ハイブリッド環境のレジリエンスが向上します。
+障害時の挙動を整理しておくのも実用的です。オンプレ側で障害が起きた場合、AWS 側の Pod はそのまま動き続けます。AWS 側で障害が起きてもオンプレ側のワークロードは独立して動作する。この部分的な冗長性を前提にした障害対応手順をあらかじめ書いておくと、実運用で効いてきます。
 
-### CloudWatch Pipelines AI支援の実践的利用
+### CloudWatch Pipelines AI 支援の実践的利用
 
-マイクロサービスアーキテクチャでは、各サービスが異なるログフォーマットを出力することが一般的です。これまでは、サービスごとにログパイプライン設定を個別に作成・メンテナンスする必要がありましたが、AI支援機能により、新サービス追加時のセットアップ時間を大幅に削減できます。
+マイクロサービス環境では、サービスごとにログフォーマットがバラバラ、というのがあるある。従来はサービスごとにパイプライン設定を個別に書いてメンテしていましたが、AI 支援機能を使えば新サービス追加時のセットアップ時間が短縮できそうです。
 
-ログフォーマットが変更された場合も、自然言語で新しい要件を説明するだけで、設定を再生成できます。これにより、「ログフォーマット変更 → パイプライン設定更新 → 動作確認」のサイクルを高速化でき、アプリケーションのイテレーション速度向上に寄与します。
+ログフォーマットが変わったときも、自然言語で新しい要件を書くだけで設定を再生成できます。「ログフォーマット変更 → パイプライン設定更新 → 動作確認」のサイクルが短くなれば、アプリ側のイテレーション速度にもプラスに効いてきます。
 
-セキュリティとコンプライアンスの観点では、PII（個人識別情報）マスキングを自然言語で指定できるため、GDPR、CCPA、個人情報保護法などの規制対応が容易になります。「email addresses, credit card numbers, and phone numbers should be masked」といった指示で、適切なマスキングパターンが自動生成されます。
+セキュリティとコンプライアンスの観点では、PII（個人識別情報）マスキングを自然言語で指定できるのが便利です。GDPR、CCPA、個人情報保護法などの規制対応で「email addresses, credit card numbers, and phone numbers should be masked」のような指示を書くと、マスキングパターンが生成されます。
 
-コスト最適化の面では、ログの前処理（フィルタリング、集約）をパイプライン段階で行うことで、ログストレージとクエリコストを削減できます。AI支援機能を使えば、「keep only ERROR and CRITICAL logs, drop DEBUG and INFO」といった指示で、効率的なフィルタリング設定が生成されます。
+コスト最適化の面では、ログの前処理（フィルタリング、集約）をパイプライン段階で行えば、ログストレージとクエリコストを減らせます。「keep only ERROR and CRITICAL logs, drop DEBUG and INFO」といった指示で、フィルタリング設定を作ってくれる。ただし AI 生成された設定は必ずサンプルログでテストしてから本番投入するのが鉄則です。特殊なエッジケース（タイムゾーン、エスケープシーケンス）は人目で確認しないと事故ります。
 
 ## 全アップデート一覧
+
+以下の表に登場する、やや馴染みの薄いサービスの補足です。
+
+> **Amazon Bedrock AgentCore とは？**
+> Bedrock 上で AI エージェントを構築するためのマネージドプラットフォーム。エージェントのランタイム、ツール統合、メモリ、観測可能性を一括で提供する。Strands Agents SDK や LangGraph といった OSS エージェントフレームワークのホスティング先として位置付けられている。
+
+> **Amazon Corretto とは？**
+> AWS が提供する OpenJDK のプロダクション対応ディストリビューション。Java 8/11/17/21 等の LTS バージョンを AWS が無償でサポートし、四半期ごとにセキュリティパッチを配布している。Oracle JDK の代替として採用するケースが多い。
+
+> **Confluent Cloud とは？**
+> Apache Kafka のマネージドサービスを提供する SaaS。イベントストリーミング基盤として、AWS Kinesis / MSK の代替またはマルチクラウドのハブとして使われる。今回の Secrets Manager 連携で、Kafka API キー等を AWS 側の権限管理に統合可能に。
 
 | # | サービス | タイトル | 概要 |
 |---|---------|---------|------|
 | 1 | EC2 | [Managed resource visibility settings](https://aws.amazon.com/about-aws/whats-new/2026/04/ec2-managed-resource-visibility/) | マネージドサービスがプロビジョニングしたEC2リソースの表示/非表示を制御可能に |
 | 2 | EC2 | [C8i instances in Ireland and New Zealand](https://aws.amazon.com/about-aws/whats-new/2026/02/amazon-ec2-c8i-instances-europe-ireland-asia-pacific-new-zealand-regions/) | Intel Xeon 6搭載の計算最適化インスタンスC8iが新リージョンで利用可能 |
 | 3 | EC2 | [C8i-flex instances in Europe and New Zealand](https://aws.amazon.com/about-aws/whats-new/2026/02/amazon-ec2-c8i-flex-instances-europe-ireland-europe-london-asia-pacific-new-zealand-regions/) | C8i-flexインスタンスが3つの新リージョンで利用開始 |
-| 4 | Bedrock | [AgentCore new features](https://aws.amazon.com/about-aws/whats-new/2026/04/agentcore-new-features-to-build-agents-faster/) | マネージドハーネス、CLI、スキルなどエージェント構築を加速する新機能 |
+| 4 | Bedrock | [AgentCore new features](https://aws.amazon.com/about-aws/whats-new/2026/04/agentcore-new-features-to-build-agents-faster/) | マネージドハーネス、CLI、スキルなどエージェント構築を助ける新機能 |
 | 5 | SageMaker | [Serverless fine-tuning for Qwen3.5](https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-sagemaker-ft-qwen3-5/) | Qwen3.5モデルのサーバーレス微調整をサポート |
 | 6 | OpenSearch | [Rollback for service software updates](https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-opensearch-service-now-supports-rollback-for-service-software-updates/) | サービスソフトウェアアップデートのロールバック機能を追加 |
 | 7 | Corretto | [April 2026 Quarterly Updates](https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-corretto-april-2026-quarterly-updates/) | Corretto全バージョンの四半期セキュリティアップデート |
@@ -367,10 +392,12 @@ CloudWatch Alarmsやコスト監視ダッシュボードでは、マネージド
 
 ## まとめ
 
-2026年4月23日のアップデートは、**運用自動化とハイブリッド環境の統合**という2つの大きなテーマが目立ちました。EC2のマネージドリソース可視性制御は、共有責任モデルの明確化により、運用チームの認知負荷を軽減します。EKS Hybrid Nodes Gatewayは、オンプレミスとクラウドのシームレスな統合を実現し、ハイブリッドKubernetesの複雑なネットワーク設定を自動化します。CloudWatch PipelinesのAI支援機能は、ログ処理パイプラインの構築を劇的に簡素化し、マイクロサービス環境での迅速なログ統合を可能にします。
+方向性が読み取れるのは、「運用自動化」と「ハイブリッド環境の統合」の 2 軸です。
 
-また、生成AI関連のアップデート（Bedrock AgentCore、SageMaker Qwen対応、推論最適化）も充実しており、エンタープライズでのAI活用が加速する基盤が整いつつあります。特にサーバーレス微調整とAI支援設定機能は、機械学習エンジニアやMLOpsチームの生産性向上に直結します。
+EC2 のマネージドリソース可視性制御は、共有責任モデルを可視化レベルまで落とし込んだ変更。EKS Hybrid Nodes Gateway は、オンプレ/クラウドまたぎのルート設定を Helm chart で自動化する構成。CloudWatch Pipelines の AI 支援機能は、これまで試行錯誤だったプロセッサ設定を自然言語で書けるようにする機能。どれも「今まで人手でやっていた作業を AWS 側が引き取る」方向の改善です。
 
-セキュリティ面では、Secrets Managerの外部シークレット統合拡張、Network FirewallのMarketplaceルール強化など、マルチクラウド・ハイブリッド環境におけるセキュリティ管理の効率化が進んでいます。
+生成 AI まわりでは Bedrock AgentCore の機能拡張、SageMaker JumpStart の Qwen モデル追加、推論最適化の自動提案など、エージェント構築と LLM 運用の実装を助ける機能が並びました。サーバーレス微調整と JumpStart のモデル拡充は、MLOps チームがプロトタイピングから本番まで持っていく速度に直結する部分です。
 
-今後も、こうした運用自動化と生成AI活用の流れは加速すると予想され、SREチームは新機能を積極的に検証し、既存の運用プロセスに組み込んでいくことが求められます。
+セキュリティ系では、Secrets Manager の MongoDB Atlas / Confluent Cloud 対応、Network Firewall の Marketplace ルール強化が入りました。マルチクラウド構成やハイブリッド構成でシークレット/ネットワーク管理を AWS 側に寄せられるアップデート。
+
+SRE 視点では、今日の 3 つの深掘りはどれも運用プロセスの見直しトリガーになり得ます。まず自組織の Terraform / ランブックが「マネージドリソース可視性」の変更で影響を受けるかを見て、当てはまるなら影響範囲を確認するところから始めるのが現実的です。
