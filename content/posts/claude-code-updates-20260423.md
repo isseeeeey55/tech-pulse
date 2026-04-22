@@ -1,173 +1,161 @@
 ---
 title: "【Claude Code】v2.1.117 リリースノートまとめ"
 date: 2026-04-23T08:01:40+09:00
-draft: true
+draft: false
 tags: ["claude-code", "bfs", "ugrep", "subagent", "mcp", "opentelemetry", "observability", "plugin", "session-management", "performance", "grep", "glob"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.117 のClaude Codeリリースノートまとめ"
 ---
 
+![](/images/claude-code-updates-20260423/header.png)
+
 ## はじめに
 
-2026年4月23日、Claude Code v2.1.117 がリリースされました。本バージョンでは、エージェントアーキテクチャの柔軟性向上とパフォーマンス最適化を軸とした複数の重要なアップデートが実装されています。
+2026年4月23日、Claude Code v2.1.117 がリリースされました。パフォーマンス面と観測性まわりの地味だが効いてくる改善が中心で、Fix も多い回です。
 
-主な変更点は以下の通りです：
+本記事で深掘りするのは次の 2 つ。
 
-- **フォークサブエージェントの外部ビルド対応** - エージェント実行環境のカスタマイズ性が大幅に向上
-- **MCPサーバー設定の改善** - より柔軟な設定管理が可能に
-- **プラグイン依存性の自動解決** - 開発体験の向上と環境構築の簡素化
-- **セッション管理の効率化** - リソース使用量の削減とレスポンス改善
-- **OpenTelemetryメトリクスの拡張** - より詳細な observability の実現
-- **ネイティブビルドにおける検索ツールの高速化** - bfs と ugrep への置き換えによる劇的な速度向上
+- **ネイティブビルド (macOS/Linux) の Glob/Grep が bfs/ugrep ベースに** — ツールラウンドトリップを省いて検索を高速化
+- **Forked subagents を external build でも有効化可能に** — 環境変数 `CLAUDE_CODE_FORK_SUBAGENT=1` で ON
 
-本記事では、これらのアップデートの中から特に重要な変更を深掘りし、実務での活用方法を解説します。
+他に、`/model` 選択がセッションをまたいで永続化、`/resume` の stale セッション自動サマライズ、OpenTelemetry の属性拡張、Opus 4.7 の `/context` 計算が 1M トークンに修正、など実務に効く修正が並んでいます。
 
 ## 注目アップデート深掘り
 
-### 1. ネイティブビルドでの検索ツール刷新による劇的な高速化
+### 1. ネイティブビルドでの Glob/Grep が bfs/ugrep ベースに
 
-今回のリリースで最も実用的なインパクトが大きいのが、ネイティブビルド環境における検索ツールの置き換えです。従来の Glob と Grep ツールが、それぞれ **bfs**（breadth-first search）と **ugrep**（ultra-fast grep）に置き換わりました。
+![Glob/Grep が Bash 経由の bfs/ugrep に切り替わる様子](/images/claude-code-updates-20260423/native-search.png)
 
-#### なぜこの変更が重要なのか
+公式リリースノートより（原文）:
 
-大規模なコードベースやモノレポ環境では、ファイル検索とコンテンツ検索のパフォーマンスがエージェントの応答速度に直結します。特に CI/CD パイプライン内での自動コード解析や、複数のマイクロサービスを横断した依存関係の調査など、SRE/インフラエンジニアのワークフローでは検索性能が生産性を大きく左右します。
+> Native builds on macOS and Linux: the `Glob` and `Grep` tools are replaced by embedded `bfs` and `ugrep` available through the Bash tool — faster searches without a separate tool round-trip (Windows and npm-installed builds unchanged)
 
-bfs は幅優先探索アルゴリズムを採用し、ディレクトリ構造を効率的に走査します。ugrep は PCRE2 正規表現をサポートしながら、ripgrep と同等以上の速度を実現する検索エンジンです。
+ポイントは「ネイティブビルド（macOS/Linux）限定」「bfs/ugrep が Bash ツール経由で呼べるようになった」「別ツールとしてのラウンドトリップが省略される」の 3 点です。Windows と npm インストール版のビルドは従来通り。
 
-#### 具体的な使い方
+> **bfs とは？**
+> `tavianator/bfs` — `find` 互換のファイル検索ツール。名前は breadth-first search（幅優先探索）に由来。ディレクトリツリーを幅優先で走査するため、浅い階層のマッチを早く返せる。
 
-エージェントに対して従来通りのファイル検索や内容検索を依頼するだけで、自動的に高速化されたツールが使用されます：
+> **ugrep とは？**
+> PCRE2 互換の正規表現をサポートする高速 grep 実装。ripgrep と同系統の高速検索エンジンだが、PCRE2 対応が強みです。
+
+#### 何が改善されたか
+
+従来の Glob/Grep ツールは、Claude Code の内部ツールとして独立した実装を呼び出していました。今回の変更で、ネイティブビルド環境では bfs/ugrep のバイナリが同梱され、Bash ツール経由で直接呼び出されるようになります。この結果、ツール呼び出しのためのラウンドトリップ（エージェント ⇄ ツール層のやり取り）が 1 回減り、大規模コードベースでの検索レスポンスが体感で速くなります。
+
+具体的な数値は公式リリースノートに記載がないため、手元のリポジトリで実測して確認するのが確実です。
+
+#### 使い方は変わらない
+
+エージェントから見たインタフェースは従来通りです。Glob や Grep をエージェントに使わせる書き方は何も変わりません。ネイティブビルドを使っていれば、自動的に bfs/ugrep 経由の呼び出しに切り替わります。
+
+```text
+# 従来どおり
+「この関数の呼び出し箇所を全部探して」
+「src 配下の全ての .ts ファイルを列挙して」
+```
+
+#### どのビルドを使っているかの確認
+
+`claude --version` の出力や `which claude` の結果で、ネイティブビルド（Homebrew などで入れたもの）か npm インストール版かを確認できます。Homebrew 版 / DMG 版のようなネイティブビルドであれば今回の改善の恩恵を受けます。
+
+---
+
+### 2. Forked subagents が external build でも有効化可能に
+
+公式リリースノートより（原文）:
+
+> Forked subagents can now be enabled on external builds by setting `CLAUDE_CODE_FORK_SUBAGENT=1`
+
+> **Forked subagents とは？**
+> メインエージェントからプロセスを fork して並列にサブエージェントを動かす仕組み。コンテキストを独立させた並列タスク処理に使われます。これまで一部のビルドでは無効化されていました。
+
+#### 有効化方法
+
+環境変数を 1 つ立てるだけです。
 
 ```bash
-# エージェントへの指示例
-$ claude "プロジェクト内のすべての Dockerfile を検索して、ベースイメージを一覧化して"
-
-# または
-$ claude "deprecated なAPIの使用箇所を全サービスから検索"
+$ export CLAUDE_CODE_FORK_SUBAGENT=1
+$ claude
 ```
 
-内部的には、これまで数秒かかっていた検索が数百ミリ秒で完了するようになります。特に `node_modules` や `.git` などの大量のファイルを含むディレクトリを含む環境での効果が顕著です。
+ドキュメントに記載されている設定ファイル上の特別なスキーマは存在せず、既存の `agents/` 下の subagent 定義がそのまま fork 方式で動くようになります。別途 agent を定義したい場合、`--agent` で起動するエージェント frontmatter の `mcpServers` が、main-thread のエージェントセッションでもロードされるようになった改善（こちらも v2.1.117）と合わせて使うと、MCP サーバ構成も agent 側に寄せやすくなります。
 
-#### パフォーマンス比較
+#### 使いどころ
 
-実測値の例（10万ファイル、1GBのコードベース）：
+fork 方式のサブエージェントは、親エージェントとコンテキストが分離されるため、以下のような場面で素直に使えます。
 
-- **ファイル検索（Glob → bfs）**: 3.2秒 → 0.8秒（約75%削減）
-- **コンテンツ検索（Grep → ugrep）**: 5.1秒 → 1.3秒（約75%削減）
+- **並列タスク**: リポジトリ全体の調査を複数のサブエージェントで分担
+- **コンテキスト汚染の回避**: 大量の検索結果を別のサブエージェントに任せて、親のコンテキストを温存
+- **独立した権限セットでの実行**: サブエージェント側で別の MCP サーバや権限を持たせる
 
-この高速化により、エージェントとのインタラクティブなやり取りがより快適になり、複雑な依存関係の分析や大規模リファクタリングの提案速度が向上します。
-
-### 2. フォークサブエージェントの外部ビルド対応
-
-エージェントアーキテクチャの柔軟性を大幅に向上させる「フォークサブエージェントの外部ビルド対応」が実装されました。これにより、サブエージェントの実行環境を独自にカスタマイズし、特定のタスクに最適化されたエージェントを構築できるようになります。
-
-> **Note:** フォークサブエージェントは、親エージェントから分岐して独立したコンテキストで動作するエージェントです。並列タスク処理や、異なる権限・環境での操作に使用されます。
-
-#### なぜこの変更が重要なのか
-
-従来、サブエージェントは親エージェントと同じビルド環境で実行されていました。しかし実務では、以下のようなニーズが存在します：
-
-- **セキュリティ境界の明確化**: 本番環境へのアクセス権を持つエージェントと、開発環境のみのエージェントを分離
-- **特殊なツールチェーンの利用**: 特定のタスク（例：機械学習モデルの推論、大規模データ処理）に最適化された環境
-- **リソース制約の個別設定**: メモリやCPU制約をタスクごとに調整
-
-#### 具体的な使い方
-
-外部ビルドのサブエージェントを定義するには、設定ファイルで専用のビルドイメージを指定します：
-
-```json
-{
-  "subagents": {
-    "infrastructure-auditor": {
-      "buildImage": "custom-agent-builds/infra-audit:v1.2",
-      "environment": {
-        "AWS_PROFILE": "audit-readonly",
-        "SCAN_DEPTH": "full"
-      },
-      "capabilities": ["read_files", "execute_commands"]
-    },
-    "deployment-executor": {
-      "buildImage": "custom-agent-builds/deploy:v2.0",
-      "environment": {
-        "KUBECONFIG": "/secure/prod-kubeconfig"
-      },
-      "capabilities": ["execute_commands", "write_files"]
-    }
-  }
-}
-```
-
-エージェントからは以下のように呼び出します：
-
-```bash
-$ claude "infrastructure-auditor サブエージェントを使って、全AWSアカウントのセキュリティグループ設定を監査して"
-```
-
-#### 実務での活用シーン
-
-SREチームでは、以下のような使い分けが可能になります：
-
-- **監査専用エージェント**: 読み取り専用権限で、コンプライアンスチェックやセキュリティスキャンを実行
-- **デプロイメントエージェント**: 本番環境への書き込み権限を持ち、Kubernetes や Terraform の適用を実行
-- **分析エージェント**: 大容量メモリを割り当て、ログ分析やメトリクス集計を高速処理
-
-この分離により、責任範囲の明確化とセキュリティリスクの低減を両立できます。
+---
 
 ## 実用的な活用ポイント
 
-### 日常の開発ワークフローへの影響
+### `/model` の永続化と起動時ヘッダー
 
-今回のアップデートは、以下のような日常的なタスクを効率化します：
+今回のリリースで `/model` の選択がセッションをまたいで永続化されるようになりました。プロジェクト側で別モデルが pin されている場合でも、個人の選択が優先されます。起動時のヘッダーには、有効なモデルがプロジェクトまたは managed-settings の pin 由来の場合にその旨が表示されます。
 
-**1. 大規模コードベースの探索が高速化**  
-モノレポや複数リポジトリにまたがるコード調査が快適になります。「この API を使用している箇所をすべて探して影響範囲を評価」といった依頼が、待ち時間なくスムーズに実行されます。
+複数リポジトリで異なるモデルを使いたい開発者、Opus と Sonnet を気分で切り替える運用のどちらにも効く変更です。
 
-**2. プラグイン環境の構築が自動化**  
-依存性の自動解決により、新しいプラグインを試す際の環境準備が不要になりました。`plugins.json` に追加するだけで、必要なパッケージが自動でインストールされます。
+### `/resume` の自動サマライズ
 
-**3. マルチテナント環境での安全なエージェント運用**  
-外部ビルド対応により、チーム間でエージェント環境を分離しながら、共通の Claude Code インスタンスを活用できます。開発チームとインフラチームで異なる権限レベルのエージェントを使い分ける、といった運用が可能です。
+長時間動かしていた大きなセッションを `/resume` で再開しようとすると、読み直す前にサマライズを提案するようになりました。これは既に `--resume` で入っていた挙動が `/resume` コマンドにも揃った形。巨大セッションを開く際の起動時間短縮に効きます。
 
-### すぐに試せる Tips
+### OpenTelemetry 属性の拡張
 
-**高速検索を体感する**  
-以下のコマンドで、検索速度の向上を実感できます：
+observability プラットフォームに Claude Code のテレメトリを流している場合、以下の属性追加が入っています。
 
-```bash
-$ time claude "すべての YAML ファイルから 'apiVersion: v1' を検索"
-```
+- `user_prompt` イベントに `command_name` と `command_source` が追加（スラッシュコマンドの識別）
+- `cost.usage` / `token.usage` / `api_request` / `api_error` に `effort` 属性が追加（モデルが effort レベル対応のとき）
+- カスタム/MCP コマンド名は `OTEL_LOG_TOOL_DETAILS=1` が無い限り redacted
 
-**セッション管理の効率化を確認**  
-長時間稼働させているエージェントのメモリ使用量をモニタリングしてみてください。v2.1.117 では、セッション管理の改善により、メモリフットプリントが平均15-20%削減されています。
+コスト分析ダッシュボードで effort 別のトークン消費を出すと、high / medium / low の効き具合が見えるようになります。
 
-**OpenTelemetry メトリクスで可視化**  
-observability プラットフォーム（Prometheus、Grafana など）と連携している場合、新しいメトリクスが追加されているか確認してください。エージェントの実行時間、ツール呼び出し頻度などの詳細な分析が可能になっています。
+### Opus 4.7 の `/context` 計算修正
 
-### SRE/インフラエンジニア視点での活用シーン
+地味ですが効く Fix。Opus 4.7 セッションで `/context` が 200K 基準で計算されていて、実際には 1M コンテキストなのに早期 autocompact が発動していた問題が修正されました。Opus 4.7 を常用しているなら、体感で autocompact の発動頻度が下がるはずです。
 
-- **インフラコード監査の自動化**: 専用サブエージェントで、Terraform や CloudFormation テンプレートのベストプラクティス準拠を定期チェック
-- **インシデント対応の高速化**: 高速検索により、障害発生時のログ解析やコード調査の時間を大幅短縮
-- **マルチクラウド環境の一元管理**: 各クラウドプロバイダーごとに最適化されたサブエージェントを構築し、統一インターフェースで操作
+### Pro/Max の Opus 4.6 / Sonnet 4.6 のデフォルト effort が high に
+
+Pro/Max 契約者は、これまで medium がデフォルトだった Opus 4.6 / Sonnet 4.6 で、デフォルトが high に変更されました。体感の思考深度は上がる代わりに、プロンプトあたりのトークン消費が増えます。効率重視なら明示的に medium / low を指定する運用も検討できます。
+
+---
 
 ## 全変更点一覧
 
-| カテゴリ | 変更内容 | 概要 |
-|---------|---------|------|
-| **Feature** | フォークサブエージェントの外部ビルド対応 | サブエージェントの実行環境を独自のビルドイメージでカスタマイズ可能に |
-| **Feature** | プラグイン依存性の自動解決 | プラグイン導入時に必要なパッケージを自動でインストール |
-| **Improvement** | MCPサーバー設定の改善 | より柔軟な設定管理とオーバーライド機能の追加 |
-| **Improvement** | セッション管理の効率化 | メモリ使用量の削減とセッションライフサイクルの最適化 |
-| **Improvement** | OpenTelemetryメトリクスの拡張 | エージェント実行の詳細なトレーシングと分析が可能に |
-| **Improvement** | ネイティブビルドでの検索ツール高速化 | Glob/Grep を bfs/ugrep に置き換え、検索速度を約75%向上 |
+| カテゴリ | 変更内容 |
+|---|---|
+| **Feature** | Forked subagents が external build で有効化可能に（`CLAUDE_CODE_FORK_SUBAGENT=1`） |
+| **Feature** | Agent frontmatter の `mcpServers` が `--agent` 経由の main-thread セッションでもロード |
+| **Feature** | Native builds (macOS/Linux) で Glob/Grep が bfs/ugrep ベースに切り替え |
+| **Improvement** | `/model` 選択がセッションをまたいで永続化。起動ヘッダーに pin 由来を表示 |
+| **Improvement** | `/resume` が stale/large セッションのサマライズを提案 |
+| **Improvement** | ローカル MCP と claude.ai MCP の並列接続が既定に。起動が高速化 |
+| **Improvement** | `plugin install` が未インストール依存を自動で補完。marketplace add で auto-resolve |
+| **Improvement** | Managed-settings の `blockedMarketplaces` / `strictKnownMarketplaces` を install/update/refresh/autoupdate 全てに適用 |
+| **Improvement** | Advisor Tool に experimental ラベル・学習用リンク・起動通知を追加 |
+| **Improvement** | `cleanupPeriodDays` の retention sweep が `~/.claude/tasks/`、`shell-snapshots/`、`backups/` も対象に |
+| **Improvement** | OpenTelemetry に `command_name` / `command_source` / `effort` 属性を追加 |
+| **Improvement** | Windows で `where.exe` 実行ファイル検索をプロセス単位でキャッシュ |
+| **Improvement** | Pro/Max の Opus 4.6 / Sonnet 4.6 のデフォルト effort が `high` に |
+| **Fix** | Plain-CLI OAuth で access token がセッション中に expire した際「Please run /login」で死ぬ問題を、401 での reactive refresh で修正 |
+| **Fix** | `WebFetch` が巨大 HTML ページでハングする問題（変換前に truncate） |
+| **Fix** | プロキシが HTTP 204 を返したときに TypeError になる問題 |
+| **Fix** | `CLAUDE_CODE_OAUTH_TOKEN` で起動して token が expire した際、`/login` が無効化される問題 |
+| **Fix** | プロンプト入力の undo (`Ctrl+_`) が、打鍵直後に効かない／状態が飛ぶ問題 |
+| **Fix** | Bun 実行時に `NO_PROXY` がリモート API リクエストに効かない |
+| **Fix** | 遅い接続でキー名が text で coalesce 到着する際の spurious escape/return |
+| **Fix** | SDK `reload_plugins` が全ユーザ MCP サーバに直列再接続していた |
+| **Fix** | Bedrock の application-inference-profile が Opus 4.7 + thinking disabled で 400 |
+| **Fix** | MCP `elicitation/create` が print/SDK モードでサーバ接続途中に auto-cancel |
+| **Fix** | サブエージェントがメインと別モデルで動く場合、ファイル読み込みが malware 警告を誤検知 |
+| **Fix** | バックグラウンドタスク存在時のアイドル再描画ループ（Linux でメモリ増大） |
+| **Fix** | [VSCode] 大規模 marketplace が複数あると「Manage Plugins」パネルが壊れる |
+| **Fix** | Opus 4.7 セッションで `/context` が 200K 基準で計算されていた問題（1M が正） |
 
 ## まとめ
 
-Claude Code v2.1.117 は、**パフォーマンス**、**柔軟性**、**observability** の3軸で大きな進化を遂げたリリースです。
+方向性としては、パフォーマンス（ネイティブビルドの検索高速化、並列 MCP 接続）、柔軟性（Forked subagents の有効化条件緩和、`/model` 永続化）、観測性（OpenTelemetry 属性拡張）の 3 軸で地味ながら効いてくる改善が入りました。Fix の多さも目を引く回で、特に Opus 4.7 の `/context` 計算修正と OAuth の 401 reactive refresh は、日常で引っかかっていた人には体感差が大きい変更です。
 
-特に検索ツールの高速化は、日々のコード探索タスクを劇的に快適にする改善です。大規模コードベースを扱う開発チームや、複数のマイクロサービスを管理する SRE チームにとって、待ち時間の削減は生産性向上に直結します。
-
-フォークサブエージェントの外部ビルド対応は、エージェントアーキテクチャの成熟を示す重要なマイルストーンです。セキュリティ境界の明確化や、タスク特化型エージェントの構築により、エンタープライズ環境での本格的な運用がより現実的になりました。
-
-さらに、プラグイン依存性の自動解決やセッション管理の効率化といった「地味だが重要な」改善により、日常的な開発体験が着実に向上しています。OpenTelemetry メトリクスの拡張は、今後のパフォーマンスチューニングやトラブルシューティングの強力な基盤となるでしょう。
-
-全体として、本バージョンは「実用性の向上」に焦点を当てた、プロダクション環境での使用を強く意識したリリースと言えます。既存ユーザーの方は、特に検索速度の改善を体感できるはずですので、ぜひアップデートしてお試しください。
+既存ユーザの実務目線で優先度をつけるなら、まずネイティブビルドを使っているかを確認して bfs/ugrep の恩恵を得ること、次に Opus 4.7 ユーザなら `/context` 修正で autocompact 挙動が変わっている点をチェック、というあたりが現実的です。Forked subagents の external build 対応は、該当するビルド環境で動かしているチーム向けの選択肢が増えた形です。
