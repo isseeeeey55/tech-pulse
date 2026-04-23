@@ -1,79 +1,149 @@
 ---
 title: "【Claude Code】v2.1.118 リリースノートまとめ"
 date: 2026-04-24T08:01:23+09:00
-draft: true
-tags: ["claude-code", "vim", "usage", "mcp", "wsl", "auto-mode", "oauth", "custom-theme", "session-search"]
+draft: false
+tags: ["claude-code", "vim", "usage", "mcp", "wsl", "auto-mode", "oauth", "custom-theme", "hooks", "plugin"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.118 のClaude Codeリリースノートまとめ"
 ---
 
-# Claude Code v2.1.118 リリース情報
+![](/images/claude-code-updates-20260424/header.png)
 
 ## はじめに
 
-Claude Code v2.1.118 がリリースされました。このバージョンでは、開発者体験の向上に焦点を当てた複数のアップデートが実施されています。
+2026年4月24日、Claude Code v2.1.118 がリリースされました。OAuth / MCP 周りの Fix が大量に入った回で、加えて Vim ユーザー向けのビジュアルモード、コマンド統合（`/cost` と `/stats` → `/usage`）、Hooks からの MCP ツール直接呼び出しなど、日常操作に効いてくる機能追加も揃っています。
 
-主な変更点としては、Vim操作モード（v/V）の新規追加によるエディタ操作性の向上、コマンド体系の整理として `/cost` と `/stats` を `/usage` に統合、カスタムテーマ機能の拡充によるUI/UXのカスタマイズ性強化が挙げられます。さらに、MCPツールの直接呼び出し対応により開発ワークフローの効率化が図られ、WSL環境におけるWindows側設定の継承によるクロスプラットフォーム対応の改善、Auto Modeの細粒度制御強化、セッション検索機能の改善が行われました。加えて、OAuth認証周りの複数のバグ修正により、認証フローの安定性が向上しています。
+本記事で深掘りするのは次の 2 つ。
 
-これらのアップデートは、日常的な開発作業の効率化と、より柔軟な開発環境構築を可能にするものとなっています。
+- **Hooks が `type: "mcp_tool"` で MCP ツールを直接呼び出せるように** — フック内から外部ツール統合が素直に書ける
+- **`/cost` と `/stats` が `/usage` に統合** — 使用状況関連の情報が単一コマンドに集約（`/cost` / `/stats` は typing shortcut として残存）
+
+OAuth / MCP 認証系の Fix は 10 件近く入っていて、これまで引っかかっていたケース（expires_in 欠落で毎時再認証、macOS キーチェーンの race、ログイン中に `CLAUDE_CODE_OAUTH_TOKEN` で詰まる）が軒並み潰されています。
 
 ## 注目アップデート深掘り
 
-### MCPツールの直接呼び出し対応
+### 1. Hooks が MCP ツールを直接呼べるようになった
 
-今回のリリースで最も注目すべきアップデートの一つが、MCPツールの直接呼び出しへの対応です。
+![Hooks に mcp_tool type が追加](/images/claude-code-updates-20260424/hooks-mcp-tool.png)
 
-> **Note:** MCP（Model Context Protocol）は、Claude Code が外部ツールやデータソースと連携するためのプロトコルです。
+公式リリースノートより（原文）:
 
-この変更が重要な理由は、開発ワークフローにおける中間ステップの削減にあります。従来は、MCPツールを利用する際に何らかの間接的な操作やコマンドを経由する必要がありましたが、直接呼び出しが可能になったことで、ツールチェーンの統合がよりシームレスになります。
+> Hooks can now invoke MCP tools directly via `type: "mcp_tool"`
 
-特にSREやインフラエンジニアにとって、モニタリングツールやデプロイメントツール、クラウドAPIなどをMCP経由で統合している場合、この改善により対話的な運用作業やトラブルシューティングのスピードが向上することが期待されます。MCPツールへのアクセスが直接的になることで、Claude Codeとの会話の中で自然にツールを呼び出し、結果を即座に確認できるようになります。
+> **Hooks とは？**
+> Claude Code のライフサイクルイベント（`PreToolUse`、`PostToolUse`、`Stop`、`SubagentStop`、`UserPromptSubmit` など）に対して、ユーザー定義の処理を差し込める仕組み。通常はシェルコマンドを実行する形式で登録します。
 
-リリースノートでは具体的な呼び出し方法の詳細は明記されていませんが、この機能によってツール連携の透明性が高まり、開発者がより直感的にMCPツールを活用できる環境が整備されたと言えます。
+これまで Hooks の `type` はシェルコマンド実行を前提としていました。v2.1.118 では `type: "mcp_tool"` が追加され、**Hooks の定義から直接 MCP ツールを起動できる**ようになります。
 
-### コマンド統合: `/cost` と `/stats` を `/usage` に集約
+#### 何が嬉しいか
 
-開発ツールにおけるコマンド体系の整理は、認知負荷の低減とユーザビリティ向上に直結します。今回のリリースでは、従来別々に提供されていた `/cost` コマンドと `/stats` コマンドが `/usage` コマンドに統合されました。
+フックからシェル経由で MCP ツールを叩きたい場合、従来は `mcp-cli` 相当のラッパーをシェルコマンドとして呼ぶ必要がありました。`type: "mcp_tool"` を使えば、シェルを経由せずにフック設定から MCP ツール名と引数を指定して呼び出せます。フックのイベント発火時に、登録済みの MCP サーバに対して直接アクション（通知、ログ記録、外部システム更新など）を流し込めるようになるイメージです。
 
-この変更の背景には、類似した情報を複数のコマンドで分散管理することの非効率性があります。コスト情報と統計情報は本質的に「利用状況」という同じ文脈に属するデータであり、これらを一つのコマンドに集約することで、ユーザーは必要な情報へのアクセスパスを記憶しやすくなります。
+具体的な設定形式の詳細は、`~/.claude/settings.json` の `hooks` セクションや Claude Code ドキュメントを参照してください（本リリースで新設された `type` なので、利用時は公式ドキュメントで最新のスキーマを確認するのが確実）。
 
-統合後は、`/usage` コマンドを実行することで、これまで別々に確認していたコスト情報（APIトークン使用量や課金関連データ）と統計情報（セッション数、実行回数など）を一元的に参照できるようになります。特にチームで Claude Code を利用している環境において、利用状況の把握とコスト管理を同時に行う際の利便性が向上します。
+---
 
-この種のコマンド統合は、ツールの成熟度を示す指標でもあります。初期段階では機能ごとに個別コマンドが追加されがちですが、ユーザーフィードバックや利用パターンの分析を経て、より合理的なコマンド体系へと整理されていくプロセスは、プロダクトの洗練を物語っています。
+### 2. `/cost` と `/stats` が `/usage` に統合
+
+![/usage コマンドへの統合](/images/claude-code-updates-20260424/usage-merge.png)
+
+公式リリースノートより（原文）:
+
+> Merged `/cost` and `/stats` into `/usage` — both remain as typing shortcuts that open the relevant tab
+
+#### 整理内容
+
+v2.1.118 で `/usage` コマンドが導入され、そこにコスト情報と統計情報がタブ構成で集約されました。旧コマンドの `/cost` と `/stats` は **typing shortcut として残り、それぞれ対応するタブを開く**挙動に変わっています。既存ユーザーが `/cost` と打ち慣れていても、そのまま使い続けられる設計です。
+
+地味ですが、これまで「コストだけ見たいのか、統計だけ見たいのか」を意識してコマンドを選んでいた部分が、`/usage` で一本化されました。タブ切り替えで両方を並べて確認できるため、チーム利用や個人の利用状況のレビュー時に使いやすくなります。
+
+---
 
 ## 実用的な活用ポイント
 
-今回のリリースは、日常の開発ワークフローにいくつかの実用的なメリットをもたらします。
+### Vim ビジュアルモード対応
 
-まず、Vim操作モード（v/V）の追加により、Vimユーザーはより自然な操作感でClaude Codeを利用できるようになります。コード編集や選択操作において、慣れ親しんだキーバインドを活用できることは、作業効率の向上に直結します。
+`v`（ビジュアルモード）と `V`（ビジュアルラインモード）が追加されました。selection、operators、visual feedback 込みで実装されているとのことで、Vim 派にとってはテキスト操作時の違和感が減る方向の変更です。
 
-カスタムテーマ機能の拡充により、長時間の作業における視認性や疲労軽減を考慮したUI設定が可能になります。チーム内で統一されたテーマを採用することで、画面共有時の視認性向上も期待できます。
+### カスタムテーマ
 
-WSL環境でWindows側の設定を継承できるようになったことは、Windowsマシンを使用する開発者にとって重要な改善です。これにより、Windows側で行った設定をWSL環境でも一貫して利用できるため、環境構築の手間が削減され、設定の二重管理から解放されます。
+`/theme` から名前付きカスタムテーマを作成・切り替えできるようになりました。`~/.claude/themes/` 配下の JSON を手編集する方法も選択可能。**プラグインからも `themes/` ディレクトリでテーマを同梱できる**ため、チーム標準のテーマをプラグイン経由で配布する運用も可能です。
 
-Auto Modeの細粒度制御強化により、自動化の範囲をより細かく調整できるようになりました。これは、セキュリティ要件の厳しいプロジェクトや、特定の操作のみを自動化したい場合に有用です。
+### WSL で Windows 側の managed settings を継承
 
-セッション検索機能の改善により、過去の作業履歴へのアクセスが容易になります。特定の問題解決パターンや実装例を後から参照する際の効率が向上します。
+`wslInheritsWindowsSettings` ポリシーキーを有効にすると、WSL 環境で Windows 側の managed settings を継承できるようになりました。組織で Windows 側に managed settings を配布しているチームは、WSL 側の設定二重管理を減らせます。
 
-すぐに試せる Tips としては、まず `/usage` コマンドで現在の利用状況を確認し、Vimユーザーは新しいv/Vモードを試してみること、WSL環境を使用している場合は設定継承が正しく機能しているか確認することをお勧めします。
+### Auto Mode のカスタマイズ
+
+`autoMode.allow` / `autoMode.soft_deny` / `autoMode.environment` に `"$defaults"` を含めておくと、built-in ルールを**置き換える**のではなく**並列に追加**する形でカスタムルールを書けるようになりました。これまで built-in ルールを活かしたまま追加したいケースで、設定が書きづらい問題が解消されます。加えて、auto mode の opt-in プロンプトに「Don't ask again」オプションが追加されました。
+
+### `DISABLE_UPDATES` 環境変数
+
+`DISABLE_AUTOUPDATER` より強く、**手動 `claude update` も含めて全ての更新パスをブロック**する環境変数が追加されました。エンタープライズ環境でバージョン固定を厳しく求められるケース向け。
+
+### `claude plugin tag`
+
+プラグイン用のリリース用 git タグをバージョン検証付きで作成できるコマンドが追加されました。プラグイン作者向け機能。
+
+### OAuth / MCP 系 Fix（抜粋）
+
+これまで詰まりやすかった箇所が軒並み修正されています。
+
+- MCP サーバの OAuth レスポンスに `expires_in` がないと毎時再認証が必要だった問題
+- macOS keychain の race で MCP トークン更新が別トークンを上書きし「Please run /login」が出る問題
+- MCP OAuth refresh でクロスプロセスロックが効かず競合する問題
+- `CLAUDE_CODE_OAUTH_TOKEN` で起動したセッションで `/login` が無効化される問題（env token が clear されて disk credentials が効くように）
+- `~/.claude/.credentials.json` が Linux/Windows で crash save により破損する問題
+- `/mcp` メニューで `headersHelper` 設定時に OAuth の Authenticate / Re-authenticate が隠れる問題
+
+MCP サーバを複数運用しているチームは、今回の Fix 群でアップデートの価値が大きい回です。
+
+---
 
 ## 全変更点一覧
 
-| カテゴリ | 変更内容 | 概要 |
-|---------|---------|------|
-| Feature | Vim操作モード（v/V）の追加 | ビジュアルモードとラインビジュアルモードに対応し、Vimユーザーの操作性が向上 |
-| Improvement | `/cost` と `/stats` を `/usage` に統合 | コマンド体系を整理し、利用状況関連情報へのアクセスを一元化 |
-| Feature | カスタムテーマ機能の拡充 | UI/UXのカスタマイズ性が強化され、より柔軟なテーマ設定が可能に |
-| Feature | MCPツールの直接呼び出し対応 | MCPツールへのアクセスが直接的になり、ツール連携がシームレスに |
-| Improvement | WSLのWindows側設定継承 | WSL環境でWindows側の設定を引き継ぐことが可能になり、設定管理が簡素化 |
-| Improvement | Auto Modeの細粒度制御強化 | 自動化の範囲をより詳細に制御できるようになり、柔軟な運用が可能に |
-| Improvement | セッション検索機能改善 | 過去のセッション履歴へのアクセス性が向上 |
-| Fix | OAuth認証周りの複数のバグ修正 | 認証フローの安定性が向上し、認証関連の問題が解消 |
+| カテゴリ | 変更内容 |
+|---|---|
+| **Feature** | Vim visual mode (`v`) / visual-line mode (`V`) 対応 |
+| **Feature** | `/usage` コマンド導入。`/cost` と `/stats` を統合（両者は typing shortcut として残存） |
+| **Feature** | `/theme` で名前付きカスタムテーマを作成・切り替え。`~/.claude/themes/` JSON も手編集可。plugin から `themes/` で配布可 |
+| **Feature** | Hooks が `type: "mcp_tool"` で MCP ツールを直接呼び出せる |
+| **Feature** | `DISABLE_UPDATES` 環境変数追加。`DISABLE_AUTOUPDATER` より強く、手動 update も含めて全ブロック |
+| **Feature** | `wslInheritsWindowsSettings` ポリシーキーで WSL が Windows 側 managed settings を継承 |
+| **Feature** | `autoMode.allow`/`soft_deny`/`environment` に `"$defaults"` を含めて built-in と並列にカスタムルール追加可能 |
+| **Feature** | auto mode opt-in プロンプトに「Don't ask again」オプション |
+| **Feature** | `claude plugin tag` コマンド追加（バージョン検証付きで git タグを作成） |
+| **Improvement** | `--continue` / `--resume` が `/add-dir` で現ディレクトリを追加したセッションも対象に |
+| **Improvement** | `/color` が Remote Control 接続時に claude.ai/code と session accent color を同期 |
+| **Improvement** | `/model` picker が `ANTHROPIC_BASE_URL` カスタムゲートウェイ使用時に `ANTHROPIC_DEFAULT_*_MODEL_NAME`/`_DESCRIPTION` の override を反映 |
+| **Improvement** | auto-update 時にプラグインの version 制約で skip された場合、`/doctor` と `/plugin` Errors タブに表示 |
+| **Fix** | `/mcp` メニューで `headersHelper` 設定サーバの OAuth Authenticate/Re-authenticate が隠れる問題 |
+| **Fix** | HTTP/SSE MCP サーバでカスタムヘッダがある場合、transient 401 後に「needs authentication」で固まる問題 |
+| **Fix** | MCP サーバの OAuth レスポンスに `expires_in` が無いと毎時再認証が発生する問題 |
+| **Fix** | MCP step-up authorization で、既にトークンが持っているスコープを名指しされた 403 `insufficient_scope` で silent refresh していた問題 |
+| **Fix** | MCP サーバの OAuth flow タイムアウト/キャンセル時の unhandled promise rejection |
+| **Fix** | MCP OAuth refresh のクロスプロセスロックが競合時に機能していなかった |
+| **Fix** | macOS keychain race で MCP トークン更新が OAuth トークンを上書きする問題（「Please run /login」の誤表示原因） |
+| **Fix** | OAuth token refresh がサーバ側トークン失効時に失敗する問題 |
+| **Fix** | Linux/Windows で credential save crash が `~/.claude/.credentials.json` を破損させる問題 |
+| **Fix** | `CLAUDE_CODE_OAUTH_TOKEN` で起動したセッションで `/login` が無効化される問題 |
+| **Fix** | 「new messages」スクロール pill と `/plugin` バッジのテキストが読めない問題 |
+| **Fix** | `--dangerously-skip-permissions` 起動時に plan acceptance ダイアログが「auto mode」を提示する問題（正: 「bypass permissions」） |
+| **Fix** | `Stop` / `SubagentStop` 以外のイベントで agent-type hooks が「Messages are required」エラーで失敗する問題 |
+| **Fix** | agent-hook verifier subagent のツール呼び出しで `prompt` hooks が再発火する問題 |
+| **Fix** | `/fork` が親会話全文をフォーク毎にディスクに書いていた問題（ポインタ＋読み込み時 hydrate に変更） |
+| **Fix** | Alt+K / Alt+X / Alt+^ / Alt+_ でキーボード入力が凍る問題 |
+| **Fix** | リモートセッション接続時に `~/.claude/settings.json` の `model` 設定が上書きされる問題 |
+| **Fix** | `/` 始まりのファイルパスを貼り付けると typeahead が「No commands match」を出す問題 |
+| **Fix** | `plugin install` が既存プラグインに対して、依存が誤バージョンで入っている場合に再解決しない問題 |
+| **Fix** | 無効パスや fd 枯渇時の file watcher の unhandled errors |
+| **Fix** | JWT refresh 時の transient CCR 初期化 blip で Remote Control セッションが archive される問題 |
+| **Fix** | `SendMessage` 経由で resume した subagent が、spawn 時の明示的な `cwd` を復元していなかった問題 |
 
 ## まとめ
 
-Claude Code v2.1.118 は、開発者体験の向上を軸とした堅実なアップデートとなっています。特に注目すべきは、MCPツールの直接呼び出し対応とコマンド体系の整理です。前者は外部ツール統合のシームレス化を、後者はユーザビリティの向上を実現しています。
+v2.1.118 は OAuth / MCP 認証系の Fix がまとまって入った回で、MCP サーバを複数使っているチームには実利の大きいアップデートです。特に `expires_in` 欠落時の毎時再認証、macOS keychain の race、プロセス間ロック未動作、`CLAUDE_CODE_OAUTH_TOKEN` 起動時の `/login` 無効化、のあたりは該当ケースを踏んでいた人には効きます。
 
-全体としてこのリリースは、「機能追加」よりも「既存機能の洗練」に重点を置いた印象です。Vim操作モードの追加、WSL設定継承、Auto Mode制御の強化など、細部にわたる改善が積み重ねられており、実際の開発現場でのフィードバックが反映されていることが伺えます。
+機能追加では、Hooks の `type: "mcp_tool"` 対応が今後の Hooks の書き方を変えるポテンシャルがある変更。シェル経由で MCP ツールを叩いていたフックを、直接呼び出しに書き換えられます。`/cost` + `/stats` → `/usage` の統合は typing shortcut 維持付きでの無痛移行になっていて、既存の習慣を壊さない配慮が入っています。
 
-OAuth認証のバグ修正も含め、安定性と使いやすさの両面での向上が図られており、日常的にClaude Codeを活用するエンジニアにとって、作業効率の向上が期待できるアップデートと言えるでしょう。
+運用的には、`DISABLE_UPDATES` がエンタープライズ用途で使える選択肢として増えた点と、WSL の `wslInheritsWindowsSettings` で Windows 側 managed settings を継承できるようになった点が、Windows 環境の組織導入で地味に効いてきそうです。
