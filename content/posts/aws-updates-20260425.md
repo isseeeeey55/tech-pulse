@@ -140,3 +140,11 @@ ML 基盤の運用で効くのは次の 2 軸です。
 Amazon Connect の AI エージェント評価メトリクス、Compute Optimizer の最新世代対応、EC2 U7i の追加リージョン、Amazon Quick × Visier Vee 連携、AWS Marketplace の UI 改善、Bedrock AgentCore の VPC Egress 対応はそれぞれ用途特化の変更で、該当機能を使っているチームには直接的に効きます。
 
 SRE の動き出しとしては、Client VPN を運用しているチームは中間 VPC の撤去計画を引きやすくなった点、SageMaker HyperPod を使っているチームはノード置換時の復旧時間短縮を CloudWatch メトリクスで追っておく価値がある点、あたりが現実的な入り口です。
+
+---
+
+## 📚 AWSをもっと深く学ぶなら
+
+<a href="//af.moshimo.com/af/c/click?a_id=5509186&p_id=54&pc_id=54&pl_id=616&url=https%3A%2F%2Fbooks.rakuten.co.jp%2Frb%2F17586246%2F%3Fscid%3Daf_pc_etc%26sc2id%3Daf_103_0_10000645%26rafcid%3Dwsc_i_is_6d64a945-e1c8-4754-a103-b4ec90d7cfa6" rel="nofollow" referrerpolicy="no-referrer-when-downgrade">AWS認定ソリューションアーキテクト - アソシエイト 完全攻略（楽天ブックス）</a><img src="//i.moshimo.com/af/i/impression?a_id=5509186&p_id=54&pc_id=54&pl_id=616" width="1" height="1" style="border:none;" alt="" loading="lazy">
+
+- [AWS公式ドキュメント](https://docs.aws.amazon.com/)

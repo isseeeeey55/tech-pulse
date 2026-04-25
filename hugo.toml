@@ -62,6 +62,9 @@ paginate = 10
     id = "G-DBZETGP0QY"
 
 [markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
   [markup.highlight]
     style = "monokai"
     lineNos = false
