@@ -1,131 +1,195 @@
 ---
 title: "【Claude Code】v2.1.119 リリースノートまとめ"
 date: 2026-04-25T08:01:27+09:00
-draft: true
-tags: ["claude-code", "settings", "gitlab", "bitbucket", "github-enterprise", "powershell", "hooks", "mcp", "opentelemetry", "ci-cd", "security", "permission-mode"]
+draft: false
+tags: ["claude-code", "settings", "gitlab", "bitbucket", "github-enterprise", "powershell", "hooks", "mcp", "opentelemetry", "permission-mode", "vim", "skills"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.119 のClaude Codeリリースノートまとめ"
 ---
 
-# Claude Code v2.1.119 リリース — 設定永続化とマルチプラットフォーム対応で進化するエンタープライズ運用
+![](/images/claude-code-updates-20260425/header.png)
 
 ## はじめに
 
-Claude Code v2.1.119 がリリースされました。今回のアップデートは、エンタープライズ環境での運用性と相互運用性の大幅な向上に焦点を当てた内容となっています。
+2026年4月25日、Claude Code v2.1.119 がリリースされました。Fix の量がかなり多い回で、加えて `/config` の永続化、`--from-pr` のマルチプラットフォーム対応、PowerShell の auto-approve 対応、Hooks への `duration_ms` 追加、OpenTelemetry の属性追加など、運用に効く小〜中粒の改善が並んでいます。
 
-主な変更点は以下の通りです：
+本記事で深掘りするのは次の 2 つ。
 
-- **設定の永続化** — `~/.claude/settings.json` による設定管理の一元化
-- **マルチプラットフォームGit対応** — GitLab、Bitbucket、GitHub Enterprise のサポート拡充
-- **PowerShellコマンドの自動承認** — Windows環境での自動化効率の向上
-- **フック機能の拡張** — `PostToolUse` フックへの `duration_ms` 追加
-- **MCP サーバーの並列接続** — 初期化パフォーマンスの改善
+- **`/config` の設定が `~/.claude/settings.json` に永続化** — theme / editor mode / verbose 等の設定が project/local/policy override の precedence に乗る
+- **`--from-pr` が GitLab MR / Bitbucket PR / GHE PR URL に対応** — GitHub.com 以外の組織でも PR コンテキスト読み込みが使える
 
-これらのアップデートにより、チーム全体での設定統一、既存CI/CDワークフローへの統合、セキュリティポリシーの厳格な運用が容易になりました。
+Fix は 30 件超で、`/skills` の Enter キー挙動、async `PostToolUse` フックの空エントリ、`/usage` プログレスバー被り、MCP OAuth の細かい修正など、日常で踏みやすかった箇所が広く潰されています。
 
 ## 注目アップデート深掘り
 
-### 1. 設定の永続化と階層的な設定管理
+### 1. `/config` の設定が settings.json に永続化
 
-今回のリリースで最も重要な変更の一つが、`~/.claude/settings.json` による設定の永続化です。これまで Claude Code の設定は実行時に毎回指定する必要がありましたが、この機能により組織全体で一貫した設定ポリシーを運用できるようになります。
+![/config の永続化と override precedence](/images/claude-code-updates-20260425/config-persistence.png)
 
-**なぜ重要なのか**
+公式リリースノートより（原文）:
 
-エンタープライズ環境では、セキュリティポリシー、リソースアクセス制限、実行権限などを組織横断で統一する必要があります。従来は各開発者が個別に設定を管理していたため、設定漏れや不整合が発生しやすく、セキュリティリスクやインシデントの原因となっていました。
+> `/config` settings (theme, editor mode, verbose, etc.) now persist to `~/.claude/settings.json` and participate in project/local/policy override precedence
 
-設定の永続化により、**組織ポリシー → プロジェクト → ローカル設定**という階層的な優先度制御が可能になります。これにより、SREチームは組織全体のベースライン設定を定義し、各プロジェクトで必要に応じてカスタマイズを許可するという柔軟な運用が実現します。
+#### 何が変わるか
 
-**具体的な活用シーン**
+これまで `/config` で変更した theme / editor mode / verbose 等の設定はセッション内でのみ有効で、再起動するとデフォルトに戻っていました。v2.1.119 からは **`~/.claude/settings.json` に書き出されて永続化** され、かつ既存の **project / local / policy override の precedence** に乗ります。
 
-例えば、本番環境へのアクセスを制限するために、組織全体で以下のような設定を `~/.claude/settings.json` に配置できます：
+> **policy override precedence とは？**
+> Claude Code の設定の解決順序。一般的に「policy（管理者配布）> local（ローカル `.claude/settings.local.json`）> project（リポジトリの `.claude/settings.json`）> user（`~/.claude/settings.json`）」のような優先順位で評価されます。`/config` で変更した値が user スコープに記録されるので、project / policy 側の同じキーがあればそちらが勝ちます。
 
-```json
-{
-  "permissionMode": "restricted",
-  "blockedMarketplaces": ["production-tools"],
-  "autoApprove": {
-    "commands": ["terraform plan", "kubectl get"]
-  }
-}
-```
+#### 実用面での効き方
 
-この設定により、初期化スクリプトやIaCテンプレートの設定を一元管理し、チームメンバー全員が同じセキュリティポリシーの下で作業できるようになります。新しいメンバーがチームに参加した際も、設定ファイルを配布するだけで環境を統一できるため、オンボーディングの効率も向上します。
+- 個人用途で毎回 `/config` で `verbose` をトグルしていた人は、もう手間が省ける
+- 組織で managed-settings を policy 側に配布している場合、ユーザーが `/config` で書き換えても **policy 側が precedence で勝つ** ので、統制が崩れない
+- 関連 Fix で「**verbose 設定が再起動後に persist しない**」問題も解消されている（`Fixed verbose output setting not persisting after restart`）
 
-### 2. マルチプラットフォームGit対応の拡張
+なお、`permissionMode` の意味的な「組織ポリシーで制限」のような話は今回のリリースには含まれていません。settings.json の階層 override 自体は以前から存在する仕組みです。
 
-`--from-pr` オプションがGitLab MR（Merge Request）、Bitbucket PR、GitHub Enterpriseに対応しました。これにより、既存のコードレビューフローに Claude Code を自然に統合できるようになります。
+---
 
-**なぜ重要なのか**
+### 2. `--from-pr` が GitLab / Bitbucket / GHE に対応
 
-多くの組織では、GitHubだけでなくGitLab（特にセルフホスティング環境）やBitbucket Serverを使用しています。これまで Claude Code のPR連携機能はGitHubに限定されていたため、他のプラットフォームを使用する組織では手動でのコンテキスト設定が必要でした。
+![--from-pr のマルチプラットフォーム対応](/images/claude-code-updates-20260425/from-pr-multi.png)
 
-今回の対応により、**PRベースのコードレビューフロー**が Git プラットフォームに依存せず利用可能になります。これは特に、CI/CDパイプライン内で Claude Code を実行し、PR内容に基づいた自動レビューや提案を行うユースケースで有効です。
+公式リリースノートより（原文）:
 
-**実際の使い方**
+> `--from-pr` now accepts GitLab merge-request, Bitbucket pull-request, and GitHub Enterprise PR URLs
 
-GitLab MRから直接コンテキストを読み込む場合：
+これまで `--from-pr` は github.com の PR URL のみが対象でした。v2.1.119 からは **GitLab の merge-request URL、Bitbucket の pull-request URL、GitHub Enterprise の PR URL** が受け付けられるようになります。
+
+#### 想定される URL 形式
 
 ```bash
-$ claude --from-pr https://gitlab.example.com/org/repo/-/merge_requests/123
+# GitHub.com (従来通り)
+$ claude --from-pr https://github.com/owner/repo/pull/123
+
+# GitLab (新規対応)
+$ claude --from-pr https://gitlab.example.com/group/project/-/merge_requests/45
+
+# Bitbucket (新規対応)
+$ claude --from-pr https://bitbucket.example.com/projects/PROJ/repos/repo/pull-requests/12
+
+# GitHub Enterprise (新規対応)
+$ claude --from-pr https://github.enterprise.example.com/owner/repo/pull/67
 ```
 
-GitHub Enterpriseのプライベートリポジトリの場合：
+詳細な認証方法（GitLab トークン、Bitbucket app password、GHE PAT など）は公式ドキュメントを参照してください。本記事ではドキュメントにない認証方式までは推測で書きません。
 
-```bash
-$ claude --from-pr https://github.enterprise.example.com/org/repo/pull/456
-```
+#### 関連: `prUrlTemplate` 設定の追加
 
-これにより、CI/CDパイプラインのステップとして以下のような自動化が可能になります：
+同じ v2.1.119 で `prUrlTemplate` 設定が追加され、フッターの PR バッジが向く先を github.com 以外のレビューシステムに置き換えられるようになりました。GitLab/Bitbucket/GHE 中心の組織は、`prUrlTemplate` と `--from-pr` をセットで使うと、Claude Code を GitHub.com 前提から開放する整理ができます。
 
-```yaml
-# GitLab CI example
-code_review:
-  script:
-    - claude --from-pr $CI_MERGE_REQUEST_IID "このMRの変更内容をレビューし、セキュリティ上の懸念点を指摘してください"
-```
+#### `owner/repo#N` ショートハンドも対応強化
 
-SREの観点では、インフラコード（Terraform、Ansible等）の変更レビューを自動化し、設定ミスや権限の過剰付与を事前に検出するワークフローが構築できます。既存のGitプラットフォームに依存せず、組織の標準ツールチェーンに自然に組み込める点が大きなメリットです。
+これも関連改善で、出力中の `owner/repo#123` 形式のショートハンドリンクが、**git remote のホスト**を使ってリンクされるようになりました（従来は常に github.com を指していた）。GHE / GitLab セルフホスト環境のチームには地味に効きます。
+
+---
 
 ## 実用的な活用ポイント
 
-### 日常の開発ワークフローへの影響
+### Hooks: `PostToolUse` / `PostToolUseFailure` に `duration_ms`
 
-設定の永続化により、毎回のコマンド実行時に `--permission-mode` や `--auto-approve` を指定する必要がなくなります。特に複数のプロジェクトを並行して扱うエンジニアにとって、プロジェクトごとに異なる設定を自動適用できる点は大きな効率化になります。
+公式リリースノートより:
 
-PowerShellコマンドの自動承認機能は、Windows環境での運用自動化スクリプト生成を大幅に効率化します。従来は各PowerShellコマンドに対して手動承認が必要でしたが、信頼できるコマンドパターンを事前に定義することで、スクリプト生成から実行までの時間を短縮できます。
+> Hooks: `PostToolUse` and `PostToolUseFailure` hook inputs now include `duration_ms` (tool execution time, excluding permission prompts and PreToolUse hooks)
 
-### すぐに試せるTips
+`PostToolUse` だけでなく **`PostToolUseFailure`** にも `duration_ms` が来ます。permission prompt 待ち時間と PreToolUse フックの時間は除外された、純粋なツール実行時間。OpenTelemetry や独自の集計に流せば、ツール別の実行時間分布がフックレベルで取れます。
 
-**設定ファイルのテンプレート化**
+### PowerShell の auto-approve
 
-チーム内で標準的な `~/.claude/settings.json` テンプレートを作成し、リポジトリのドキュメントとして管理しましょう。新メンバーはこれをコピーするだけで、チームの運用ポリシーに準拠した環境を即座に構築できます。
+> PowerShell tool commands can now be auto-approved in permission mode, matching Bash behavior
 
-**MCP並列接続の活用**
+これまで Bash 限定だった auto-approval が PowerShell でも効くようになりました。Windows メインの開発者が、Bash 利用者と同じ auto mode 体験を得られるようになります。
 
-複数の外部ツール（AWS CLI、Terraform、監視ツール等）を MCP サーバーとして接続している場合、並列接続により初期化時間が削減されます。特に多数の MCP サーバーを使用するプロジェクトでは、起動時の待ち時間が体感的に短縮されます。
+### `--print` / `--agent` の挙動改善
 
-### SRE/インフラエンジニアの視点での活用シーン
+- `--print` モードが、エージェント frontmatter の `tools:` と `disallowedTools:` を honor するようになった（インタラクティブモードと挙動を揃える）
+- `--agent <name>` が、built-in agents の `permissionMode` を honor するようになった
 
-`PostToolUse` フックに `duration_ms` が追加されたことで、Terraform apply やスクリプト実行の性能監視が可能になりました。これを OpenTelemetry と連携させることで、ツール実行の詳細トレーシングを実装し、障害分析を高速化できます。例えば、特定のツール実行が異常に時間を要している場合、そのメトリクスをアラートとして検知し、インフラの問題を早期発見できます。
+スクリプトや CI 経由で `--print` / `--agent` を使っているチームには、**意図したツール制限が一貫して効く**ようになる修正です。
 
-`permissionMode` と `blockedMarketplaces` の改善により、本番環境への操作制限を厳格に運用できるようになりました。例えば、本番環境では読み取り専用コマンドのみを許可し、変更操作は明示的な承認フローを経由するという運用ポリシーを技術的に強制できます。
+### MCP の並列再接続
+
+> Subagent and SDK MCP server reconfiguration now connects servers in parallel instead of serially
+
+Subagent や SDK 経由で MCP サーバを再構成する場面で、サーバ接続が直列から並列に変わりました。v2.1.118 で入った「ローカル + claude.ai MCP の並列接続が既定」とは別の場所での並列化です。
+
+### OpenTelemetry の属性拡張
+
+> OpenTelemetry: `tool_result` and `tool_decision` events now include `tool_use_id`; `tool_result` also includes `tool_input_size_bytes`
+
+`tool_result` / `tool_decision` イベントで **特定のツール呼び出しを `tool_use_id` で追跡可能**になり、`tool_result` には **入力サイズ (`tool_input_size_bytes`)** も付くようになりました。「どのツール呼び出しが何バイトの入力を受けて何 ms で終わったか」が、ID 紐付けで追える形。
+
+### Vim モードの細かい改善
+
+INSERT モードで Esc を押したときに、queued message が input に戻る挙動を停止。**Esc をもう一度押すと中断**になる。Vim ユーザの操作感が他モードと近づきます。
+
+### Status line への `effort.level` / `thinking.enabled`
+
+ステータスライン用の stdin JSON に `effort.level` と `thinking.enabled` が含まれるようになりました。カスタムステータスラインで現在の effort や thinking 状態を表示できます。
+
+---
 
 ## 全変更点一覧
 
-| カテゴリ | 変更内容 | 概要 |
-|---------|---------|------|
-| Feature | 設定の永続化 | `~/.claude/settings.json` による設定管理の一元化。組織ポリシー → プロジェクト → ローカル設定の階層的な優先度制御に対応 |
-| Feature | GitLab/Bitbucket/GitHub Enterprise対応 | `--from-pr` オプションが GitLab MR、Bitbucket PR、GitHub Enterprise をサポート。既存のコードレビューフローへの統合が容易に |
-| Feature | PowerShellコマンドの自動承認 | Windows環境での運用自動化スクリプト生成の効率化。信頼できるコマンドパターンの事前定義が可能 |
-| Improvement | フック機能の拡張 | `PostToolUse` フックに `duration_ms` を追加。ツール実行時間の監視とパフォーマンス分析が可能に |
-| Improvement | MCP サーバーの並列接続 | 複数の MCP サーバーの初期化を並列実行。AWS CLI、Terraform、監視ツール等の初期化遅延を削減 |
-| Improvement | permissionMode と blockedMarketplaces の改善 | 本番環境への操作制限をより厳格に運用可能。セキュリティポリシーの技術的強制が容易に |
-| Improvement | OpenTelemetry イベント拡張 | ツール実行の詳細トレーシングに対応。障害分析の高速化と可観測性の向上 |
+| カテゴリ | 変更内容 |
+|---|---|
+| **Feature** | `/config` 設定 (theme, editor mode, verbose 等) を `~/.claude/settings.json` に永続化、project/local/policy override precedence 対応 |
+| **Feature** | `prUrlTemplate` 設定追加。フッターの PR バッジを GitHub.com 以外の URL に向けられる |
+| **Feature** | `CLAUDE_CODE_HIDE_CWD` 環境変数追加。起動ロゴで cwd を非表示化 |
+| **Feature** | `--from-pr` が GitLab MR / Bitbucket PR / GitHub Enterprise PR URL に対応 |
+| **Feature** | `--print` モードが agent frontmatter の `tools:` / `disallowedTools:` を honor |
+| **Feature** | `--agent <name>` が built-in agents の `permissionMode` を honor |
+| **Feature** | PowerShell ツールコマンドが permission mode で auto-approve 対象に（Bash と同様） |
+| **Feature** | Hooks: `PostToolUse` / `PostToolUseFailure` に `duration_ms` 追加（permission prompt と PreToolUse 除外） |
+| **Improvement** | Subagent / SDK MCP server の reconfiguration が並列接続化 |
+| **Improvement** | プラグインが他プラグインの version 制約で pin されたとき、満たす最新の git tag に auto-update |
+| **Improvement** | Vim mode: INSERT で Esc が queued message を戻さず、再押下で中断に |
+| **Improvement** | スラッシュコマンド候補がクエリにマッチした文字をハイライト |
+| **Improvement** | スラッシュコマンドピッカーが長い説明を切り捨てず 2 行に折り返し |
+| **Improvement** | `owner/repo#N` ショートハンドリンクが git remote のホストを使用（github.com 固定でなくなる） |
+| **Improvement** | `blockedMarketplaces` の `hostPattern` / `pathPattern` エントリが正しく強制されるように |
+| **Improvement** | OpenTelemetry: `tool_result` / `tool_decision` に `tool_use_id` 追加、`tool_result` に `tool_input_size_bytes` 追加 |
+| **Improvement** | ステータスライン stdin JSON に `effort.level` / `thinking.enabled` 追加 |
+| **Improvement** | Tool search が Vertex AI でデフォルト無効化（unsupported beta header 回避、`ENABLE_TOOL_SEARCH` で opt-in 可） |
+| **Fix** | CRLF コンテンツ (Windows clipboard、Xcode console) の貼り付けで余計な空行が入る |
+| **Fix** | kitty keyboard protocol の bracketed paste で複数行貼り付けの改行が消える |
+| **Fix** | macOS/Linux ネイティブビルドで Bash tool が deny されると Glob/Grep ツールも消える |
+| **Fix** | フルスクリーンモードで上スクロール後、ツール完了のたびに底に戻る |
+| **Fix** | MCP HTTP 接続で OAuth discovery が non-JSON を返すと "Invalid OAuth error response" で失敗 |
+| **Fix** | Rewind オーバーレイが画像添付メッセージで "(no prompt)" と表示 |
+| **Fix** | auto mode が plan mode の "Execute immediately" 指示で plan mode を上書きする |
+| **Fix** | レスポンスペイロードを返さない非同期 `PostToolUse` フックがセッショントランスクリプトに空エントリを書く |
+| **Fix** | サブエージェントタスク通知がキューに孤立した状態でスピナーが回り続ける |
+| **Fix** | スラッシュコマンド内で絶対パスを使った場合、`@`-file の Tab 補完がプロンプト全体を置換 |
+| **Fix** | macOS Terminal.app で Docker / SSH 経由起動時に起動プロンプトに余分な `p` 文字 |
+| **Fix** | HTTP/SSE/WebSocket MCP サーバの `headers` 内の `${ENV_VAR}` プレースホルダがリクエスト前に置換されない |
+| **Fix** | `--client-secret` で保存した MCP OAuth client secret が `client_secret_post` 必須サーバとのトークン交換時に送られない |
+| **Fix** | `/skills` で Enter キーがダイアログを閉じてしまい、`/<skill-name>` がプロンプトに pre-fill されない |
+| **Fix** | `/agents` 詳細ビューがサブエージェント未使用な built-in tool を "Unrecognized" と誤表示 |
+| **Fix** | プラグイン由来の MCP サーバが、プラグインキャッシュが不完全な状態の Windows で起動しない |
+| **Fix** | `/export` が会話で実際に使われたモデルではなく、現在のデフォルトモデルを表示 |
+| **Fix** | verbose output 設定が再起動後に persist しない |
+| **Fix** | `/usage` プログレスバーが "Resets …" ラベルと重なる |
+| **Fix** | プラグイン MCP サーバが `${user_config.*}` 参照先のオプションフィールドが空のとき失敗 |
+| **Fix** | リスト項目の文末数字が単独で次行に折り返される |
+| **Fix** | `/plan` / `/plan open` が plan mode 入室時に既存プランに作用しない |
+| **Fix** | auto-compaction 前に呼ばれた skill が、次のユーザーメッセージに対して再実行される |
+| **Fix** | `/reload-plugins` / `/doctor` が無効化されたプラグインのロードエラーを報告 |
+| **Fix** | Agent ツールの `isolation: "worktree"` が前セッションの古い worktree を再利用 |
+| **Fix** | 無効化された MCP サーバが `/status` で "failed" と表示 |
+| **Fix** | `TaskList` がタスクをファイルシステム順で返し、ID 順ソートされていない |
+| **Fix** | `gh` 出力に "rate limit" を含む PR タイトルがあると "GitHub API rate limit exceeded" を誤表示 |
+| **Fix** | SDK/bridge `read_file` が成長中のファイルでサイズ上限を正しく強制しない |
+| **Fix** | git worktree で動作時、PR がセッションにリンクされない |
+| **Fix** | `/doctor` が、より高い precedence のスコープで上書きされた MCP サーバエントリに対して警告 |
+| **Fix** | Windows: 偽陽性の "Windows requires 'cmd /c' wrapper" MCP 設定警告を削除 |
+| **Fix** | [VSCode] macOS でマイク許可プロンプト中に音声ディクテーションの初回録音が無音 |
 
 ## まとめ
 
-v2.1.119 は、Claude Code のエンタープライズ運用を大きく前進させるリリースです。設定の永続化により、チーム全体での一貫した運用ポリシーの適用が可能になり、マルチプラットフォームGit対応により既存のCI/CDワークフローへの統合障壁が大幅に低下しました。
+v2.1.119 は Fix の量で見ると 2026-04 の中でも特に多い回で、特に MCP OAuth まわり、Hooks の細かい挙動、フルスクリーン UI、`/skills` / `/agents` / `/export` / `/usage` 系のスラッシュコマンドなど、日常的に踏みうる箇所が広く修正されています。
 
-特に注目すべきは、**組織横断での標準化**と**既存ツールチェーンへの柔軟な統合**という2つの軸で改善が進んでいる点です。SREやインフラエンジニアにとっては、セキュリティポリシーの技術的強制、パフォーマンス監視の充実、Windows環境での自動化効率向上など、実務で直面する課題に対する実践的な解決策が提供されています。
+機能追加では、`--from-pr` のマルチプラットフォーム対応がチーム単位での導入のしやすさに直結する変更です。GitLab セルフホストや GHE 中心の組織で、これまで「PR コンテキストを CLI で食わせる」運用が GitHub.com 前提でしか組めなかった部分を、本来の Git ホスティングに合わせられるようになります。`prUrlTemplate` と `owner/repo#N` の git remote 対応も含めて、Claude Code を GitHub.com 前提から外す方向の整理が今回のリリースの裏テーマと言えそうです。
 
-既に Claude Code を運用している組織では、まず `~/.claude/settings.json` による設定の統一から始めることをお勧めします。新規導入を検討している組織では、既存のGitプラットフォームとCI/CDパイプラインへの統合可能性を評価する良いタイミングと言えるでしょう。
+`/config` の永続化は地味ですが、毎回 `verbose` を切り替えていた人や、組織で managed-settings を配っているチームには日常的に効きます。Hooks の `duration_ms` と OpenTelemetry の `tool_use_id` / `tool_input_size_bytes` も合わせて、observability まわりが一段強化されたリリースです。
