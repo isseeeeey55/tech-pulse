@@ -1,197 +1,142 @@
 ---
 title: "【AWS】2026/04/25 のアップデートまとめ"
 date: 2026-04-25T08:02:13+09:00
-draft: true
-tags: ["aws", "client-vpn", "transit-gateway", "sagemaker", "hyperpod", "ec2", "connect", "compute-optimizer", "rds", "marketplace", "bedrock", "quick"]
+draft: false
+tags: ["aws", "client-vpn", "transit-gateway", "sagemaker", "hyperpod", "ec2", "connect", "compute-optimizer", "rds", "marketplace", "bedrock", "amazonquick"]
 categories: ["AWS Updates"]
 summary: "2026/04/25 のAWSアップデートまとめ"
 ---
 
-# 2024年4月25日 AWS アップデート解説
+![](/images/aws-updates-20260425/header.png)
 
 ## はじめに
 
-2024年4月25日、AWSから8件のアップデートが発表されました。本日の注目ポイントは、**AWS Client VPNのTransit Gatewayネイティブ統合**と**Amazon SageMaker HyperPodの自動トポロジ管理機能**です。特にClient VPNアップデートは、リモートアクセスアーキテクチャを根本から簡素化し、セキュリティ監査を強化する重要な機能です。また、SageMaker HyperPodの機能強化は、大規模分散学習環境の運用負荷を大幅に軽減します。その他、Amazon Connectの新メトリクス追加やEC2最新インスタンスの地域拡大など、運用改善と性能向上に貢献するアップデートが揃いました。
+2026年4月25日の AWS アップデートは 8 件。ネットワーク（Client VPN）、ML 基盤（SageMaker HyperPod）、コンタクトセンター（Connect）、最適化（Compute Optimizer）、AI 関連（Bedrock AgentCore / Amazon Quick）など分野はバラついていますが、運用負担を減らす方向の変更が中心の回です。
+
+本記事で深掘りするのは次の 2 つ。
+
+- **AWS Client VPN が AWS Transit Gateway とのネイティブ統合に対応** — 中間 VPC 不要、SNAT 排除、送信元 IP の End-to-End 保持
+- **Amazon SageMaker HyperPod が Slurm の自動トポロジ管理に対応** — クラスタのスケーリングや置換に追従して最適トポロジを自動維持
+
+他に Amazon Connect の AI エージェント評価メトリクス 8 種、Compute Optimizer の最新世代 EC2/RDS 対応、EC2 High Memory U7i の追加リージョン、Amazon Quick × Visier Vee 連携、AWS Marketplace の銀行口座削除 UI、Bedrock AgentCore Gateway/Identity の VPC Egress 対応などが含まれます。
 
 ## 注目アップデート深掘り
 
-### AWS Client VPN の Transit Gateway ネイティブ統合
+### 1. AWS Client VPN が Transit Gateway とのネイティブ統合に対応
 
-#### なぜこのアップデートが重要なのか
+![Client VPN × Transit Gateway 構成の変化](/images/aws-updates-20260425/client-vpn-tgw.png)
 
-従来、AWS Client VPNから複数のVPCやオンプレミスネットワークにアクセスする場合、中間VPCを構築し、そこを経由してTransit Gatewayに接続する必要がありました。このアーキテクチャには以下の課題がありました：
+> **Transit Gateway とは？**
+> 複数の VPC とオンプレミスネットワークを 1 つのハブとして相互接続できる AWS のネットワーキングサービス。各 VPC を個別に VPC ピアリングで結ぶ代わりに、Transit Gateway を中心としたハブ＆スポーク構成を取れます。
 
-- **運用の複雑性**: 中間VPCの構築・維持管理が必要
-- **IPアドレス変換の問題**: SNAT（Source NAT）により、クライアントの実際の送信元IPアドレスが隠蔽される
-- **セキュリティ監査の困難性**: どのリモートユーザーがトラフィックを生成したか正確に特定できない
+#### これまでの構成と課題
 
-今回のアップデートにより、Client VPNが直接Transit Gatewayに接続可能となり、これらの課題が解決されます。特に重要なのは、**クライアントの送信元IPアドレスがEnd-to-Endで保持される**ようになった点です。これにより、セキュリティグループやネットワークACLでクライアントIPベースの細かいアクセス制御が可能となり、ログ分析やコンプライアンス監査が飛躍的に容易になります。
+これまで Client VPN から複数の VPC やオンプレネットワークに接続する場合、**中間 VPC を作って Transit Gateway へ接続する** 構成が必要でした。公式アナウンスにあるとおり、この構成には次の 2 つの不便さがありました。
 
-#### アーキテクチャの変化
+- 中間 VPC のリソース（NAT・ルートテーブル・サブネット等）を別途プロビジョニング・運用しなければならない
+- Source NAT (SNAT) によりクライアントの送信元 IP が変換されるため、どのリモートユーザーがどのトラフィックを生成したかを特定しづらい（セキュリティ監査で問題になる）
 
-**従来のアーキテクチャ**:
+#### v2026-04-25 の変更点
 
-```
-[Client VPN] → [中間VPC + NAT] → [Transit Gateway] → [各VPC/オンプレミス]
-                     ↓
-               送信元IP変換（SNAT）
-```
+- Client VPN エンドポイントを **直接 Transit Gateway にアタッチ** 可能になった（中間 VPC 不要）
+- **エンドユーザーの送信元 IP が End-to-End で保持** されるようになった（SNAT 排除）
+- 結果として、**実クライアント IP に基づく authorization rule が書ける** ようになり、トラフィックを特定ユーザーに紐づけて追跡できる
+- **Transit Gateway flow logs が、保持された送信元 IP に紐づく接続レベルの詳細を記録** する
+- Client VPN が利用可能な全リージョンで提供。**追加料金なし**（Client VPN と Transit Gateway の通常料金のみ）
 
-**新しいアーキテクチャ**:
+具体的な API パラメータ・CLI 例・コンソール手順は、公式の Client VPN 製品ページとドキュメントを参照してください。本リリースのアナウンスでは具体的な CLI 形式までは記載されていないので、本記事ではドキュメントにない構文を推測で書きません。
 
-```
-[Client VPN] → [Transit Gateway] → [各VPC/オンプレミス]
-                     ↓
-           送信元IP保持（End-to-End）
-```
+#### SRE が嬉しいポイント
 
-#### 実装手順
+- **インシデント調査時のユーザー特定が容易**: 中間 VPC の SNAT を経由しないため、Transit Gateway flow logs / VPC flow logs から実 IP で追える
+- **コンプライアンス監査の証跡が綺麗になる**: 「誰がどこにアクセスしたか」が IP ベースで記録される
+- **中間 VPC の運用が消える**: NAT・サブネット・パッチ・SG 管理など、純粋に消化していた運用タスクの削減
 
-Transit Gateway統合を有効化するには、Client VPN エンドポイント作成時に以下のパラメータを指定します。
+---
 
-AWS CLI での作成例：
+### 2. Amazon SageMaker HyperPod が Slurm の自動トポロジ管理に対応
 
-```bash
-$ aws ec2 create-client-vpn-endpoint \
-  --client-cidr-block "10.0.0.0/16" \
-  --server-certificate-arn "arn:aws:acm:us-east-1:123456789012:certificate/abc123..." \
-  --authentication-options Type=certificate-authentication,MutualAuthentication={ClientRootCertificateChainArn=arn:aws:acm:us-east-1:123456789012:certificate/def456...} \
-  --connection-log-options Enabled=true,CloudwatchLogGroup=client-vpn-logs \
-  --transport-protocol udp \
-  --split-tunnel
-```
+![HyperPod 自動トポロジ管理の流れ](/images/aws-updates-20260425/hyperpod-topology.png)
 
-既存のClient VPNエンドポイントにTransit Gatewayアタッチメントを追加：
+> **SageMaker HyperPod とは？**
+> 大規模分散学習向けに最適化された SageMaker のクラスタ機能。GPU インスタンスの集合を Slurm や Kubernetes で管理し、長時間ジョブの耐障害性（自動ノード置換、チェックポイント）や、HPC 風のスケジューリングを提供します。
 
-```bash
-$ aws ec2 associate-client-vpn-target-network \
-  --client-vpn-endpoint-id cvpn-endpoint-0123456789abcdef0 \
-  --subnet-id subnet-0123456789abcdef0 \
-  --transit-gateway-id tgw-0123456789abcdef0
-```
+> **Slurm とは？**
+> HPC の世界で広く使われているジョブスケジューラ。`sbatch` でジョブを投げ、ノードを割り当てて並列実行する。SageMaker HyperPod でもクラスタオーケストレータの選択肢として提供されています。
 
-#### セキュリティグループルールの設定例
+#### 何ができるようになったか
 
-送信元IPが保持されるため、クライアントIPベースの認可が可能になります：
+公式アナウンスより、ポイントは以下です。
 
-```bash
-$ aws ec2 authorize-security-group-ingress \
-  --group-id sg-0123456789abcdef0 \
-  --protocol tcp \
-  --port 443 \
-  --cidr 10.0.0.100/32 \
-  --description "Allow access from specific VPN client"
-```
+- HyperPod が **クラスタ内の GPU インスタンスタイプを自動検出** し、最適なネットワークトポロジモデルを選択する
+- **Tree topology**: 階層的なインターコネクトを持つインスタンスタイプ向け。対象は `ml.p5.48xlarge` / `ml.p5e.48xlarge` / `ml.p5en.48xlarge`
+- **Block topology**: 均一な高帯域幅接続を持つインスタンスタイプ向け。対象は `ml.p6e-gb200.NVL72`
+- **インスタンスタイプ混在クラスタでは、両方に互換性のあるトポロジを自動選択**
+- **クラスタの scale-up / scale-down / ノード置換イベントに追従** してトポロジ設定を自動更新
+- **デフォルトで有効**、追加設定不要
+- HyperPod が利用可能な全リージョンで提供
 
-#### Transit Gateway フローログでの検証
+#### 何が嬉しいか
 
-送信元IPの保持を確認するため、Transit Gateway フローログを有効化します：
+- スケーリングのたびに Slurm 設定ファイルを手動で更新する手間がなくなる
+- ノード置換時にトポロジ再設定の作業が消えるので、**長時間学習ジョブの中断時間を短くできる**
+- トポロジ最適化のためにインスタンス特性を深く理解しなくても、ML エンジニアがそのまま使える
 
-```bash
-$ aws ec2 create-flow-logs \
-  --resource-type TransitGateway \
-  --resource-ids tgw-0123456789abcdef0 \
-  --traffic-type ALL \
-  --log-destination-type cloud-watch-logs \
-  --log-group-name /aws/transitgateway/flowlogs
-```
+各インスタンスタイプの具体的な GPU 数・メモリ・帯域などの仕様は、本リリースノートの範囲外なので、SageMaker / EC2 公式ドキュメントを確認してください。
 
-フローログには、クライアントの実際のIPアドレスが記録され、トラフィック追跡が正確に行えます。
+#### 移行時の確認
 
-> **Note:** この機能は既存のClient VPN・Transit Gateway料金のみで利用でき、追加料金は発生しません。
+すでに HyperPod クラスタを運用している場合、自動選択されるトポロジが手動で構成していたものと一致するかを事前に確認すると安全です。カスタム Slurm 設定がある場合の互換性は、自分の構成依存の話なので個別検証が必要です。
 
-### Amazon SageMaker HyperPod の自動 Slurm トポロジ管理
-
-#### 分散学習における通信最適化の重要性
-
-大規模な機械学習モデルの学習では、複数のGPUインスタンス間でモデルパラメータや勾配を頻繁に同期する必要があります。この通信パターンは、NCCL（NVIDIA Collective Communications Library）などの集約操作ライブラリによって最適化されますが、その効率はネットワークトポロジに大きく依存します。
-
-従来、SageMaker HyperPodでSlurmクラスタを構築する際、最適なネットワークトポロジを選択・設定するには、GPUインスタンスの相互接続特性を深く理解し、手動でSlurm設定ファイルを編集する必要がありました。クラスタのスケーリングやノード置換時には、再度手動で設定を更新する必要があり、運用負荷が高い状況でした。
-
-#### 自動トポロジ管理の仕組み
-
-今回のアップデートにより、HyperPodは以下を自動的に実行します：
-
-- **GPUインスタンスタイプの検出**: クラスタ内のインスタンスタイプ（ml.p5.48xlarge、ml.p5e.48xlarge、ml.p5en.48xlarge、ml.p6e-gb200.NVL72など）を識別
-- **最適なトポロジの選択**: 
-  - **ツリートポロジ**: 階層的な相互接続を持つインスタンス向け（多段スイッチ構成）
-  - **ブロックトポロジ**: 均一な高帯域幅接続を持つインスタンス向け（フルメッシュに近い構成）
-- **動的な設定更新**: スケーリングやノード置換時に自動でトポロジを再計算・適用
-- **混合環境への対応**: 複数のインスタンスタイプが混在する場合、互換性のあるトポロジを自動選択
-
-#### 技術的な背景
-
-ツリートポロジとブロックトポロジの違いは、NCCL集約操作のアルゴリズム選択に影響します：
-
-- **ツリートポロジ**: Ring AllReduceやTree AllReduceアルゴリズムを最適化。階層的な通信パターンで帯域幅を効率的に利用
-- **ブロックトポロジ**: Double Binary Treeアルゴリズムなど、並列度の高い操作を最適化。低レイテンシ通信が可能
-
-#### 対応インスタンスタイプ
-
-本機能は以下のGPUインスタンスタイプに対応しています：
-
-- **ml.p5.48xlarge**: NVIDIA H100 GPU × 8、EFA対応、インスタンス間3.2Tbps
-- **ml.p5e.48xlarge**: H100 GPU × 8、高性能メモリ構成
-- **ml.p5en.48xlarge**: H100 GPU × 8、強化されたネットワーク構成
-- **ml.p6e-gb200.NVL72**: NVIDIA GB200 Grace Blackwell（最新世代）
-
-#### 実装上の考慮点
-
-デフォルトで有効化されているため、既存のHyperPodクラスタでも追加設定なしに利用できます。ただし、以下の点に注意が必要です：
-
-- クラスタ作成時にインスタンスタイプを慎重に選択（トポロジはインスタンスタイプに基づいて決定される）
-- 混合インスタンス環境では、通信性能のボトルネックが発生しないようインスタンスの組み合わせを検討
-- 既存の手動Slurm設定がある場合、自動トポロジ管理との競合を確認
-
-> **Note:** この機能は、すべてのSageMaker HyperPod対応AWSリージョンで利用可能です。
+---
 
 ## SRE視点での活用ポイント
 
-### Client VPN × Transit Gateway 統合の運用改善
+### Client VPN × Transit Gateway 統合の運用効果
 
-リモートアクセス環境の運用において、この統合は以下のシナリオで大きな価値を発揮します。
+中間 VPC の廃止と送信元 IP 保持は、実運用の 3 つのシーンに効いてきます。
 
-**セキュリティインシデント対応の高速化**: 従来、VPNクライアントからの不審なアクセスを調査する際、中間VPCでのSNATによりログ追跡が困難でした。送信元IP保持により、Transit Gateway フローログやVPCフローログから直接クライアントを特定でき、インシデント対応時間を大幅に短縮できます。CloudWatch Logs Insightsと組み合わせれば、特定ユーザーのアクセスパターンをリアルタイムで分析可能です。
+**インシデント対応**: VPN クライアントから不審なアクセスがあったときに、実 IP がフローログに記録されているので、ユーザー特定が直接できる。CloudWatch Logs Insights と組み合わせれば、特定ユーザーのアクセス履歴を時系列で追える構成にできます。
 
-**コンプライアンス監査の自動化**: 金融機関や医療機関など、厳格な監査要件がある環境では、「誰が・いつ・どのリソースにアクセスしたか」の完全な記録が必須です。クライアントIP保持により、AWS CloudTrail、VPCフローログ、アプリケーションログを統合した監査証跡を構築できます。Terraformで管理している環境であれば、セキュリティグループルールとログ分析パイプラインを一体で管理し、変更履歴を自動追跡できます。
+**コンプライアンス監査**: 「誰がどのリソースにアクセスしたか」を IP ベースで記録できる。VPC flow logs / Transit Gateway flow logs / アプリ側のアクセスログを実 IP で結合できれば、監査要件への対応が整理しやすくなります。
 
-**マルチテナント環境でのコスト配賦**: クライアントIPベースでトラフィックを正確に分類できるため、部門別・プロジェクト別のネットワーク利用量を測定し、コスト配賦の精度を向上できます。AWS Cost and Usage Reportと組み合わせた分析基盤を構築すれば、リソース利用の可視化が容易になります。
+**運用削減**: 中間 VPC のパッチ・セキュリティグループ・NAT ゲートウェイの可用性監視といった、純粋に消化していた運用タスクが消える。新規構築のチームほど効果が大きい一方、既存環境では中間 VPC を撤去するための切り替え作業が発生するので、実利を見ながら段階的に進めるのが現実的です。
 
-**運用複雑性の削減**: 中間VPCの廃止により、パッチ適用、セキュリティグループ管理、NATゲートウェイの可用性監視といった運用タスクが不要になります。障害対応のランブックもシンプルになり、MTTR（平均復旧時間）の短縮が期待できます。
+### SageMaker HyperPod 自動トポロジ管理の運用効果
 
-### SageMaker HyperPod 自動トポロジ管理の運用価値
+ML 基盤の運用で効くのは次の 2 軸です。
 
-機械学習基盤の運用では、以下の改善が見込まれます。
+**ノード置換時の復旧時間短縮**: GPU インスタンスの障害・置換は HyperPod のような大規模クラスタでは日常的に起きる事象です。トポロジ再構成が自動化されることで、置換後のジョブ再開までの時間が短くなります。CloudWatch アラームで GPU インスタンス異常を検知 → HyperPod の自動置換 → 自動トポロジ更新、というフローを組めば、夜中のオンコールが減る方向に効きます。
 
-**スケーリング時の運用負荷軽減**: 学習ジョブの優先度や緊急性に応じてクラスタを動的にスケールする運用では、ノード追加のたびにSlurm設定を手動更新する負担が大きな課題でした。自動トポロジ管理により、Auto Scalingグループと連携した完全自動化が実現し、オンコール対応の頻度を削減できます。
+**新規クラスタ構築のハードル低下**: 自動有効なので、Slurm の topology.conf を自分でメンテする必要がない状態で動かせる。ML エンジニアがクラスタ初期構築をやる場面で、トポロジ最適化を専門知識としてキャッチアップしなくてよくなる。
 
-**ノード障害時の自動復旧**: GPUインスタンスの障害は稀ではなく、ノード置換が発生します。従来は置換後に手動でトポロジ再設定が必要でしたが、自動管理により復旧プロセスが完全に自動化され、学習ジョブの中断時間を最小化できます。CloudWatch アラームと組み合わせてノード異常を検知し、自動置換フローを構築すれば、無人運用に近づけます。
+導入判断としては、新規クラスタなら即座に恩恵を受けられる一方、既存クラスタでカスタムの Slurm 設定を持っている場合は、自動選択されるトポロジが現行設定と整合するかを事前に検証してから移行するのが安全です。
 
-**パフォーマンス最適化の民主化**: ネットワークトポロジの最適化には深い専門知識が必要でしたが、自動管理によりMLエンジニアがインフラの詳細を意識せずに高性能な学習環境を利用できます。これにより、SREチームは運用自動化やコスト最適化などの高付加価値業務に集中できます。
-
-**導入時の判断基準**: 既存のHyperPod環境で手動トポロジ設定を運用している場合、移行前に自動選択されるトポロジが現在の設定と一致するか検証が必要です。特に、カスタマイズしたSlurm設定がある場合、互換性を慎重に確認してください。新規構築であれば、デフォルトで有効化されているため即座に恩恵を受けられます。
+---
 
 ## 全アップデート一覧
+
+> **Amazon Quick とは？**
+> ACL（アクセス制御リスト）対応のナレッジベースを管理できる AWS のサービス。SharePoint や Google Drive 等の外部データソースを横断検索できる。Amazon Q（生成 AI アシスタント）とは別サービス。
+
+> **EFA (Elastic Fabric Adapter) とは？**
+> EC2 インスタンスに装着できる、HPC / ML 向けの高速・低レイテンシなネットワークインターフェース。MPI や NCCL を使った大規模ノード間通信で性能を出すために使われる。
 
 | # | タイトル | 概要 |
 |---|----------|------|
 | 1 | [Amazon Bedrock AgentCore Gateway and Identity support VPC egress](https://aws.amazon.com/about-aws/whats-new/2024/04/agentcore-gateway-identity-vpc/) | Bedrock AgentCore Gateway と Identity が VPC Egress に対応 |
-| 2 | [Amazon Quick now integrates with Visier's Vee agent for workforce intelligence](https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-quick-visier-vee/) | Amazon Quick が Visier の AI アシスタント「Vee」と統合。MCP を通じて人員分析データにアクセス可能となり、従業員数、離職率、勤続年数などを自然言語で質問できる。Quick Flows の自動化ワークフローから Vee を呼び出し可能 |
-| 3 | [AWS Marketplace Management Portal now supports bank account deletion](https://aws.amazon.com/about-aws/whats-new/2026/04/aws-marketplace-management-portal/) | AWS Marketplace 販売者が Payment Settings ページから銀行口座（ACH/SWIFT）を直接削除可能に。カスタマーサポート連絡が不要となり、複数通貨管理や未使用口座のクリーンアップが効率化 |
-| 4 | [Amazon Connect now provides eight new metrics to measure and improve AI agent performance](https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-connect-ai-agent-metrics/) | AI エージェントのパフォーマンス測定用に 8 つの新メトリクスが追加。目標達成率、忠実性スコア、ツール選択精度、ハルシネーション検出、カスタマーフィードバックなどを測定可能。GetMetricDataV2 API とゼロ ETL データレイク経由でカスタムレポート作成に対応 |
-| 5 | [Amazon EC2 High Memory U7i instances now available in additional regions](https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-ec2-high-memory-u7i/) | 高メモリ U7i インスタンスがヨーロッパ・米国の追加リージョンで利用可能に。u7i-8tb.112xlarge（ストックホルム、チューリッヒ）、u7in-16tb.224xlarge（オハイオ）、u7in-24tb.224xlarge（ストックホルム）を提供。第4世代 Intel Xeon（Sapphire Rapids）搭載、DDR5 メモリ、最大 100 Gbps EBS 帯域幅 |
-| 6 | [AWS Client VPN now supports native AWS Transit Gateway integration](https://aws.amazon.com/about-aws/whats-new/2026/04/aws-client-vpn-transit-gateway/) | Client VPN が Transit Gateway にネイティブ統合対応。中間 VPC が不要となり、クライアント送信元 IP が End-to-End で保持される。SNAT による IP 変換が排除され、セキュリティ認可ルールの設定やトラフィック追跡、コンプライアンス監査が大幅に簡素化 |
-| 7 | [AWS Compute Optimizer supports 162 new EC2 instance types and 32 new RDS DB instance classes](https://aws.amazon.com/about-aws/whats-new/2026/04/aws-compute-optimizer-ec2-rds/) | Compute Optimizer が最新世代 EC2 インスタンスタイプ 162 種類（C8a、C8gb、C8i、C8i-flex、C8id、M8a、M8azn、M8gb、M8gn、M8id、R8a、R8gb、R8gn、R8id、x8i、i7i）と RDS DB インスタンスクラス 32 種類（M7i、M8g、R8g、X1、Z1d）に対応 |
-| 8 | [Amazon SageMaker HyperPod now supports automatic Slurm topology management](https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-sagemaker-hyperpod-automatic-slurm-topology/) | HyperPod が Slurm クラスタの最適なネットワークトポロジを自動選択・管理。GPU 間通信を最適化し、分散学習のパフォーマンスを向上。ツリートポロジとブロックトポロジを自動適用し、スケーリングやノード置換時に動的に適応。ml.p5/p5e/p5en/p6e-gb200 など複数の GPU インスタンスに対応 |
+| 2 | [Amazon Quick now integrates with Visier's Vee agent for workforce intelligence](https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-quick-visier-vee/) | Amazon Quick が Visier の AI アシスタント Vee と統合。MCP 経由で人員分析データに自然言語アクセス、Quick Flows から Vee 呼び出しが可能 |
+| 3 | [AWS Marketplace Management Portal now supports bank account deletion](https://aws.amazon.com/about-aws/whats-new/2026/04/aws-marketplace-management-portal/) | Marketplace 販売者が Payment Settings で銀行口座 (ACH/SWIFT) を直接削除可能に。サポート連絡が不要 |
+| 4 | [Amazon Connect now provides eight new metrics to measure and improve AI agent performance](https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-connect-ai-agent-metrics/) | AI エージェント性能評価用に 8 つの新メトリクス（goal success rate / faithfulness score / tool selection accuracy / hallucination 検知 / カスタマーフィードバック等）。GetMetricDataV2 API と zero-ETL データレイク経由で取得可能 |
+| 5 | [Amazon EC2 High Memory U7i instances now available in additional regions](https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-ec2-high-memory-u7i/) | High Memory U7i インスタンスの追加リージョン提供（Stockholm、Zurich、Ohio 等） |
+| 6 | [AWS Client VPN now supports native AWS Transit Gateway integration](https://aws.amazon.com/about-aws/whats-new/2026/04/aws-client-vpn-transit-gateway/) | Client VPN が Transit Gateway にネイティブ統合。中間 VPC 不要、送信元 IP の End-to-End 保持、追加料金なし |
+| 7 | [AWS Compute Optimizer supports 162 new EC2 instance types and 32 new RDS DB instance classes](https://aws.amazon.com/about-aws/whats-new/2026/04/aws-compute-optimizer-ec2-rds/) | 最新世代 EC2 162 種（C8a/C8gb/C8i/C8i-flex/C8id/M8a/M8azn/M8gb/M8gn/M8id/R8a/R8gb/R8gn/R8id/x8i/i7i）と RDS 32 クラス（M7i/M8g/R8g/X1/Z1d）に対応 |
+| 8 | [Amazon SageMaker HyperPod now supports automatic Slurm topology management](https://aws.amazon.com/about-aws/whats-new/2026/04/amazon-sagemaker-hyperpod-automatic-slurm-topology/) | HyperPod が GPU インスタンスタイプに応じて Tree topology / Block topology を自動選択。スケールやノード置換にも追従。ml.p5/p5e/p5en/p6e-gb200 対応 |
 
 ## まとめ
 
-本日のアップデートは、**運用効率化**と**パフォーマンス最適化**という2つの軸で大きな進化を遂げています。
+ネットワーク（Client VPN × Transit Gateway）と ML 基盤（HyperPod 自動トポロジ）の 2 つは、どちらも「これまで自前で組み立てていた配管が、AWS 側のマネージド側に移った」タイプの変更です。中間 VPC や Slurm topology.conf の手動管理は、本来の業務価値とは関係ない設定維持のコストだったので、この種の変更は実運用に効きます。
 
-Client VPN の Transit Gateway ネイティブ統合は、リモートアクセスアーキテクチャの複雑性を根本から解消し、セキュリティとコンプライアンスの両面で実質的な改善をもたらします。送信元IP保持という一見地味な改善が、監査、インシデント対応、コスト配賦といった広範な運用シーンに波及効果を持つ点が注目です。
+Amazon Connect の AI エージェント評価メトリクス、Compute Optimizer の最新世代対応、EC2 U7i の追加リージョン、Amazon Quick × Visier Vee 連携、AWS Marketplace の UI 改善、Bedrock AgentCore の VPC Egress 対応はそれぞれ用途特化の変更で、該当機能を使っているチームには直接的に効きます。
 
-SageMaker HyperPod の自動トポロジ管理は、大規模分散学習環境の運用を専門知識不要で高度に最適化する方向性を示しています。機械学習基盤の民主化と運用自動化を同時に推進する重要なステップと言えるでしょう。
-
-その他、Amazon Connect の AI エージェントメトリクス、Compute Optimizer の最新インスタンス対応、EC2 高メモリインスタンスの地域拡大など、既存サービスの着実な機能強化が目立ちます。これらは個別には小さな改善に見えますが、組み合わせることで運用品質の総合的な向上につながります。
-
-AWSは引き続き、運用負荷の軽減と性能向上を両立させる方向でサービスを進化させており、今後のアップデートにも期待が持てます。
+SRE の動き出しとしては、Client VPN を運用しているチームは中間 VPC の撤去計画を引きやすくなった点、SageMaker HyperPod を使っているチームはノード置換時の復旧時間短縮を CloudWatch メトリクスで追っておく価値がある点、あたりが現実的な入り口です。
