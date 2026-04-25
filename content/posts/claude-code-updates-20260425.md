@@ -193,3 +193,11 @@ v2.1.119 は Fix の量で見ると 2026-04 の中でも特に多い回で、特
 機能追加では、`--from-pr` のマルチプラットフォーム対応がチーム単位での導入のしやすさに直結する変更です。GitLab セルフホストや GHE 中心の組織で、これまで「PR コンテキストを CLI で食わせる」運用が GitHub.com 前提でしか組めなかった部分を、本来の Git ホスティングに合わせられるようになります。`prUrlTemplate` と `owner/repo#N` の git remote 対応も含めて、Claude Code を GitHub.com 前提から外す方向の整理が今回のリリースの裏テーマと言えそうです。
 
 `/config` の永続化は地味ですが、毎回 `verbose` を切り替えていた人や、組織で managed-settings を配っているチームには日常的に効きます。Hooks の `duration_ms` と OpenTelemetry の `tool_use_id` / `tool_input_size_bytes` も合わせて、observability まわりが一段強化されたリリースです。
+
+---
+
+## 📚 Claude Codeをもっと深く学ぶなら
+
+<a href="//af.moshimo.com/af/c/click?a_id=5509186&p_id=54&pc_id=54&pl_id=616&url=https%3A%2F%2Fbooks.rakuten.co.jp%2Frb%2F18439208%2F%3Fl-id%3Dsearch-c-item-text-02" rel="nofollow" referrerpolicy="no-referrer-when-downgrade">実践Claude Code入門ー現場で活用するためのAIコーディングの思考法（楽天ブックス）</a><img src="//i.moshimo.com/af/i/impression?a_id=5509186&p_id=54&pc_id=54&pl_id=616" width="1" height="1" style="border:none;" alt="" loading="lazy">
+
+- [Claude Code 公式ドキュメント](https://docs.anthropic.com/en/docs/claude-code)
