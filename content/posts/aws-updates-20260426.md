@@ -1,7 +1,7 @@
 ---
 title: "【AWS】2026/04/26 のアップデートまとめ"
 date: 2026-04-26T08:01:32+09:00
-draft: true
+draft: false
 tags: ["aws", "lambda", "kafka", "msk", "cloudwatch", "cloudformation"]
 categories: ["AWS Updates"]
 summary: "2026/04/26 のAWSアップデートまとめ"
@@ -50,11 +50,11 @@ $ aws lambda create-event-source-mapping \
     --event-source-arn arn:aws:kafka:ap-northeast-1:123456789012:cluster/my-msk-cluster/abcd1234-5678-90ab-cdef-EXAMPLE11111 \
     --topics my-topic \
     --starting-position LATEST \
-    --scaling-config '{"MaximumConcurrency":10,"MinimumConcurrency":2}' \
+    --scaling-config '{"MaximumConcurrency":10}' \
     --provisioned-poller-config '{"MinimumPollers":2,"MaximumPollers":10}'
 ```
 
-この設定により、常時2つのイベントポーラーが起動し、負荷に応じて最大10まで自動拡張されます。`MaximumConcurrency` は Lambda 関数の同時実行数、`MinimumPollers`/`MaximumPollers` はイベント取得のためのポーリングリソース数を制御します。
+この設定により、常時2つのイベントポーラーが起動し、負荷に応じて最大10まで自動拡張されます。`MaximumConcurrency` は Lambda 関数の同時実行数の上限、`MinimumPollers`/`MaximumPollers` はイベント取得のためのポーリングリソース数を制御します。
 
 CloudFormation での定義例：
 
@@ -69,7 +69,6 @@ MyKafkaEventSourceMapping:
     StartingPosition: LATEST
     ScalingConfig:
       MaximumConcurrency: 10
-      MinimumConcurrency: 2
     ProvisionedPollerConfig:
       MinimumPollers: 2
       MaximumPollers: 10
