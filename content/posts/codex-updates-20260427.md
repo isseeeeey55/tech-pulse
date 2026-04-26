@@ -7,6 +7,8 @@ categories: ["Codex CLI Updates"]
 summary: "0.125.0 のCodex CLIリリースノートまとめ"
 ---
 
+![](/images/codex-updates-20260427/header.png)
+
 # OpenAI Codex CLI 0.125.0 リリース情報
 
 ## はじめに
