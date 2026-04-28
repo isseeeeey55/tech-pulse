@@ -7,6 +7,8 @@ categories: ["AWS Updates"]
 summary: "2026/04/26 のAWSアップデートまとめ"
 ---
 
+![](/images/aws-updates-20260426/header.png)
+
 ## はじめに
 
 2026年4月26日の AWS アップデートは 1 件。AWS Lambda の Kafka イベントソースマッピング（ESM）に対する「プロビジョニングモード」が、アジア太平洋（台北）、AWS GovCloud（US-East）、AWS GovCloud（US-West）の 3 リージョンに展開されました。
