@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/04/30 のアップデートまとめ"
 date: 2026-04-30T08:02:07+09:00
-draft: true
+draft: false
 tags: ["aws", "cloudfront", "cloudwatch", "ec2", "rds", "mysql", "sagemaker", "documentdb", "mongodb", "dms", "lambda", "backup", "cloudtrail", "auto-scaling"]
 categories: ["AWS Updates"]
 summary: "2026/04/30 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260430/header.png)
 
 # 2026年4月30日 AWS アップデート情報
 
