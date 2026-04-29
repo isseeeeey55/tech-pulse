@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/04/29 のアップデートまとめ"
 date: 2026-04-29T08:02:33+09:00
-draft: true
+draft: false
 tags: ["aws", "bedrock", "workspaces", "ec2", "cost-optimization-hub", "glue", "kms", "redshift", "billing-conductor", "connect"]
 categories: ["AWS Updates"]
 summary: "2026/04/29 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260429/header.png)
 
 # 2026年4月29日 AWS アップデート情報
 
