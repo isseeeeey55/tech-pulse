@@ -1,11 +1,13 @@
 ---
 title: "【New Relic】2026/05/01 のアップデートまとめ"
 date: 2026-05-01T08:00:55+09:00
-draft: true
+draft: false
 tags: ["newrelic", "infrastructure-agent", "logs", "flex-integration", "sre"]
 categories: ["New Relic Updates"]
 summary: "2026/05/01 のNew Relicアップデートまとめ"
 ---
+
+![](/images/newrelic-updates-20260501/header.png)
 
 ## はじめに
 
