@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/05/01 のアップデートまとめ"
 date: 2026-05-01T08:02:20+09:00
-draft: true
+draft: false
 tags: ["aws", "neuron", "trainium", "inferentia", "opensearch", "kms", "lambda", "mq", "rabbitmq", "prometheus", "cloudwatch", "outposts"]
 categories: ["AWS Updates"]
 summary: "2026/05/01 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260501/header.png)
 
 # 2026年5月1日 AWS アップデート解説
 
