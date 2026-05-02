@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/05/02 のアップデートまとめ"
 date: 2026-05-02T08:02:23+09:00
-draft: true
+draft: false
 tags: ["aws", "opensearch", "cloudfront", "rds", "redshift", "iam", "eks", "bedrock", "ecs", "payment-cryptography", "quicksight"]
 categories: ["AWS Updates"]
 summary: "2026/05/02 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260502/header.png)
 
 # 2026年5月2日 AWS アップデート解説
 
