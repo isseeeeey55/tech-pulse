@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/05/05 のアップデートまとめ"
 date: 2026-05-05T08:02:07+09:00
-draft: true
+draft: false
 tags: ["aws", "aurora", "quick", "entity-resolution", "payment-cryptography", "sagemaker", "s3", "redshift", "athena", "lambda", "cloudwatch", "iam"]
 categories: ["AWS Updates"]
 summary: "2026/05/05 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260505/header.png)
 
 # 2026年5月5日 AWS アップデート解説
 
