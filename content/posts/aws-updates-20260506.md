@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/05/06 のアップデートまとめ"
 date: 2026-05-06T08:02:32+09:00
-draft: true
+draft: false
 tags: ["aws", "sam", "api-gateway", "lambda", "cloudwatch", "logs", "elasticache", "iam", "opensearch", "connect", "workspaces", "fsx", "iot-core", "mediatailor"]
 categories: ["AWS Updates"]
 summary: "2026/05/06 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260506/header.png)
 
 # 2026/05/06 AWS アップデート情報
 
