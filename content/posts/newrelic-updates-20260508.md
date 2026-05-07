@@ -1,11 +1,13 @@
 ---
 title: "【New Relic】2026/05/08 のアップデートまとめ"
 date: 2026-05-08T08:00:54+09:00
-draft: true
+draft: false
 tags: ["newrelic", "infrastructure-agent", "nri-flex", "custom-metrics", "sre"]
 categories: ["New Relic Updates"]
 summary: "2026/05/08 のNew Relicアップデートまとめ"
 ---
+
+![](/images/newrelic-updates-20260508/header.png)
 
 ## はじめに
 
