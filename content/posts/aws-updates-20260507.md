@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/05/07 のアップデートまとめ"
 date: 2026-05-07T08:02:29+09:00
-draft: true
+draft: false
 tags: ["aws", "site-to-site-vpn", "bedrock", "ec2", "elastic-beanstalk", "marketplace", "neptune", "cloudshell", "cloudwatch", "cloudtrail", "iam", "s3", "lambda", "dynamodb", "cloudformation", "mcp-server", "mediatailor"]
 categories: ["AWS Updates"]
 summary: "2026/05/07 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260507/header.png)
 
 # 2026年5月7日 AWS アップデート情報
 
