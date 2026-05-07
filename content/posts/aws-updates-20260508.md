@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/05/08 のアップデートまとめ"
 date: 2026-05-08T08:02:17+09:00
-draft: true
+draft: false
 tags: ["aws", "ec2", "rds", "aurora", "kms", "bedrock", "sagemaker", "opensearch", "mediatailor", "iam"]
 categories: ["AWS Updates"]
 summary: "2026/05/08 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260508/header.png)
 
 # 2026/05/08 AWS アップデート情報
 
