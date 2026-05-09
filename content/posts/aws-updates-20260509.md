@@ -1,17 +1,19 @@
 ---
 title: "【AWS】2026/05/09 のアップデートまとめ"
 date: 2026-05-09T08:02:12+09:00
-draft: true
-tags: ["aws", "iam", "terraform", "marketplace", "service-catalog", "cloudformation", "route53", "ec2", "organizations", "cloudwatch", "cloudtrail"]
+draft: false
+tags: ["aws", "iam", "terraform", "marketplace", "service-catalog", "cloudformation", "route53", "ec2", "cloudwatch", "cloudtrail"]
 categories: ["AWS Updates"]
 summary: "2026/05/09 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260509/header.png)
 
 # 2026年5月9日 AWS アップデート解説
 
 ## はじめに
 
-2026年5月9日、AWSは7件のアップデートを発表しました。本日の注目は、IAMポリシー管理の自動化を実現する「IAM Policy Autopilot」のJavaおよびTerraform対応、IPv6トラフィックに完全対応したRoute 53 Resolverエンドポイントの機能強化、そして欧州主権クラウド向けのGPUインスタンス拡充です。セキュリティ、ネットワーク、コンピューティングの各領域で、運用の自動化とグローバル展開の柔軟性が大きく向上しています。
+2026年5月9日、AWSは6件のアップデートを発表しました。本日の注目は、IAMポリシー管理の自動化を実現する「IAM Policy Autopilot」のJavaおよびTerraform対応、IPv6トラフィックに完全対応したRoute 53 Resolverエンドポイントの機能強化、そして欧州主権クラウド向けのGPUインスタンス拡充です。セキュリティ、ネットワーク、コンピューティングの各領域で、運用の自動化とグローバル展開の柔軟性が大きく向上しています。
 
 ## 注目アップデート深掘り
 
@@ -30,9 +32,8 @@ IAM Policy Autopilotは、re:Invent 2025で発表された無料のオープン�
 まず、IAM Policy AutopilotのGitHubリポジトリをクローンし、環境をセットアップします。
 
 ```bash
-$ git clone https://github.com/aws/iam-policy-autopilot.git
+$ git clone https://github.com/awslabs/iam-policy-autopilot.git
 $ cd iam-policy-autopilot
-$ npm install
 ```
 
 次に、サンプルのJavaアプリケーションとTerraformファイルを用意します。以下は、S3とDynamoDBを使用するJavaアプリケーションの例です。
