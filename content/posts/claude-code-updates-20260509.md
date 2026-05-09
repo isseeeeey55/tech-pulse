@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.136・v2.1.133 リリースノートまとめ"
 date: 2026-05-09T08:01:29+09:00
-draft: true
+draft: false
 tags: ["claude-code", "mcp", "oauth", "worktree", "linux", "wsl", "sandbox", "policy", "proxy", "hooks"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.136・v2.1.133 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260509/header.png)
 
 ## はじめに
 
@@ -66,7 +68,7 @@ worktreeのブランチベース選択機能（v2.1.133）により、複数の�
 | カテゴリ | 内容 | 概要 |
 |---------|------|------|
 | Fix | MCP OAuth リフレッシュトークン競合 | 複数のリモートMCPサーバーが同時にOAuthリフレッシュトークンを更新する際のトークン喪失問題を修正 |
-| Fix | プラン模式でのファイル書き込み制御 | プラン（計画）モードにおけるファイル書き込み動作の不具合を解決 |
+| Fix | プランモードでのファイル書き込み制御 | プランモードにおいて、Edit/Write の allow ルールがあってもファイル書き込みがブロックされない不具合を解決 |
 | Fix | セッション再開時のパス解析 | セッション再開時にパス解析が正しく行われない問題を修正 |
 | Fix | 拡張思考モードでのAPIエラー | 拡張思考モード実行時に発生していたAPIエラーを解決 |
 | Feature | worktree 分岐ベース選択 | worktree作成時のブランチベース選択機能を追加 |
