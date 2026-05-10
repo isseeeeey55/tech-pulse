@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/05/10 のアップデートまとめ"
 date: 2026-05-10T08:01:41+09:00
-draft: true
+draft: false
 tags: ["aws", "connect", "client-vpn", "vpn"]
 categories: ["AWS Updates"]
 summary: "2026/05/10 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260510/header.png)
 
 ## はじめに
 
