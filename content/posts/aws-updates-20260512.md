@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/05/12 のアップデートまとめ"
 date: 2026-05-12T08:02:14+09:00
-draft: true
+draft: false
 tags: ["aws", "aurora", "dsql", "ec2", "sagemaker", "bedrock", "ecs", "eks", "ecr", "healthomics", "iam", "cloudtrail", "s3", "codeartifact", "terraform"]
 categories: ["AWS Updates"]
 summary: "2026/05/12 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260512/header.png)
 
 # 2026年5月12日 AWS アップデート情報
 
