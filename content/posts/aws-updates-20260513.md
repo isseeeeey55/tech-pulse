@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/05/13 のアップデートまとめ"
 date: 2026-05-13T08:02:05+09:00
-draft: true
+draft: false
 tags: ["aws", "lambda", "eventbridge", "sagemaker", "redshift", "eks", "ec2"]
 categories: ["AWS Updates"]
 summary: "2026/05/13 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260513/header.png)
 
 # 2026年5月13日 AWS アップデート解説
 
