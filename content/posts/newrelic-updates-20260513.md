@@ -1,11 +1,13 @@
 ---
 title: "【New Relic】2026/05/13 のアップデートまとめ"
 date: 2026-05-13T08:00:47+09:00
-draft: true
+draft: false
 tags: ["newrelic", "opentelemetry", "ai-monitoring", "claude-code", "dashboard", "sre"]
 categories: ["New Relic Updates"]
 summary: "2026/05/13 のNew Relicアップデートまとめ"
 ---
+
+![](/images/newrelic-updates-20260513/header.png)
 
 # 2026年5月13日 New Relic アップデート情報
 
