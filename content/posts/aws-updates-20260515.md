@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/05/15 のアップデートまとめ"
 date: 2026-05-15T08:02:28+09:00
-draft: true
+draft: false
 tags: ["aws", "cloudfront", "bedrock", "sagemaker", "aurora", "lambda", "cloudformation", "cdk", "kinesis", "redshift", "s3", "opensearch", "application-recovery-controller", "iam", "glue", "athena"]
 categories: ["AWS Updates"]
 summary: "2026/05/15 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260515/header.png)
 
 # 2026年5月15日 AWS アップデート情報
 
@@ -28,8 +30,9 @@ Amazon Bedrockに導入された**Advanced Prompt Optimization**は、生成AI�
 この機能の核心は、**フィードバックループを通じた自動最適化**にあります。ユーザーが入力するのは以下の3要素です：
 
 - プロンプトテンプレート
-- ユーザー入力例
-- 評価基準
+- ユーザー入力例（変数値のサンプル）
+- 正解データ（任意）
+- 評価指標、または自然言語による短い評価基準
 
 システムはこれらを元に、最大5つのモデルを同時に比較しながら、最適化されたプロンプトを自動生成します。最終的には以下の情報が出力されます：
 
@@ -156,8 +159,7 @@ const vpc = ec2.Vpc.fromLookup(this, 'SharedVPC', {
     {
       "Effect": "Allow",
       "Action": [
-        "cloudformation:DescribeStacks",
-        "cloudformation:GetStackOutput"
+        "cloudformation:DescribeStacks"
       ],
       "Resource": "arn:aws:cloudformation:us-west-2:123456789012:stack/networking-stack/*"
     }
@@ -285,7 +287,7 @@ Aurora DSQL CDCの課金は、データ量に基づくDPU（Data Processing Unit
 | **機械学習** | [SageMaker AI now supports serverless model customization for Qwen3.6](https://aws.amazon.com/about-aws/whats-new/2026/05/amazon-sagemaker-ft-qwen3-6/) | Qwen3.6 27Bモデルのサーバーレスファインチューニング（SFT/RFT）がSageMaker AIで利用可能に |
 | **IaC** | [Reference stack outputs across accounts and Regions with AWS CloudFormation and CDK](https://aws.amazon.com/about-aws/whats-new/2026/05/aws-cloudformation-cdk-stack/) | CloudFormationに新関数Fn::GetStackOutputが追加され、アカウント間・リージョン間のスタック出力参照が可能に |
 | **災害復旧** | [ARC Region switch adds Lambda event source mapping execution block](https://aws.amazon.com/about-aws/whats-new/2026/05/region-switch-lambda-esm-execution-block/) | Application Recovery Controller Region SwitchにLambdaイベントソースマッピング実行ブロックが追加され、フェイルオーバー時のイベント処理を自動化 |
-| **機械学習** | [Amazon SageMaker Data Agent now available for IAM Identity Center domains](https://aws.amazon.com/about-aws/whats-new/2026/05/amazon-sagemaker-data-agent-idc/) | SageMaker Data AgentがIAM Identity Centerドメインに対応し、自然言語からPython/SQLコードを自動生成 |
+| **機械学習** | [Amazon SageMaker Data Agent now available for IAM Identity Center domains](https://aws.amazon.com/about-aws/whats-new/2026/05/amazon-sagemaker-data-agent-idc/) | SageMaker Unified Studio の IAM Identity Center 認証ドメインで SageMaker Data Agent が利用可能に。自然言語から Python/SQL コードを自動生成 |
 
 ## まとめ
 
