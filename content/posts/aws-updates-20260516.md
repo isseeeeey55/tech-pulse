@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/05/16 のアップデートまとめ"
 date: 2026-05-16T08:02:08+09:00
-draft: true
+draft: false
 tags: ["aws", "emr", "organizations", "connect", "cloudfront", "grafana", "rds", "postgresql", "ec2"]
 categories: ["AWS Updates"]
 summary: "2026/05/16 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260516/header.png)
 
 # 2026年5月16日 AWS アップデート解説
 
@@ -141,7 +143,7 @@ CloudWatch Logsと連携することで、失効確認の成功・失敗をメ�
 | 1 | [Amazon EMR Serverless is now available in additional AWS Regions](https://aws.amazon.com/about-aws/whats-new/2026/05/amazon-emr-serverless-aws-regions/) | アジア太平洋地域（ハイデラバード、マレーシア、ニュージーランド、台北、タイ）およびメキシコ（中央）の6つの新しいリージョンでEMR Serverlessが利用可能に。クラスタ管理不要でApache SparkやHiveアプリケーションを実行できるサーバーレス型データ分析ソリューション |
 | 2 | [AWS announces AWS Interconnect - multicloud connectivity with Oracle Cloud Infrastructure in preview](https://aws.amazon.com/about-aws/whats-new/2026/05/aws-announces-AWS-interconnect-multicloud-oci-preview/) | 業界初のマルチクラウド専用接続サービスをプレビュー公開。OCIとの間にプライベートで堅牢な接続を簡単にプロビジョニング可能。Google Cloudは既に対応、Microsoft Azureは2026年後半に対応予定 |
 | 3 | [AWS Organizations now supports higher quotas for service control policies (SCPs)](https://aws.amazon.com/about-aws/whats-new/2026/05/aws-organizations-increased-scp-quotas/) | SCPの最大添付数が5個から10個へ、最大サイズが5,120文字から10,240文字へ倍増。より細かい粒度の権限制御と複雑な条件分岐を実装可能に |
-| 4 | [Amazon Connect Cases now lets you edit related items and delete cases from the agent workspace](https://aws.amazon.com/about-aws/whats-new/2026/05/amazon-connect-cases-related-item/) | エージェントがワークスペースから直接、関連アイテムの編集・削除、ケース自体の削除が可能に。コメント更新、連絡先のリンク解除、カスタム関連アイテム（注文・返品・請求書など）の管理に対応 |
+| 4 | [Amazon Connect Cases now lets you edit related items and delete cases from the agent workspace](https://aws.amazon.com/about-aws/whats-new/2026/05/amazon-connect-cases-related-item/) | エージェントがワークスペースから直接、関連アイテムの編集・削除、ケース自体の削除が可能に。コメント更新、誤ってリンクされた連絡先の解除、注文・返品といったカスタム関連アイテムの管理に対応 |
 | 5 | [Amazon Managed Grafana now supports in-place upgrade to Grafana version 12.4](https://aws.amazon.com/about-aws/whats-new/2026/05/amazon-managed-grafana-v12-update/) | Grafanaバージョン10.4から12.4へのインプレースアップグレードに対応。Grafana Scenesによる高速レンダリング、クエリレスDrilldownアプリ、CloudWatchプラグイン強化（PPL/SQLクエリ、クロスアカウントMetrics Insights、ログ異常検知）を搭載 |
 | 6 | [Amazon RDS for PostgreSQL announces Extended Support minor versions](https://aws.amazon.com/about-aws/whats-new/2026/05/amazon-rds-postgresql-extended-support/) | PostgreSQL 11、12、13のExtended Support新マイナーバージョンをリリース。既知のセキュリティ脆弱性とバグ修正を含み、標準サポート終了後も最大3年間のサポートを提供 |
 | 7 | [Amazon CloudFront announces support for OCSP Revocation for Mutual TLS (Viewer)](https://aws.amazon.com/about-aws/whats-new/2026/05/amazon-cloudfront-mtls-ocsp/) | Viewer向けmTLSにOCSPによる証明書失効確認機能を追加。接続時に認証局から直接失効状態を確認可能に。OCSPレスポンスを最大30分間キャッシュし、レイテンシへの影響を最小化 |
