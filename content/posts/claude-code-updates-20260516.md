@@ -1,72 +1,75 @@
 ---
 title: "【Claude Code】v2.1.143・v2.1.142 リリースノートまとめ"
 date: 2026-05-16T08:01:12+09:00
-draft: true
-tags: ["claude-code", "mcp", "powershell", "opus", "fast-mode", "worktree", "windows-terminal"]
+draft: false
+tags: ["claude-code", "background-agents", "plugins", "powershell", "mcp", "worktree"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.143・v2.1.142 のClaude Codeリリースノートまとめ"
 ---
 
+![](/images/claude-code-updates-20260516/header.png)
+
 ## はじめに
 
-2026年5月16日、Claude Code の v2.1.143 と v2.1.142 がリリースされました。
+Claude Code が 2 リリース連続で更新されました。**v2.1.142**（2026-05-14 UTC）と **v2.1.143**（2026-05-15 UTC）です。両リリースとも、`claude agents` / `/bg` に代表されるバックグラウンドエージェント運用まわりの設定オプション拡充と、Windows・macOS・MCP の修正が中心です。v2.1.142 では Fast モードが Opus 4.7 へ既定で更新され、v2.1.143 では PowerShell ツールが `-ExecutionPolicy Bypass` で起動するなど、Windows での実用性が一段上がっています。
 
-v2.1.143 では、プラグイン依存関係の自動解決、コンテキストコスト表示機能、バックグラウンドセッションの安定性向上が実装されています。また、PowerShell 実行ポリシーの自動バイパスやセッション設定の保持など、Windows 環境での利便性が向上しました。
-
-v2.1.142 では、バックグラウンドエージェント実行時の制御オプションが強化され（`--add-dir`、`--settings`、`--mcp-config` など）、Fast Mode が Opus 4.7 にアップグレードされました。MCP Server のタイムアウト問題や Worktree 認識の不具合、macOS 休止状態からの復帰、Windows ネットワークドライブ関連の重大なバグも修正されています。
-
-> **Note:** MCP (Model Context Protocol) は、Claude Code が外部ツールやデータソースと連携するための機能です。
+> **Note:** MCP (Model Context Protocol) は、Claude Code が外部ツールやデータソースと連携するための仕組みです。
 
 ## 注目アップデート深掘り
 
-### コンテキストコスト表示機能の追加
+### `claude agents` のフラグ群拡充とバックグラウンド継承（v2.1.142 + v2.1.143）
 
-v2.1.143 では、コンテキストコスト（トークン消費量）を可視化する機能が追加されました。この変更により、ユーザーはリクエスト時のコンテキスト使用量を把握しやすくなり、より効率的な指示の組み立てが可能になります。
+`claude agents` に多数の新フラグが追加され、バックグラウンドで起動するセッションのコンテキストを呼び出し側から細かく指定できるようになりました。
 
-リリースノートでは「コンテキストコスト表示」として記載されており、Terraform や AWS CDK などの IaC コード生成時に、どの程度のコンテキストが消費されているかを確認しながら作業を進められます。大規模なコードベースやドキュメントを扱う際に、トークン制限を意識した指示設計が行いやすくなるため、無駄なリトライを削減できます。
+v2.1.142 で追加されたのは `--add-dir` / `--settings` / `--mcp-config` / `--plugin-dir` / `--permission-mode` / `--model` / `--effort` / `--dangerously-skip-permissions` の 8 つのフラグです。v2.1.143 では、これらが `claude agents` のダッシュボードと、そこから派生する個別セッションの両方に適用されるようになりました。
 
-### バックグラウンドエージェント制御オプションの強化
+あわせて `/bg` および ← デタッチでも `--mcp-config` / `--settings` / `--add-dir` / `--plugin-dir` / `--strict-mcp-config` / `--fallback-model` / `--allow-dangerously-skip-permissions` が引き継がれるようになり、再開後のバックグラウンドワーカーが同じ MCP サーバー・設定・フォールバックモデルを保持します。複数のリポジトリやテナントを行き来する運用で、毎回 `/mcp` や設定再読込をやり直す必要がなくなります。
 
-v2.1.142 では、バックグラウンドエージェント実行時に `--add-dir`、`--settings`、`--mcp-config` といった制御オプションが追加されました。これにより、セッション起動時にディレクトリ追加や設定ファイル、MCP 設定を柔軟に指定できるようになります。
+### PowerShell ツールの ExecutionPolicy Bypass（v2.1.143）
 
-複数のプロジェクトや環境を切り替えながら作業する場合、起動パラメータでコンテキストを事前に構成できるため、セットアップ時間が短縮されます。特に、複数リージョンでのインフラ検証やマルチテナント環境でのスクリプト実行など、並行作業が求められる運用業務での効率向上が見込まれます。
+v2.1.143 で、Claude Code 内部の PowerShell ツールが `-ExecutionPolicy Bypass` 付きで PowerShell を起動するようになりました。実行ポリシーで `Restricted` などが設定されている環境でも、Claude Code 経由のスクリプト実行がブロックされなくなります。オプトアウトは環境変数 `CLAUDE_CODE_POWERSHELL_RESPECT_EXECUTION_POLICY=1` です。
+
+同リリースで、Bedrock / Vertex / Foundry を使う Windows ユーザーでは PowerShell ツールが既定で有効化されました（無効化は `CLAUDE_CODE_USE_POWERSHELL_TOOL=0`）。エンタープライズ配布された Windows 端末で、Claude Code がシェルとして PowerShell を経由するルートが標準になります。
 
 ## 実用的な活用ポイント
 
-**Windows 環境での運用改善**  
-PowerShell 実行ポリシーの自動バイパスにより、Windows 環境でのログ分析スクリプトや運用自動化スクリプトの実行が簡便化されます。また、Windows Terminal 環境での安定動作が向上し、Windows ネットワークドライブ関連のバグも修正されたことで、クロスプラットフォーム対応が求められる CI/CD パイプライン構築でも安心して利用できます。
+- **Fast モードが Opus 4.7 に**（v2.1.142）: 既定モデルが Opus 4.6 → 4.7。旧版に固定したい場合は `CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE=1`。
+- **`worktree.bgIsolation: "none"`**（v2.1.143）: バックグラウンドセッションが worktree を作らず作業コピーを直接編集できる設定が追加。サブモジュール多用・ローカル変更が多い・worktree 運用が難しいリポジトリ向け。
+- **MCP の 60 秒上限解消**（v2.1.142）: リモート HTTP / SSE の MCP サーバーで `MCP_TOOL_TIMEOUT` が反映されず 60 秒で打ち切られていた問題を修正。長時間ツールコールが実用になります。
+- **macOS スリープ／復帰**（v2.1.142）: macOS のスリープ・ウェイクでバックグラウンドセッションが消失／デーモン再接続が失敗していた問題を、時刻ジャンプ検知で修正。
+- **Windows ネットワークドライブ**（v2.1.142）: `claude agents` がネットワークドライブ上の作業ディレクトリでデッドロックする問題を修正。起動中の Ctrl+C も効くようになりました。
+- **stop hook の無限ブロック対策**（v2.1.143）: stop hook が繰り返しブロックし続けるとターンが終わらない問題に、8 回連続ブロックでターン終了する上限が追加（`CLAUDE_CODE_STOP_HOOK_BLOCK_CAP` で調整可）。
+- **`/plugin` マーケットプレースにトークン見積もり**（v2.1.143）: マーケットプレースの一覧画面に、プラグインごとのターン単位・呼び出し単位のトークン消費見積もりが表示されます。プラグイン選定時の参考に。
+- **プラグイン依存関係の強制**（v2.1.143）: `claude plugin disable` は依存している別プラグインがあれば拒否（解除手順のヒント付き）、`claude plugin enable` は推移的な依存を自動有効化します。
+- **macOS の `~/Documents`・`~/Desktop`・`~/Downloads` の "Operation not permitted"**（v2.1.143）: フルディスクアクセスを付与してもバックグラウンドジョブが読めなかった問題を修正。
 
-**セッション管理の効率化**  
-セッション設定の保持機能により、中断後の作業環境を素早く復帰できるようになりました。障害調査中に一時的にセッションを閉じても、再開時に以前の設定が引き継がれるため、長時間にわたるトラブルシューティング作業が効率化されます。
-
-**並行作業の安定性向上**  
-バックグラウンドセッションの改善とループ処理の無限ブロック修正により、複数のインフラコード検証や複数リージョンでの並行操作がより安定します。また、MCP Server のタイムアウト問題や Worktree 認識の不具合修正により、大規模なリポジトリやマルチブランチ環境での作業も円滑に進められます。
-
-## 全変更点一覧
+## 主な変更点一覧
 
 | カテゴリ | バージョン | 内容 | 概要 |
-|---------|----------|------|------|
-| Feature | v2.1.143 | コンテキストコスト表示 | リクエスト時のトークン消費量を可視化 |
-| Feature | v2.1.142 | バックグラウンドエージェント制御オプション強化 | `--add-dir`、`--settings`、`--mcp-config` 等のオプション追加 |
-| Improvement | v2.1.143 | プラグイン依存関係の強制化 | プラグイン依存関係の自動解決機能 |
-| Improvement | v2.1.143 | バックグラウンドセッションの改善 | セッション安定性とパフォーマンスの向上 |
-| Improvement | v2.1.143 | PowerShell 実行ポリシー自動バイパス | Windows 環境でのスクリプト実行が簡便化 |
-| Improvement | v2.1.143 | セッション設定の保持 | セッション再開時に以前の設定を引き継ぎ |
-| Improvement | v2.1.142 | Fast Mode を Opus 4.7 にアップグレード | パフォーマンス向上 |
-| Fix | v2.1.143 | UI/UX バグ修正 | Windows Terminal 環境での安定動作向上 |
-| Fix | v2.1.143 | ループ処理の無限ブロック修正 | スクリプト実行の安定性向上 |
-| Fix | v2.1.142 | MCP Server タイムアウト問題修正 | 外部ツール連携の安定性向上 |
-| Fix | v2.1.142 | Worktree 認識の不具合修正 | Git Worktree 環境での動作改善 |
-| Fix | v2.1.142 | macOS 休止状態からの復帰バグ修正 | macOS での安定性向上 |
-| Fix | v2.1.142 | Windows ネットワークドライブ関連バグ修正 | Windows 環境でのファイルアクセス改善 |
+|---------|---------|------|------|
+| Feature | v2.1.142 | `claude agents` の新フラグ群 | `--add-dir` / `--settings` / `--mcp-config` / `--plugin-dir` / `--permission-mode` / `--model` / `--effort` / `--dangerously-skip-permissions` |
+| Feature | v2.1.142 | Fast モードを Opus 4.7 に既定変更 | 旧 Opus 4.6 への固定は `CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE=1` |
+| Feature | v2.1.142 | ルート `SKILL.md` を Skill として認識 | `skills/` サブディレクトリなしのプラグインも Skill 公開可能に |
+| Feature | v2.1.143 | プラグイン依存関係の強制 | `disable` は依存があれば拒否、`enable` は推移的依存を自動有効化 |
+| Feature | v2.1.143 | `/plugin` マーケットプレースにトークン見積もり表示 | ターン単位・呼び出し単位のコスト推計 |
+| Feature | v2.1.143 | `worktree.bgIsolation: "none"` 設定 | バックグラウンドセッションが worktree を使わず作業コピーを直接編集 |
+| Improvement | v2.1.143 | PowerShell ツールが `-ExecutionPolicy Bypass` で起動 | Bedrock / Vertex / Foundry の Windows で既定有効化 |
+| Improvement | v2.1.143 | アイドル復帰後のモデル／effort 保持 | 起動時の `--model` / `--effort` をウェイク後も維持 |
+| Improvement | v2.1.143 | `/bg`・← デタッチで MCP・設定・フォールバックモデルを継承 | 再開後のワーカーが同じ設定で起動 |
+| Fix | v2.1.142 | リモート MCP の `MCP_TOOL_TIMEOUT` 不反映 | HTTP / SSE で 60 秒上限に貼り付いていた問題を修正 |
+| Fix | v2.1.142 | バックグラウンドが既存 worktree を認識せず Edit がブロック | `EnterWorktree` の重複作成拒否と組み合わさるデッドロックを解消 |
+| Fix | v2.1.142 | macOS スリープ／復帰でセッション消失 | デーモンが時刻ジャンプを検知してアイドル誤判定を回避 |
+| Fix | v2.1.142 | Windows ネットワークドライブで `claude agents` がデッドロック | 起動中の Ctrl+C も効くように修正 |
+| Fix | v2.1.143 | stop hook の無限ブロック | 8 回連続で警告と共にターン終了（`CLAUDE_CODE_STOP_HOOK_BLOCK_CAP` で調整可） |
+| Fix | v2.1.143 | macOS `~/Documents` 等で "Operation not permitted" | バックグラウンドジョブの読み取り問題を修正 |
+| Fix | v2.1.143 | `/bg` 単体実行で "continue" が送信される | プロンプトなしのフォークが入力待ちで止まるように修正 |
 
 ## まとめ
 
-v2.1.143 と v2.1.142 は、安定性向上と運用効率化に焦点を当てたリリースです。
+2 リリースを通じて、バックグラウンドエージェント運用（`claude agents`・`/bg`・← デタッチ）が大きく前進しました。`--add-dir` / `--settings` / `--mcp-config` などのフラグで起動時のコンテキストが完全に指定でき、再開後にも MCP・設定・フォールバックモデルが引き継がれます。Windows では PowerShell ツールの `-ExecutionPolicy Bypass` 化とネットワークドライブのデッドロック修正、macOS ではスリープ／復帰時のセッション消失や `~/Documents` 配下のアクセス問題が片付き、プラットフォーム横断で安定性が底上げされています。Fast モードの Opus 4.7 化も含め、日常的に Claude Code を回している環境ほど更新価値が大きい 2 本です。
 
-コンテキストコスト表示やバックグラウンドエージェント制御オプションの強化により、大規模プロジェクトや並行作業における使い勝手が向上しました。Windows 環境での PowerShell 実行ポリシー自動バイパスやネットワークドライブ対応、macOS 休止状態からの復帰バグ修正など、プラットフォーム固有の問題も着実に解決されています。
-
-MCP Server のタイムアウト修正や Worktree 認識の改善により、外部ツール連携や複雑なリポジトリ構成での動作も安定化しており、実運用での信頼性が高まっています。Fast Mode の Opus 4.7 へのアップグレードは、今後のパフォーマンス向上にも期待が持てます。
+- 公式リリースノート: <https://github.com/anthropics/claude-code/releases/tag/v2.1.143> / <https://github.com/anthropics/claude-code/releases/tag/v2.1.142>
+- 公開日時: 2026-05-15 22:28 UTC / 2026-05-14 22:55 UTC
 
 ---
 
