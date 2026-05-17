@@ -1,17 +1,19 @@
 ---
 title: "【AWS】2026/05/17 のアップデートまとめ"
 date: 2026-05-17T08:01:25+09:00
-draft: true
-tags: ["aws", "cloudwatch", "partner-central", "amazon-q"]
+draft: false
+tags: ["aws", "cloudwatch", "partner-central", "bedrock-agentcore"]
 categories: ["AWS Updates"]
 summary: "2026/05/17 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260517/header.png)
 
 # 2026年5月17日 AWS アップデート情報
 
 ## はじめに
 
-2026年5月17日に発表された AWS アップデートは2件です。今日の注目ポイントは、**Amazon CloudWatch Logs のクエリ結果上限が10倍に拡大**したことです。これまで10,000件だった上限が100,000件に引き上げられ、大規模ログ分析の効率が劇的に向上します。また、AWS Partner Central にAIエージェント機能が追加され、パートナー企業の営業案件作成が自然言語ベースに進化しました。特に CloudWatch Logs のアップデートは、ログ分析や障害調査を日常的に行うエンジニアにとって待望の改善といえるでしょう。
+本日まとめる AWS アップデートは2件です。注目は、**Amazon CloudWatch Logs のクエリ結果上限が10倍に拡大**したことです（公式アナウンスは2026年5月15日付）。これまで10,000件だった上限が100,000件に引き上げられ、大規模ログ分析の効率が劇的に向上します。あわせて、Amazon Bedrock AgentCore をベースにした **AWS Partner Central agents**（2026年3月にGA）も取り上げ、パートナー企業の営業オペレーションがどう変わるかを整理します。特に CloudWatch Logs のアップデートは、ログ分析や障害調査を日常的に行うエンジニアにとって待望の改善といえるでしょう。
 
 ## 注目アップデート深掘り
 
@@ -136,14 +138,14 @@ CloudWatch Logs の上限拡大は、障害対応の初動調査フェーズで�
 
 | # | タイトル | 概要 |
 |---|---------|------|
-| 1 | [AWS Partner Central agents now accelerates opportunity creation](https://aws.amazon.com/about-aws/whats-new/2026/05/aws-partner-central-agents-opportunity-creation/) | AWS Partner Central に AI エージェント機能が追加され、営業案件作成が自然言語会話ベースに進化。会議議事録や提案資料をアップロードするだけで、AI が情報を抽出・充実させ、改善提案を実施。Amazon Q チャットまたは Model Context Protocol (MCP) 経由で利用可能。全商用 AWS リージョンで提供開始。 |
+| 1 | [Announcing AWS Partner Central agents to accelerate co-sell](https://aws.amazon.com/about-aws/whats-new/2026/03/aws-partner-central-agents-accelerate-co-sell/) | AWS Partner Central に AI エージェント機能（Amazon Bedrock AgentCore ベース）が追加され、営業案件管理が自然言語ベースに進化。会議議事録や提案資料、メールを共有すると、AI が情報を抽出してオポチュニティのフィールドを自動補完。資金プログラムの適格性確認や事前入力済みのファンドリクエスト作成も支援。Model Context Protocol (MCP) 経由で既存 CRM 等とも統合可能。全商用 AWS リージョンで提供開始（2026年3月16日アナウンス）。 |
 | 2 | [Amazon CloudWatch Logs announces increased query result limits](https://aws.amazon.com/about-aws/whats-new/2026/05/cloudwatch-logs-query-results/) | CloudWatch Logs のクエリ結果上限が10,000件から100,000件に拡大。LIMIT コマンドで指定可能。GetQueryResults API がページネーション対応となり、1呼び出しで最大10,000件を返しながらトークンを提供。すべての商用 AWS リージョンで利用可能。 |
 
 ## まとめ
 
 今日のアップデートは、AWS の運用効率を大きく向上させる改善が中心でした。特に CloudWatch Logs のクエリ結果上限拡大は、ログ分析の効率を劇的に改善する実用的なアップデートです。大規模システムの運用では、1回のクエリで包括的なデータを取得できることが、迅速な障害対応や分析の質向上に直結します。
 
-AWS Partner Central の AI エージェント機能は、パートナー企業の営業プロセスを効率化する興味深い取り組みです。自然言語処理と MCP による既存ツール統合は、今後の AWS サービス全体における AI 活用の方向性を示唆しています。
+AWS Partner Central agents（2026年3月16日にGA）は、パートナー企業の co-sell プロセスを効率化する取り組みです。Amazon Bedrock AgentCore をベースに、会議議事録や提案資料を取り込んでオポチュニティ情報を補完し、Model Context Protocol (MCP) 経由で既存 CRM とも統合できる点は、今後の AWS サービス全体における AI 活用の方向性を示唆しています。
 
 どちらのアップデートも既存の全商用リージョンで利用可能なため、すぐに実践投入できる点が魅力です。特に CloudWatch Logs のアップデートは、既存のクエリに `limit 100000` を追加するだけで恩恵を受けられるため、今日からでも試してみる価値があります。
 
