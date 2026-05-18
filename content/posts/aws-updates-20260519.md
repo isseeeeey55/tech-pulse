@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/05/19 のアップデートまとめ"
 date: 2026-05-19T08:02:17+09:00
-draft: true
+draft: false
 tags: ["aws", "glue", "redshift", "sam", "sagemaker", "lightsail", "cloudformation", "dynamodb", "athena", "emr", "lambda", "lake-formation", "evs", "local-zones"]
 categories: ["AWS Updates"]
 summary: "2026/05/19 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260519/header.png)
 
 # 2026/05/19 AWS アップデート情報
 
