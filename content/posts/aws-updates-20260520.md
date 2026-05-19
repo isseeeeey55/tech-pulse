@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/05/20 のアップデートまとめ"
 date: 2026-05-20T08:01:43+09:00
-draft: true
+draft: false
 tags: ["aws", "ecs", "grafana", "mwaa", "inspector", "ec2", "lambda", "ecr", "eventbridge", "cloudwatch"]
 categories: ["AWS Updates"]
 summary: "2026/05/20 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260520/header.png)
 
 # 2026年5月20日 AWS アップデート情報
 
@@ -67,7 +69,7 @@ $ aws ecs continue-service-deployment \
 6. トラフィックの100%をGreenにシフト（テスト成功後再開）
 7. 旧タスクセット（Blue）を削除
 
-デプロイメントは最大14日間一時停止状態を保持できます。この期間を超えるとデプロイメントは失敗となり、自動ロールバックが実行されます。
+デプロイメントは最大14日間一時停止状態を保持できます。この期間を超えた場合の挙動（自動続行または自動ロールバック）は設定によって選択できます。
 
 ### Amazon Managed Grafana のデュアルスタック対応
 
