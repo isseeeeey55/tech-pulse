@@ -1,11 +1,13 @@
 ---
 title: "【New Relic】2026/05/21 のアップデートまとめ"
 date: 2026-05-21T08:00:57+09:00
-draft: true
+draft: false
 tags: ["newrelic", "infrastructure-agent", "logs", "alerts", "aws"]
 categories: ["New Relic Updates"]
 summary: "2026/05/21 のNew Relicアップデートまとめ"
 ---
+
+![](/images/newrelic-updates-20260521/header.png)
 
 # New Relic アップデート情報（2026年5月21日）
 
