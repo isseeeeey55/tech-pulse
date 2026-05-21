@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/05/21 のアップデートまとめ"
 date: 2026-05-21T08:02:01+09:00
-draft: true
+draft: false
 tags: ["aws", "security-hub", "iam", "access-analyzer", "ecs", "ebs", "fargate", "dynamodb", "postgresql", "ec2", "s3", "eks", "vpc", "direct-connect", "sagemaker", "billing-conductor", "eventbridge"]
 categories: ["AWS Updates"]
 summary: "2026/05/21 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260521/header.png)
 
 # AWS 2026年5月21日のアップデート情報
 
@@ -96,8 +98,8 @@ jobs:
           AWS_SECRET_ACCESS_KEY: dummy
           AWS_REGION: us-east-1
         run: |
-          $ npm install
-          $ npm test
+          npm install
+          npm test
 ```
 
 この設定により、AWS環境に接続することなく、DynamoDBを使用するアプリケーションの統合テストを完全にローカルで実行できます。テストの実行速度も向上し、外部依存を排除することでCI/CDパイプラインの信頼性が高まります。
