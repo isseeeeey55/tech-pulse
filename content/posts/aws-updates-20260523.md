@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/05/23 のアップデートまとめ"
 date: 2026-05-23T08:02:36+09:00
-draft: true
+draft: false
 tags: ["aws", "cloudwatch", "security", "sagemaker", "clean-rooms", "workspaces", "keyspaces", "glue", "transform", "lake-formation"]
 categories: ["AWS Updates"]
 summary: "2026/05/23 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260523/header.png)
 
 # 2026年5月23日 AWS アップデート情報
 
@@ -131,21 +133,15 @@ AWS Security Agent は、各検出結果に対して**実行可能なスクリ�
 
 #### 利用フロー
 
-```bash
-# 1. AWS Security Agent コンソールから検証スクリプトをダウンロード
-$ aws security-agent download-verification-script \
-    --finding-id finding-12345 \
-    --output-file verify-finding-12345.sh
+AWS の発表では、AWS Security Agent コンソールでペネトレーションテストを実行し、検出された各 finding の **Verification Script セクション**を展開してスクリプトをダウンロードする流れが示されています。具体的な CLI コマンド名やオプションは AWS Security Agent ユーザーガイド側の記述を確認してください。
 
-# 2. 環境変数を設定
-$ export TARGET_ENDPOINT="https://api.example.com"
-$ export API_KEY="your-api-key-here"
+利用フローのイメージは次の通りです。
 
-# 3. スクリプト実行
-$ bash verify-finding-12345.sh
-```
+1. AWS Security Agent コンソールで対象の finding を開き、Verification Script セクションからスクリプトをダウンロード
+2. スクリプト内でドキュメント化されている環境変数（対象エンドポイント、認証情報など）を設定
+3. シェル等から実行し、検証結果を確認
 
-スクリプトは検証結果を標準出力に返し、終了コードで成功・失敗を判定できるため、CI/CDパイプラインへの組み込みも容易です。
+スクリプトを CI/CD パイプラインから呼び出せば、修復後の再検証や定期的なセキュリティリグレッションテストを自動化できます。
 
 #### 従来手法との比較
 
@@ -156,26 +152,15 @@ $ bash verify-finding-12345.sh
 | 機密情報管理 | 手順書に平文記載のリスク | 環境変数経由で安全に管理 |
 | 自動化 | 困難 | CI/CDパイプライン統合可能 |
 
-#### CI/CDパイプラインへの統合例
+#### CI/CDパイプラインへの統合方針
 
-GitLab CI/CD での統合例を示します。
+検証スクリプトはダウンロード後にローカルや CI ランナーから実行できるため、以下のような運用が考えられます。
 
-```yaml
-verify-security-findings:
-  stage: security-verification
-  script:
-    - aws security-agent download-verification-script --finding-id $FINDING_ID --output-file verify.sh
-    - export TARGET_ENDPOINT=$STAGING_ENDPOINT
-    - export API_KEY=$STAGING_API_KEY
-    - bash verify.sh
-  only:
-    - schedules
-  artifacts:
-    reports:
-      junit: verification-report.xml
-```
+- ステージング環境向けに環境変数（エンドポイント、トークン等）を Secret Manager / CI 変数で管理し、スケジュールジョブから呼び出す
+- 実行ログとリターンコードを集約し、JUnit などの形式に整形してダッシュボード化する
+- インフラ変更（Terraform / CloudFormation の apply）後のステップとして組み込み、既知の脆弱性が再導入されていないかを継続的に検証する
 
-定期的なスケジュール実行により、修復後の再検証を自動化できます。
+具体的な finding ID の取得・スクリプトの配布方法は、リリース時点ではコンソール経由が中心であるため、自動化を進める際は AWS Security Agent のユーザーガイドで API/CLI 対応状況を確認することを推奨します。
 
 ---
 
@@ -199,20 +184,20 @@ AWS Clean Rooms では、複数の組織が互いにデータを共有せずに�
 
 - SQL クエリ実行コスト
 - PySpark ジョブ実行コスト
-- ML モデルの学習コスト
-- ML モデルの推論コスト
+- ML モデルの学習・推論ジョブのコスト
 - 合成データ生成コスト
+
+なお、SQL と PySpark の分析では**複数の支払者を事前登録**し、分析実行時に支払者を選択できます。ML / 合成データ系のコスト種別については、変更リクエスト経由で支払者の追加・削除が行えます。
 
 #### チェンジリクエストによるガバナンス
 
-支払い設定の変更は**チェンジリクエスト**方式で行われ、すべてのコラボレーションメンバーの承認が必要です。これにより、透明性と合意形成プロセスが担保されます。
+支払い設定の変更は**チェンジリクエスト**方式で行われ、コラボレーションメンバーの承認後に反映されます。これにより、透明性と合意形成プロセスが担保されます。
 
 変更フロー：
 
 1. いずれかのメンバーがチェンジリクエストを作成
-2. 他のすべてのメンバーに通知が送信
-3. 全員が承認すると変更が適用
-4. 1人でも拒否すると変更は却下
+2. コラボレーションメンバーに通知が送信される
+3. メンバーが承認すると変更が適用される
 
 #### 活用シナリオ例
 
@@ -298,7 +283,7 @@ SREがマルチテナント環境やパートナー連携システムを運用�
 
 | # | タイトル | 概要 |
 |---|---------|------|
-| 1 | [New agentic migration assessment capabilities now available with AWS Transform](https://aws.amazon.com/about-aws/whats-new/2026/05/assessment-capabilities-transform>) | エージェント型マイグレーション評価機能を追加。What-Ifシナリオ作成、カスタマイズ可能な仮定条件、複数のTCO評価オプションで最適なAWSマイグレーションパスを決定 |
+| 1 | [New agentic migration assessment capabilities now available with AWS Transform](https://aws.amazon.com/about-aws/whats-new/2026/05/assessment-capabilities-transform/) | エージェント型マイグレーション評価機能を追加。What-Ifシナリオ作成、カスタマイズ可能な仮定条件、複数のTCO評価オプションで最適なAWSマイグレーションパスを決定 |
 | 2 | [Amazon SageMaker expands domain management across domain types](https://aws.amazon.com/about-aws/whats-new/2026/05/domain-management-iam-idc/) | SageMaker Unified StudioがIdentity Centerベースドメインのドメイン管理に対応。プロジェクト、ユーザー権限、ネットワーク設定を一元管理 |
 | 3 | [Amazon SageMaker adds business metadata and governance in IAM-based domains](https://aws.amazon.com/about-aws/whats-new/2026/05/sagemaker-catalog-iam-domains/) | IAMベースドメインでビジネスメタデータとガバナンス機能をサポート。AI生成メタデータ、用語集、メタデータフォームテンプレートでデータカタログを強化 |
 | 4 | [Amazon Keyspaces (for Apache Cassandra) expands to Asia Pacific (Malaysia) and Asia Pacific (Thailand) Regions](https://aws.amazon.com/about-aws/whats-new/2026/05/amazon-keyspaces-malaysia-thailand/) | Amazon Keyspacesがマレーシアとタイリージョンで利用可能に。低レイテンシーでデータレジデンシー要件を満たすCassandra互換アプリケーションを構築可能 |
