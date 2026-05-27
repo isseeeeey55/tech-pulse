@@ -1,84 +1,87 @@
 ---
 title: "【Codex CLI】rust-v0.134.0 リリースノートまとめ"
 date: 2026-05-27T21:50:16+09:00
-draft: true
-tags: ["codex", "conversation-history", "search", "profile", "permission-profile", "mcp", "oauth", "sandbox", "tui", "cli", "websocket", "remote-control", "compaction", "plugin", "auto-review", "proxy", "windows", "aws", "bedrock", "dotslash", "v8", "tracing", "analytics"]
+draft: false
+tags: ["codex", "conversation-history", "search", "profile", "permission-profile", "mcp", "oauth", "sandbox", "tui", "cli", "websocket", "remote-control", "compaction", "plugin", "auto-review", "proxy", "windows", "dotslash", "v8", "tracing", "analytics"]
 categories: ["Codex CLI Updates"]
 summary: "rust-v0.134.0 のCodex CLIリリースノートまとめ"
 ---
 
+![](/images/codex-updates-20260527/header.png)
+
+# OpenAI Codex CLI rust-v0.134.0 リリース解説
+
 ## はじめに
 
-2026年5月27日、OpenAI Codex CLI の **rust-v0.134.0** がリリースされました。このバージョンでは、ローカル会話履歴の検索機能、プロファイル管理の統一化、MCP（Model Context Protocol）サーバー設定の強化など、日常的な開発ワークフローの効率化に焦点を当てた改善が多数含まれています。
+2026年5月27日、OpenAI Codex CLI の **rust-v0.134.0** がリリースされました。
 
-主な変更点は以下の通りです：
+今回のリリースでは、ローカル会話履歴の検索、`--profile` の扱いの整理、MCP サーバー設定の強化、リモート接続まわりの信頼性改善などが含まれています。大きな単一機能というより、日々の利用で触れる検索・設定・接続・拡張まわりを広く整えるアップデートです。
 
-- ローカル会話履歴の全文検索機能（大文字小文字を区別しない検索と結果プレビュー）
-- `--profile` フラグの CLI、TUI、サンドボックス全体への統一適用と、レガシープロファイル設定の廃止
-- MCPサーバー設定におけるサーバー単位の環境ターゲティングとOAuth対応
-- 読み取り専用MCPツールの並行実行サポート
-- リモート接続の信頼性向上（WebSocket再接続、認証リカバリー後の即時リトライ）
-- Windows TUI描画の修正とワークスペース固有のエラーメッセージ表示
+主な変更点は以下の通りです。
 
-本記事では、これらの変更点を技術的に深掘りし、実務での活用方法を解説します。
+- ローカル会話履歴を検索できるようになり、大文字小文字を区別しない本文一致と結果プレビューに対応
+- `--profile` が CLI、TUI permissions、sandbox flows における主要な profile selector として整理され、legacy profile configs は migration guidance 経由で拒否
+- MCP setup でサーバー単位の environment targeting と、streamable HTTP server 向け OAuth options に対応
+- `readOnlyHint` を持つ read-only MCP tools の並行実行に対応
+- exec-server websocket、remote control、remote compaction v2 まわりの retry/reconnect を改善
+- Windows TUI の描画崩れ、workspace-specific usage-limit messages、Node-based tools の proxy 継承などを修正
+
+参考: [GitHub Release rust-v0.134.0](https://github.com/openai/codex/releases/tag/rust-v0.134.0) / [Full Changelog](https://github.com/openai/codex/compare/rust-v0.133.0...rust-v0.134.0)
 
 ---
 
 ## 注目アップデート深掘り
 
-### ローカル会話履歴の検索機能追加
+### ローカル会話履歴の検索
 
-今回のリリースで最も注目すべき機能の一つが、ローカル会話履歴の検索機能です（#23519, #23921）。Codex CLIを日常的に使用していると、過去の会話で生成したコードやコマンド、解決策を再度参照したい場面が頻繁に発生します。従来は会話履歴を手動でスクロールして探す必要がありましたが、この機能により効率的な検索が可能になりました。
+今回のリリースでは、ローカル会話履歴を横断して検索できる機能が追加されました（#23519, #23921）。公式リリースノートでは、case-insensitive な content match と result preview が明記されています。
 
-**なぜ重要か：** 開発者の生産性において、過去のコンテキストへの素早いアクセスは極めて重要です。特にインフラエンジニアやSREの業務では、過去のトラブルシューティング手順、デバッグコマンド、設定変更履歴などを参照する頻度が高く、検索機能の有無が作業効率に直結します。大文字小文字を区別しない検索（case-insensitive）と結果プレビュー機能により、キーワードの入力形式を意識せず、文脈を確認しながら目的の会話を素早く見つけられるようになりました。
+過去の会話を再利用したいとき、目的のやり取りを探すために履歴を目視でたどる負担が下がります。結果プレビューがあるため、単に一致箇所を見るだけでなく、その候補が目的の会話かを判断しやすくなる点も実用的です。
 
-**活用シーン：** 例えば、数日前に生成したKubernetesのトラブルシューティングコマンドを再利用したい場合、"pod restart"や"kubectl logs"といったキーワードで検索することで、該当する会話とその前後のコンテキストをプレビュー付きで確認できます。これにより、単にコマンドを見つけるだけでなく、当時の状況や試行錯誤の過程も含めて振り返ることができるため、より適切な判断が可能になります。
+### `--profile` の整理と legacy profile config の扱い
 
-### プロファイル管理の統一化と `--profile` フラグの標準化
+`--profile` が、CLI、TUI permissions、sandbox flows をまたいだ主要な profile selector として整理されました（#23708, #23883, #23890, #24051, #24055, #24059, #24067, #24110）。あわせて legacy profile configs は migration guidance を通じて拒否されるようになっています。
 
-v0.134.0では、`--profile` フラグがCLI、TUI、サンドボックスフロー全体で主要なプロファイル選択方式として統一されました（#23708, #23883, #23890, #24051, #24055, #24059, #24067, #24110）。同時に、レガシーなプロファイル設定は廃止され、移行ガイダンスを通じて新しい設定方法へのアップグレードが促されます。
+> **Note:** ここでの profile は Codex CLI の権限や実行設定を選択するための profile です。今回のリリースでは、古い profile config をそのまま受け入れ続けるのではなく、移行ガイダンスへ寄せる変更が含まれています。
 
-**なぜ重要か：** Codex CLIは複数の実行モード（対話型CLI、TUI、サンドボックス環境）を持ち、それぞれで権限プロファイルや環境設定を管理する必要があります。従来は設定方法が統一されておらず、モード間での挙動の違いや設定の重複が発生しやすい状況でした。`--profile` の統一により、どの実行モードでも同じフラグで一貫したプロファイルを指定できるようになり、設定管理の複雑さが大幅に軽減されます。
+関連して、profile migration documentation links が config error に追加されています（#23879）。既存設定を持つ環境では、エラー表示を手がかりに新しい形式へ移行する流れになります。
 
-> **Note:** Codex CLIの permission profile は、ツールやリソースへのアクセス権限をまとめて管理する仕組みです。開発環境、ステージング環境、本番環境など、異なるアクセスレベルをプロファイルとして定義できます。
+### MCP setup と tool schema の改善
 
-**移行のポイント：** レガシーなプロファイル設定を使用している場合、起動時にエラーメッセージとともに移行ドキュメントへのリンクが表示されます（#23879）。移行作業は、既存のプロファイル設定を新しい形式に書き換えることで完了します。例えば、サンドボックスを起動する際も以下のように統一された形式で指定できます：
+MCP setup では、サーバー単位の environment targeting と、streamable HTTP server 向け OAuth options が追加されました（#23583, #24120）。MCP server の接続先や認証を扱う設定が、より明示的に表現できる方向の変更です。
 
-```bash
-$ codex sandbox --profile production
-```
+また、connector tool schemas については local `$ref` / `$defs` 構造を保持し、oversized schemas は公開前に compact する改善が入っています（#23357, #23904）。大きな schema を扱う connector や tool 連携で、schema の取り扱いをより堅くする変更として読めます。
 
-この変更により、チーム内でのプロファイル管理標準化や、CI/CDパイプラインでの環境切り替えがシンプルになります。
+さらに、`readOnlyHint` を advertise する read-only MCP tools は並行実行できるようになりました（#23750）。読み取り専用であることが示されている tool について、実行の扱いを最適化する変更です。
 
-### MCPサーバー設定の強化：環境ターゲティングとOAuth対応
+### リモート接続と実行環境まわりの修正
 
-MCP（Model Context Protocol）サーバーの設定機能が強化され、サーバー単位での環境ターゲティングと、ストリーム対応HTTPサーバー向けのOAuthオプションがサポートされました（#23583, #24120）。
+Bug Fixes では、remote reliability の改善がまとまっています。stale な exec-server websocket client の reconnect、auth recovery 後の remote control retry、remote compaction v2 streams の retry が含まれます（#23867, #23775, #23951）。
 
-**なぜ重要か：** MCPサーバーは外部ツールやサービスとの連携を実現する重要なコンポーネントです。実務環境では、開発、ステージング、本番といった複数環境に対して異なる認証情報やエンドポイントを使い分ける必要があります。サーバー単位で環境を明示的に指定できるようになったことで、設定の見通しが良くなり、誤った環境への接続リスクが低減します。また、OAuth対応により、より安全な認証フローが実現できます。
-
-**活用例：** 内製の監視ツールやログ集約システムとMCP経由で連携する場合、`codex mcp add`コマンドで環境とOAuthオプションを指定することで、安全かつ明示的な接続設定が可能になります。これにより、SREチームが本番環境の情報に安全にアクセスしながら、開発環境では制限されたアクセス権で動作確認を行うといった運用が容易になります。
+そのほか、Windows TUI rendering corruption の修正（#24082）、credit / spend-cap failure 時の workspace-specific usage-limit messages（#24114）、Node-based tools が Codex managed network proxy environment を引き継ぐ修正（#23905）も入っています。
 
 ---
 
 ## 実用的な活用ポイント
 
-### 日常のワークフローへの影響
+### 日常ワークフローへの影響
 
-今回のリリースは、日々の開発ワークフローに直接的な効率化をもたらします。特に会話履歴検索機能は、「あのときのコマンドは何だったか」「以前試したアプローチを確認したい」といった場面で、スクロールや記憶に頼る必要がなくなり、即座に情報を取り出せるようになります。大文字小文字を気にせず検索できるため、コマンド名や技術用語を曖昧に覚えている場合でも素早くヒットさせられます。
+ローカル会話履歴検索は、過去の会話から必要な文脈を探す操作に直接効く変更です。case-insensitive search と result preview が入ったことで、検索語の大文字小文字を気にせず、候補の中身を確認しながら目的の会話へ戻りやすくなります。
 
-プロファイル管理の統一化は、環境切り替えの作業を大幅に簡素化します。開発中に本番環境の情報を参照する必要が生じた場合、`--profile production`を付けるだけで安全に切り替えられます。CI/CDパイプラインでも、ステージごとに異なるプロファイルを指定するシェルスクリプトを書くだけで、環境依存の設定を一元管理できます。
+`--profile` の整理は、既存の profile 設定を使っている環境ほど確認しておきたい変更です。legacy profile configs が migration guidance 経由で拒否されるため、手元の設定で警告やエラーが出る場合は、リリースノートと移行ドキュメントに沿って見直すのがよさそうです。
 
-### SRE/インフラエンジニア視点での活用
+### SRE / インフラエンジニア視点
 
-インフラエンジニアやSREにとって、過去のインシデント対応履歴や調査ログは貴重な知識ベースです。会話履歴検索により、「前回の障害時にどのメトリクスを確認したか」「どのKubernetesリソースを調べたか」といった情報を瞬時に引き出せるため、再発時の初動対応が迅速化します。
+MCP setup の environment targeting と OAuth options は、接続先や認証の違いを明示的に扱いたい場面で重要です。公式リリースノートの記載範囲では、サーバー単位の environment targeting と streamable HTTP server 向け OAuth options が追加された、という点を押さえておくのが安全です。
 
-MCPサーバーの環境ターゲティングは、監視ツールやログ管理システムとの連携において特に有用です。開発環境で新しいダッシュボードやアラートルールを試しながら、本番環境のデータには読み取り専用でアクセスする、といった安全な運用が実現できます。読み取り専用MCPツールの並行実行サポート（#23750）により、複数の監視エンドポイントから同時にデータを取得するような操作も高速化されます。
+remote reliability の修正も、リモート実行や remote control を使う環境では確認しておきたいポイントです。websocket reconnect、auth recovery 後の retry、remote compaction v2 stream retry が含まれており、接続まわりの失敗時の扱いが改善されています。
 
-### すぐに試せるTips
+### すぐに確認したいこと
 
-- **会話履歴検索：** 過去1週間で実行したコマンドを "kubectl" で検索し、結果プレビューで文脈を確認しながら再利用する
-- **プロファイル切り替え：** `--profile staging` と `--profile production` を使い分けて、安全に環境間の設定差分を確認する
-- **リモート接続の信頼性：** WebSocket再接続機能（#23867）により、ネットワークが不安定な環境でも接続が自動復旧されるため、リモート作業時の安定性が向上します
+- ローカル会話履歴検索で、期待した履歴が case-insensitive に見つかるか
+- 既存の profile 設定で migration guidance が出ないか
+- MCP server 設定を使っている場合、environment targeting や OAuth options の変更点が関係するか
+- Node-based tools を proxy 環境で使っている場合、managed network proxy environment の継承が効くか
 
 ---
 
@@ -86,37 +89,33 @@ MCPサーバーの環境ターゲティングは、監視ツールやログ管�
 
 | カテゴリ | 変更内容 | 概要 |
 |---------|---------|------|
-| Feature | ローカル会話履歴検索 (#23519, #23921) | 大文字小文字を区別しない検索と結果プレビュー機能 |
-| Feature | `--profile` フラグの統一 (#23708, #23883, #23890, #24051, #24055, #24059, #24067, #24110) | CLI、TUI、サンドボックス全体で主要なプロファイル選択方式として統一し、レガシー設定を廃止 |
-| Feature | MCP設定の強化 (#23583, #24120) | サーバー単位の環境ターゲティングと、OAuth対応HTTPサーバーのサポート |
-| Feature | ツールスキーマの信頼性向上 (#23357, #23904) | ローカル `$ref`/`$defs` 構造の保持と、大型スキーマの自動コンパクション |
-| Feature | 読み取り専用MCPツールの並行実行 (#23750) | `readOnlyHint` が付与されたツールの並行実行をサポート |
-| Feature | 拡張機能・フックコンテキストの拡充 (#22882, #23963) | 拡張ツールへの会話履歴提供、フック入力へのサブエージェントID追加 |
-| Fix | リモート接続の信頼性向上 (#23867, #23775, #23951) | exec-server WebSocketの再接続、認証リカバリー後の即時リトライ、remote compaction v2のリトライ処理 |
-| Fix | Windows TUI描画の修正 (#24082) | 描画前に仮想端末モードを復元し、描画崩れを解消 |
-| Fix | ワークスペース固有エラーメッセージ (#24114) | クレジット不足や利用上限時のメッセージをワークスペース別に表示 |
-| Fix | プラグインスキルのアイコン共有 (#23776) | プラグインレベルのアイコンアセットを複数スキルで再利用可能に |
-| Fix | アクティブプロファイルメタデータの保持 (#23956) | auto-review設定同期時にプロファイルメタデータを保持 |
-| Fix | Node.jsツールのプロキシ対応 (#23905) | Codex管理のネットワークプロキシ環境を継承 |
-| Improvement | 一時セッションのゴールエラーメッセージ改善 (#23796) | エフェメラルセッションでの `/goal` エラーメッセージを改善 |
-| Improvement | TUIゴール置換プロンプトのスキップ (#23792) | 完了済みゴールの置換プロンプトをスキップ |
-| Documentation | インストーラー手順の追加 (#24106) | READMEにcurlとPowerShellインストーラーのパスを記載 |
-| Documentation | テスト実行手順の更新 (#23910) | 開発者ドキュメントで `cargo test` より `just test` を推奨 |
-| Documentation | プロファイル移行ドキュメント (#23879) | 設定エラーに移行ドキュメントリンクを追加 |
-| Chore | リリースパッケージング改善 (#23833, #23836, #24129, #24165) | ネイティブアーティファクトの標準化、DotSlash取得の再利用、macOS x64 zshアーティファクト追加 |
-| Chore | V8アーティファクトのリリースビルド対応 (#23934) | Codex生成V8アーティファクトのリリースビルドサポート |
-| Chore | ベンチマークとフィクスチャ追加 (#23935, #24152) | 画像再エンコードベンチマーク、JSONスキーマポリシーフィクスチャ |
-| Chore | トレーシング・分析機能の強化 (#23581, #23980, #24146) | WebSocketリクエスト、ターン開始、remote compaction v2のトレーシング・分析機能 |
+| Feature | ローカル会話履歴検索 (#23519, #23921) | case-insensitive な content match と result preview を含む検索を追加 |
+| Feature | `--profile` の主要 selector 化 (#23708, #23883, #23890, #24051, #24055, #24059, #24067, #24110) | CLI、TUI permissions、sandbox flows で `--profile` を主要な profile selector として整理 |
+| Feature | MCP setup の改善 (#23583, #24120) | per-server environment targeting と streamable HTTP server 向け OAuth options を追加 |
+| Feature | connector tool schema の信頼性改善 (#23357, #23904) | local `$ref` / `$defs` の保持と oversized schema の compact に対応 |
+| Feature | read-only MCP tools の並行実行 (#23750) | `readOnlyHint` を advertise する read-only MCP tools の並行実行に対応 |
+| Feature | extension / hook context の拡充 (#22882, #23963) | extension tools への conversation history 提供と hook inputs への subagent identity 追加 |
+| Fix | remote reliability の改善 (#23867, #23775, #23951) | exec-server websocket reconnect、auth recovery 後の retry、remote compaction v2 stream retry |
+| Fix | Windows TUI rendering corruption 修正 (#24082) | 描画前に virtual terminal mode を復元 |
+| Fix | workspace-specific usage-limit messages (#24114) | credit / spend-cap failure 時の message を workspace 別に表示 |
+| Fix | plugin-level icon assets の再利用 (#23776) | plugin skills が共有 icon assets を再利用可能に |
+| Fix | auto-review runtime settings の profile metadata 保持 (#23956) | active permission profile metadata を保持 |
+| Fix | Node-based tools の proxy 継承 (#23905) | Codex managed network proxy environment を引き継ぐよう修正 |
+| Documentation | installer path の README 追記 (#24106) | curl と PowerShell installer paths を README に記載 |
+| Documentation | developer docs の test 手順更新 (#23910) | repo-local test runs で direct `cargo test` より `just test` を推奨 |
+| Documentation | profile migration docs link 追加 (#23879) | relevant config errors に migration documentation links を追加 |
+| Chore | release packaging の整理 (#23833, #23836, #24129, #24165) | canonical native artifacts、DotSlash fetching、macOS x64 zsh artifact まわりを改善 |
+| Chore | V8 artifact の release build 対応 (#23934) | Codex-produced V8 artifacts の release build support を追加 |
+| Chore | benchmarks / fixtures 追加 (#23935, #24152) | image re-encoding benchmarks と connector-style JSON schema policy fixtures を追加 |
+| Chore | tracing / analytics 改善 (#23581, #23980, #24146) | websocket requests、turn starts、remote compaction v2 の tracing / analytics を改善 |
 
 ---
 
 ## まとめ
 
-rust-v0.134.0 は、検索機能やプロファイル管理の統一といったユーザビリティ向上と、MCP設定の柔軟性強化、リモート接続の信頼性改善など、実務での使い勝手を重視したアップデートとなっています。特にローカル会話履歴検索は、日々の開発やトラブルシューティングにおいて過去の知見を素早く活用できるようにする画期的な機能であり、ナレッジの蓄積と再利用を加速させます。
+rust-v0.134.0 は、会話履歴検索、profile 選択、MCP setup、remote reliability など、日常利用の土台になる部分を広く整えるリリースです。
 
-プロファイル管理の統一化は、複数環境を扱うチームやSREにとって、設定ミスのリスクを減らし、運用の標準化を進める上で重要なステップです。レガシー設定の廃止により、今後の機能拡張もよりシンプルな設計で進められることが期待されます。
-
-全体として、このリリースは「実務での使いやすさ」と「運用の安全性」を両立させる方向性を明確に示しており、Codex CLIが成熟したプロダクションツールへと進化していることを感じさせる内容となっています。早速 `--profile` フラグを活用した環境管理や、会話履歴検索を日常ワークフローに取り入れてみることをお勧めします。
+特に確認しておきたいのは、ローカル会話履歴検索と legacy profile config の扱いです。検索機能はすぐに体感しやすい改善であり、profile まわりは既存設定に影響する可能性があります。MCP や remote control を使っている場合は、environment targeting、OAuth options、retry/reconnect まわりの変更もあわせて見ておくとよさそうです。
 
 ---
 
