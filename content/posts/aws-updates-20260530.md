@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/05/30 のアップデートまとめ"
 date: 2026-05-30T08:02:06+09:00
-draft: true
+draft: false
 tags: ["aws", "shield", "rds", "oracle", "redshift", "connect", "s3", "cloudwatch", "firehose", "pinpoint", "direct-connect"]
 categories: ["AWS Updates"]
 summary: "2026/05/30 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260530/header.png)
 
 # 2026年5月30日 AWS アップデート解説
 
@@ -25,73 +27,25 @@ DDoS攻撃は現代のクラウドインフラにおける最も深刻な脅威�
 
 ログには送信元IP、宛先IP、ポート番号、プロトコル、パケット数、バイト数、送信元国情報といった豊富なメタデータが含まれており、攻撃の全体像を把握できます。これらのデータは**Amazon S3**、**Amazon CloudWatch Logs**、または**Amazon Data Firehose**に5分間隔で自動送信されるため、リアルタイムに近い形で攻撃状況を追跡できます。
 
-#### 実装と検証の具体的手順
+#### 有効化の流れとログの内容
 
-Shield Advancedでフローログを有効化する際には、まず送信先を選択します。以下はAWS CLIを使用した設定例です。
+公式アナウンスによれば、フローログを利用するには、対象リソースを Shield Advanced で保護したうえで、配信先に応じたログ配信を構成します。アクティブな攻撃が発生している間、ログは選択した宛先へ **5分間隔** で自動的に配信されます。
 
-```bash
-$ aws shield create-protection-group \
-    --protection-group-id my-ddos-protection \
-    --aggregation MAX \
-    --pattern ALL \
-    --resource-type CLOUDFRONT_DISTRIBUTION \
-    --members arn:aws:cloudfront::123456789012:distribution/EXAMPLE
-```
+ログには、パケットレベルの詳細情報として以下が含まれるとされています。
 
-フローログの有効化は以下のように行います。
+- 送信元・宛先の IP アドレス
+- 送信元・宛先のポート
+- プロトコル
+- パケット数・バイト数
+- 送信元の国情報 など
 
-```bash
-$ aws shield enable-protection-group-flow-logs \
-    --protection-group-id my-ddos-protection \
-    --log-destination-configs \
-        LogDestinationType=S3,ResourceArn=arn:aws:s3:::my-ddos-logs
-```
+> **Note:** 本記事執筆時点で、公式アナウンスにはログフィールドの完全なスキーマや有効化用の CLI/API の詳細までは記載されていません。正確なログフォーマットと設定手順は[AWS公式ドキュメント](https://docs.aws.amazon.com/waf/latest/developerguide/ddos-overview.html)を参照してください。
 
-送信されるログデータはJSON形式で、以下のようなスキーマを持ちます（リリースノートに基づく推定構造）。
+#### ログの分析基盤
 
-```json
-{
-  "timestamp": "2026-05-30T12:00:00Z",
-  "sourceAddress": "198.51.100.1",
-  "destinationAddress": "203.0.113.5",
-  "sourcePort": 54321,
-  "destinationPort": 443,
-  "protocol": "TCP",
-  "packets": 15000,
-  "bytes": 7500000,
-  "sourceCountry": "US",
-  "action": "BLOCKED"
-}
-```
+配信先によって分析方法を選べる点がこの機能の利点です。**Amazon CloudWatch Logs** に配信すれば Logs Insights でインタラクティブにクエリでき、**Amazon S3** に蓄積すれば Amazon Athena による SQL 分析やコスト効率の良い長期保管が可能です。**Amazon Data Firehose** を経由すれば、OpenSearch や任意のデータレイクへストリーミングし、既存の分析パイプラインに統合できます。
 
-#### CloudWatch LogsとAthenaを使った分析
-
-CloudWatch Logsに送信されたログは、CloudWatch Insights を使って即座に分析できます。たとえば、攻撃元の国別トラフィック量を集計するクエリは以下のようになります。
-
-```
-fields @timestamp, sourceCountry, bytes
-| stats sum(bytes) as totalBytes by sourceCountry
-| sort totalBytes desc
-```
-
-S3に保存したログをAthenaでクエリする場合は、以下のようなテーブル定義を作成します。
-
-```sql
-CREATE EXTERNAL TABLE ddos_flow_logs (
-  timestamp string,
-  sourceAddress string,
-  destinationAddress string,
-  sourcePort int,
-  destinationPort int,
-  protocol string,
-  packets bigint,
-  bytes bigint,
-  sourceCountry string,
-  action string
-)
-ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe'
-LOCATION 's3://my-ddos-logs/';
-```
+たとえば「送信元の国別トラフィック量」「プロトコル別のパケット数の推移」といった切り口で集計すれば、攻撃元の地理的分布や攻撃手法の傾向を把握できます。具体的なクエリやテーブル定義は、確定したログスキーマに合わせて組み立ててください。
 
 #### 従来の方法との比較
 
@@ -128,15 +82,12 @@ response = client.send_text_message(
     OriginationIdentity='arn:aws:sms-voice:us-east-1:123456789012:phone-number/+12025551234',
     MessageBody='Your order #12345 has been shipped! Track here: https://example.com/track',
     MessageType='TRANSACTIONAL',
-    DestinationCountryParameters={
-        'IN_TEMPLATE_ID': 'my-rcs-template'
-    }
 )
 
 print(response['MessageId'])
 ```
 
-RCS非対応端末の場合、上記コードはそのままSMS送信にフォールバックします。追加の条件分岐やエラーハンドリングは不要です。
+公式アナウンスでも「既存の SendTextMessage API でアプリケーションの変更なしに送信できる」と明言されており、RCS非対応端末の場合は上記コードのままSMS送信にフォールバックします。追加の条件分岐やエラーハンドリングは不要です。
 
 #### RCS vs SMS vs Push Notification 比較
 
@@ -163,38 +114,9 @@ RCSの料金はSMSよりも高めですが、エンゲージメント率の向�
 
 SRE業務において、DDoS攻撃は「予測できないが備えるべき」障害の典型例です。フローログ機能は、単なる事後分析だけでなく、**継続的な改善活動の基盤**として活用できます。
 
-たとえば、週次のポストモーテム会議で攻撃パターンのトレンド分析を行い、特定地域からの攻撃が増加している場合はWAFルールを強化する判断材料にできます。また、CloudWatch Logsと連携してアラートを設定すれば、攻撃の初期段階でオンコール担当者に通知し、迅速なエスカレーションが可能になります。
+たとえば、週次のポストモーテム会議で攻撃パターンのトレンド分析を行い、特定地域からの攻撃が増加している場合はWAFルールを強化する判断材料にできます。また、CloudWatch Logs に配信したログにメトリクスフィルターを設定すれば、一定の閾値を超えるトラフィックを検知してアラート化でき、攻撃の初期段階でオンコール担当者に通知して迅速なエスカレーションにつなげられます。Infrastructure as Code で運用している場合は、ログ配信先（S3バケットや CloudWatch ロググループ）の構成もコード化して一元管理するとよいでしょう。配信設定に対応するリソースは、利用する IaC ツールの対応状況に合わせて確認してください。
 
-```bash
-$ aws logs put-metric-filter \
-    --log-group-name /aws/shield/ddos-flow-logs \
-    --filter-name HighVolumeAttack \
-    --filter-pattern '[timestamp, sourceAddress, destinationAddress, sourcePort, destinationPort, protocol, packets > 100000, ...]' \
-    --metric-transformations \
-        metricName=DDoSHighVolume,metricNamespace=Shield,metricValue=1
-```
-
-Terraform で管理しているインフラであれば、フローログ設定もコード化して一元管理できます。
-
-```hcl
-resource "aws_shield_protection_group" "main" {
-  protection_group_id = "my-ddos-protection"
-  aggregation         = "MAX"
-  pattern             = "ALL"
-  resource_type       = "CLOUDFRONT_DISTRIBUTION"
-  members             = [aws_cloudfront_distribution.main.arn]
-}
-
-resource "aws_shield_protection_group_flow_logs" "main" {
-  protection_group_id = aws_shield_protection_group.main.id
-  log_destination_configs {
-    log_destination_type = "S3"
-    resource_arn         = aws_s3_bucket.ddos_logs.arn
-  }
-}
-```
-
-コスト面では、ログストレージとクエリコストが追加で発生します。5分間隔のログ送信により、大規模な攻撃時には数GB〜数十GBのデータが生成される可能性があるため、S3ライフサイクルポリシーで古いログを自動的にGlacierに移行するなどの設計が推奨されます。
+コスト面では、ログストレージとクエリコストが追加で発生します。アクティブな攻撃時には5分間隔でログが配信されるため、大規模な攻撃ではデータ量が増大する可能性があります。S3ライフサイクルポリシーで古いログを低頻度アクセス階層やアーカイブ階層へ移行するなど、保管コストを抑える設計が推奨されます。
 
 ### RCS for Business の運用改善ポイント
 
