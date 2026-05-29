@@ -1,11 +1,13 @@
 ---
 title: "【Codex CLI】rust-v0.135.0 リリースノートまとめ"
 date: 2026-05-29T08:02:02+09:00
-draft: true
+draft: false
 tags: ["codex", "codex-doctor", "vim-mode", "tui", "sandbox", "python-sdk", "permissions", "mcp", "remote-control", "git", "app-server", "markdown", "zsh", "tmux", "iterm", "zellij", "macos", "linux", "sqlite", "rust-toolchain"]
 categories: ["Codex CLI Updates"]
 summary: "rust-v0.135.0 のCodex CLIリリースノートまとめ"
 ---
+
+![](/images/codex-updates-20260529/header.png)
 
 ## はじめに
 
