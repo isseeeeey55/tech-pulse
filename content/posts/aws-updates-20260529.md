@@ -1,17 +1,19 @@
 ---
 title: "【AWS】2026/05/29 のアップデートまとめ"
 date: 2026-05-29T08:02:35+09:00
-draft: true
+draft: false
 tags: ["aws", "resilience-hub", "iot-core", "billing-and-cost-management", "opensearch", "partner-central", "connect", "organizations", "cloudtrail", "sagemaker", "bedrock", "elemental", "dynamodb", "glue", "ec2"]
 categories: ["AWS Updates"]
 summary: "2026/05/29 のAWSアップデートまとめ"
 ---
 
+![](/images/aws-updates-20260529/header.png)
+
 # 2026年5月29日 AWS アップデート情報
 
 ## はじめに
 
-2026年5月29日に公開されたAWSアップデートは全18件で、AIと機械学習基盤の大幅な拡充が目立つ日となりました。特に注目すべきは、次世代AWS Resilience Hubの一般提供開始による組織全体のレジリエンシー管理の高度化と、SageMaker Notebook InstancesへのP5en、P6-B200といった最新GPU搭載インスタンスの展開によるAI開発基盤の強化です。また、AWS IoT CoreへのMQTT接続管理API追加、AWS OrganizationsとCloudTrailの統合強化といった運用管理機能の改善も含まれています。生成AI分野では、Claude Opus 4.8のリリースやAmazon Bedrock、OpenSearch Serverlessの次世代版提供開始など、エンタープライズ向けAI活用を加速する内容が揃いました。
+2026年5月29日に公開されたAWSアップデートは全17件で、AIと機械学習基盤の大幅な拡充が目立つ日となりました。特に注目すべきは、次世代AWS Resilience Hubの一般提供開始による組織全体のレジリエンシー管理の高度化と、SageMaker Notebook InstancesへのP5en、P6-B200といった最新GPU搭載インスタンスの展開によるAI開発基盤の強化です。また、AWS IoT CoreへのMQTT接続管理API追加、AWS OrganizationsとCloudTrailの統合強化といった運用管理機能の改善も含まれています。生成AI分野では、Claude Opus 4.8のリリースやAmazon Bedrock、OpenSearch Serverlessの次世代版提供開始など、エンタープライズ向けAI活用を加速する内容が揃いました。
 
 ## 注目アップデート深掘り
 
@@ -59,17 +61,7 @@ ListSubscriptions APIは、MQTTセッションのすべてのトピックサブ�
 
 これらの新APIは既存のDeleteConnection APIと組み合わせることで、包括的なMQTT接続ライフサイクル管理が可能になります。問題のある接続を検出（GetConnection）し、サブスクリプションを確認（ListSubscriptions）した上で、必要に応じて接続を切断（DeleteConnection）するという完全な運用フローを自動化できます。
 
-```bash
-# GetConnection APIの使用例（AWS CLI）
-$ aws iot-data get-connection \
-  --thing-name my-iot-device \
-  --connection-id 12345678-abcd-1234-efgh-123456789012
-
-# ListSubscriptions APIの使用例
-$ aws iot-data list-subscriptions \
-  --thing-name my-iot-device \
-  --connection-id 12345678-abcd-1234-efgh-123456789012
-```
+これらの API は SDK や CLI からプログラマティックに呼び出せます。公式発表時点では具体的なコマンド構文は明示されていないため、実際の呼び出し方法は最新の API リファレンスを参照してください。IAM ポリシーで呼び出し可能なプリンシパルとアクションを制限できるため、自動化基盤には最小権限のみを、運用担当者には調査用途の権限を付与する、といった権限分離が可能です。
 
 ### Amazon OpenSearch Serverless 次世代版の性能とコスト革新
 
