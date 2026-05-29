@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.120 リリースノートまとめ"
 date: 2026-04-26T08:01:43+09:00
-draft: true
+draft: false
 tags: ["claude-code", "powershell", "ultrareview", "ci-cd", "skills", "claude-effort", "windows", "git-bash", "bash", "iac", "terraform", "cloudformation", "json", "mcp"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.120 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260426/header.png)
 
 ## はじめに
 
