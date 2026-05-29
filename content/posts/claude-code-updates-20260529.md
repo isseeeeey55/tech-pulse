@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.154・v2.1.153 リリースノートまとめ"
 date: 2026-05-29T08:01:06+09:00
-draft: true
+draft: false
 tags: ["claude-code", "opus", "git-lfs", "npm", "mcp", "macos"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.154・v2.1.153 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260529/header.png)
 
 # Claude Code v2.1.154 & v2.1.153 リリース情報
 
