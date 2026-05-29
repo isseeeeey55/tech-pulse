@@ -1,17 +1,19 @@
 ---
 title: "【AWS】2026/05/28 のアップデートまとめ"
 date: 2026-05-28T08:06:33+09:00
-draft: true
+draft: false
 tags: ["aws", "sagemaker", "ec2", "emr", "spark", "guardduty", "s3", "backup", "lake-formation", "connect", "hyperpod", "iceberg", "glue"]
 categories: ["AWS Updates"]
 summary: "2026/05/28 のAWSアップデートまとめ"
 ---
 
+![](/images/aws-updates-20260528/header.png)
+
 # 2026年5月28日 AWS アップデート解説
 
 ## はじめに
 
-2026年5月28日、AWSから6件のアップデートが発表されました。本日の注目ポイントは、**機械学習・データ分析基盤の性能とセキュリティの大幅強化**です。SageMaker では NVIDIA H100 搭載の P5.4xl インスタンスが利用可能になり、LLM 開発の高速化とコスト削減が実現します。また、Amazon EMR が Apache Spark 4.0.2 に対応し、ANSI SQL サポートや細粒度アクセス制御が強化されました。セキュリティ面では、GuardDuty が S3 継続的バックアップのマルウェアスキャンに対応し、ランサムウェア攻撃後の安全な復旧ポイント特定が可能になっています。
+2026年5月28日、AWSから6件のアップデートが発表されました。本日の注目ポイントは、**機械学習・データ分析基盤の性能とセキュリティの大幅強化**です。SageMaker Studio notebooks では NVIDIA H100 搭載の P5.4xl インスタンスが利用可能になり、LLM 開発の高速化とコスト削減が期待できます。また、Amazon EMR が Apache Spark 4.0.2 に対応し、ANSI SQL サポートや細粒度アクセス制御が強化されました。セキュリティ面では、GuardDuty が S3 継続的バックアップのマルウェアスキャンに対応し、ランサムウェア攻撃後の安全な復旧ポイント特定が可能になっています。
 
 本記事では、特に影響範囲の大きい **Amazon EMR の Apache Spark 4.0.2 対応**と **GuardDuty の S3 継続的バックアップ対応**を深掘りし、SRE 視点での活用シナリオを解説します。
 
@@ -73,9 +75,9 @@ df.show()
 
 金融機関や医療機関など、コンプライアンス要件が厳しい環境では、この機能によってデータガバナンスを維持しながら、データ活用を加速できます。
 
-#### Apache Iceberg v3 による監査とコンプライアンス強化
+#### Apache Iceberg v3 と S3 Tables 統合
 
-Spark 4.0.2 は Apache Iceberg v3 テーブル形式をサポートし、強化された監査ログとデータ系統管理を提供します。Iceberg v2 と v3 の主な違いは、トランザクションメタデータの記録粒度と保持期間です。v3 では、すべてのデータ変更操作が詳細に記録され、「誰が、いつ、どのデータを変更したか」を追跡できます。
+Spark 4.0.2 は Apache Iceberg v3 テーブル形式をサポートし、Iceberg テーブルでの VARIANT データ型や AWS S3 Tables との統合を利用できます。半構造化データを含む分析テーブルを Iceberg で管理しやすくなるため、データレイクの標準化やテーブル形式の統一を進めている組織では移行検証の価値があります。
 
 ```sql
 -- Iceberg v3 テーブルの作成例
@@ -91,7 +93,7 @@ TBLPROPERTIES (
   'commit.manifest.min-count-to-merge' = '10'
 );
 
--- 監査ログの確認
+-- テーブル履歴やスナップショットの確認
 SELECT * FROM customer_transactions.history;
 SELECT * FROM customer_transactions.snapshots;
 ```
@@ -136,42 +138,15 @@ Amazon GuardDuty Malware Protection for AWS Backup が、Amazon S3 の継続的�
 
 ランサムウェア攻撃を受けた場合、バックアップからの復旧が最後の砦となります。しかし、従来の方法では「どの時点のバックアップが感染前のクリーンな状態か」を特定することが困難でした。攻撃者がシステムに潜伏している期間中に取得されたバックアップには、既にマルウェアが混入している可能性があります。S3 継続的バックアップのマルウェアスキャン機能により、バックアップタイムライン全体から安全な復旧ポイントを科学的に特定できるようになりました。
 
-#### フルスキャンと差分スキャンの実装
+#### フルスキャンと増分スキャンの実装
 
-AWS Backup のバックアッププラン内で、S3 継続的バックアップに対してフルスキャンまたは差分スキャンを設定できます。
+AWS Backup のバックアッププラン内で、S3 継続的バックアップに対してフルスキャンまたは増分スキャンを設定できます。初回や重要データの棚卸しではフルスキャン、継続的な監視では変更分を対象にする増分スキャンを組み合わせることで、復旧前検証の実効性とコストのバランスを取りやすくなります。
 
-```bash
-# AWS CLI でバックアッププランにマルウェアスキャンを設定
-$ aws backup create-backup-plan \
-  --backup-plan '{
-    "BackupPlanName": "S3-ContinuousBackup-WithMalwareScan",
-    "Rules": [{
-      "RuleName": "DailyBackupWithScan",
-      "TargetBackupVaultName": "Default",
-      "ScheduleExpression": "cron(0 5 ? * * *)",
-      "EnableContinuousBackup": true,
-      "Lifecycle": {
-        "DeleteAfterDays": 35
-      },
-      "RecoveryPointTags": {
-        "Environment": "Production"
-      },
-      "CopyActions": [],
-      "BackupOptions": {
-        "WindowsVSS": "disabled"
-      }
-    }],
-    "AdvancedBackupSettings": [{
-      "ResourceType": "S3",
-      "BackupOptions": {
-        "EnableMalwareScan": "true",
-        "MalwareScanType": "DIFFERENTIAL"
-      }
-    }]
-  }'
-```
+運用設計では、次の点をバックアッププランやランブックに明記しておくと扱いやすくなります。
 
-**フルスキャン**は、バックアップ全体をスキャンし、すべてのファイルをチェックします。初回スキャンや、長期間スキャンされていないバックアップに適しています。**差分スキャン**は、前回のスキャン以降に変更されたファイルのみをスキャンするため、処理時間とコストを削減できます。
+- **フルスキャンのタイミング**: 初回有効化時、重要な構成変更後、または定期的な基準点の確認
+- **増分スキャンの対象**: 日常的な変更分の確認と、復旧候補時刻の絞り込み
+- **オンデマンドスキャン**: インシデント対応時に、復旧したい任意の時点がクリーンかを確認
 
 #### GetPITRMalwareScanResults API による復旧前検証
 
@@ -207,28 +182,11 @@ else:
 
 ランサムウェア攻撃を検知した際の典型的な復旧フローは以下のようになります。
 
-```bash
-# 1. 継続的バックアップの全体像を確認
-$ aws backup list-recovery-points-by-resource \
-  --resource-arn arn:aws:s3:::my-critical-bucket
-
-# 2. 攻撃検知時刻の前後で複数の時点をスキャン
-$ aws backup start-restore-job \
-  --recovery-point-arn <RECOVERY_POINT_ARN> \
-  --metadata '{"EnableMalwareScan":"true"}' \
-  --dry-run
-
-# 3. スキャン結果を確認し、クリーンな最新時点を特定
-$ aws backup get-pitr-malware-scan-results \
-  --resource-arn arn:aws:s3:::my-critical-bucket \
-  --recovery-point-time "2026-05-26T10:30:00Z"
-
-# 4. クリーンな時点から復旧実行
-$ aws backup start-restore-job \
-  --recovery-point-arn <CLEAN_RECOVERY_POINT_ARN> \
-  --metadata '{"RestoreToOriginalLocation":"true"}' \
-  --iam-role-arn arn:aws:iam::123456789012:role/AWSBackupServiceRole
-```
+1. 継続的バックアップの対象バケットと保持期間を確認
+2. 攻撃検知時刻の前後で複数の復旧候補時刻を選定
+3. オンデマンドスキャンと `GetPITRMalwareScanResults` で候補時刻のスキャン状態を確認
+4. マルウェア検出がない最新の時点を復旧候補として承認
+5. 復旧後にアプリケーション整合性、アクセスログ、GuardDuty / Security Hub の検知状況を再確認
 
 このフローにより、「感染前の最新クリーン状態」への復旧が、推測ではなく科学的根拠に基づいて実行できます。
 
@@ -241,7 +199,7 @@ Spark 4.0.2 の ANSI SQL と VARIANT データ型は、データエンジニア�
 ```hcl
 resource "aws_emr_cluster" "data_pipeline" {
   name          = "spark-4-data-pipeline"
-  release_label = "emr-7.2.0"  # Spark 4.0.2 を含む EMR リリース
+  release_label = "emr-spark-8.0.0"  # Spark 4.0.2 を含む EMR Spark リリース
   applications  = ["Spark", "Hadoop", "Hive"]
 
   ec2_attributes {
@@ -304,7 +262,7 @@ def find_clean_recovery_point(resource_arn, max_lookback_hours=72):
 
 CloudWatch Logs にスキャン結果を記録し、Security Hub と統合することで、組織全体のバックアップセキュリティ状態を可視化できます。
 
-コスト面では、差分スキャンを活用することで、日次バックアップの継続的なマルウェア監視を低コストで実現できます。ただし、フルスキャンとのバランスを取るため、週次でフルスキャンを実行する戦略が一般的です。
+コスト面では、増分スキャンを活用することで、日次バックアップの継続的なマルウェア監視を低コストで実現しやすくなります。ただし、フルスキャンとのバランスを取るため、定期的に基準点を再確認する運用が現実的です。
 
 導入判断としては、クリティカルなデータを S3 に保管している場合、特に規制要件がある業界（金融、医療、官公庁）では、この機能の導入がコンプライアンス対応として推奨されます。既存の AWS Backup 設定に対して、API または CLI でマルウェアスキャンを有効化するだけで利用開始できるため、導入ハードルは低いと言えます。
 
@@ -312,12 +270,12 @@ CloudWatch Logs にスキャン結果を記録し、Security Hub と統合する
 
 | # | タイトル | 概要 |
 |---|---------|------|
-| 1 | [SageMaker Notebook Instances now support P5.4xl instance types](https://aws.amazon.com/about-aws/whats-new/2026/03/g6-region-expansion-sagemaker-notebook-instances/) | SageMaker Notebook Instances で NVIDIA H100 搭載の P5.4xl インスタンスが利用可能に。前世代比で最大 4 倍の高速化と最大 40% のコスト削減を実現。LLM や拡散モデルの学習・デプロイに最適化。7つのリージョンで利用可能。 |
-| 2 | [Amazon EMR now supports Apache Spark 4.0.2 in general availability](https://aws.amazon.com/about-aws/whats-new/2026/05/amazon-emr-apache-spark/) | Amazon EMR が Apache Spark 4.0.2 の一般提供を開始。ANSI SQL と VARIANT データ型により標準 SQL でデータパイプライン構築が可能に。Lake Formation による行・列レベルのアクセス制御、Apache Iceberg v3 による監査ログ強化、ストリーミング機能拡張を実現。 |
+| 1 | [Amazon SageMaker Studio notebooks now support P5.4xl instance types](https://aws.amazon.com/about-aws/whats-new/2026/01/p5.4xl-new-launch-sagemaker-studio-notebooks/) | SageMaker Studio notebooks で NVIDIA H100 搭載の P5.4xl インスタンスが利用可能に。前世代比で最大 4 倍の高速化と最大 40% のコスト削減が期待でき、LLM や拡散モデルの学習・デプロイに活用可能。7つのリージョンで利用可能。 |
+| 2 | [Amazon EMR now supports Apache Spark 4.0.2 in general availability](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-spark800-release.html) | Amazon EMR Spark 8.0.0 が Apache Spark 4.0.2 の一般提供を開始。ANSI SQL、VARIANT データ型、SQL PIPE 構文、SQL scripting、SQL UDF、ストリーミング機能拡張、Iceberg v3、Native FGAC / FTA をサポート。 |
 | 3 | [Amazon Connect Customer now uses generative AI to automatically evaluate self-service interactions](https://aws.amazon.com/about-aws/whats-new/2026/05/amazon-connect-customer-gen-AI-evaluations-self-service) | Amazon Connect Customer に生成AI による自動評価機能が追加。自然言語でカスタム評価基準を定義し、AI エージェントのセルフサービスインタラクション品質を自動評価。詳細な理由説明とトランスクリプト参照を提供。7つのリージョンで利用可能。 |
 | 4 | [Amazon SageMaker HyperPod Slurm clusters now support specifying minimum capacity requirements with continuous provisioning](https://aws.amazon.com/about-aws/whats-new/2026/05/amazon-sagemaker-hyperpod-mincount/) | SageMaker HyperPod で Slurm クラスタの最小キャパシティ要件（MinCount）指定が可能に。分散学習ワークロードで必要な最小ノード数を保証し、クラスタが InService になるタイミングを制御。3時間のロールバック機構を実装。 |
 | 5 | [Amazon EC2 X8i instances are now available in additional regions](https://aws.amazon.com/about-aws/whats-new/2026/02/amazon-ec2-x8i-instances-SIN-SYD-PDT-region/) | EC2 X8i インスタンス（メモリ最適化型、カスタム Intel Xeon 6 搭載）がアジア太平洋（シンガポール、シドニー）と GovCloud（US-West）で利用可能に。前世代 X2i 比で最大 43% の性能向上、メモリ容量 1.5 倍（最大 6TB）、メモリ帯域幅 3.3 倍を実現。SAP HANA 認定取得。 |
-| 6 | [Amazon GuardDuty Malware Protection for AWS Backup supports Amazon S3 continuous backups](https://aws.amazon.com/about-aws/whats-new/2026/05/amazon-guardduty-aws-backup-s3-continuous/) | GuardDuty Malware Protection が S3 継続的バックアップに対応。バックアップタイムライン全体から安全な復旧ポイントを特定可能に。フル/差分スキャンの選択、任意時点でのオンデマンドスキャン、新しい GetPITRMalwareScanResults API による復旧前検証を提供。 |
+| 6 | [Amazon GuardDuty Malware Protection for AWS Backup supports Amazon S3 continuous backups](https://aws.amazon.com/about-aws/whats-new/2026/05/amazon-guardduty-aws-backup-s3-continuous/) | GuardDuty Malware Protection が S3 継続的バックアップに対応。バックアップタイムライン全体から安全な復旧ポイントを特定可能に。フル/増分スキャンの選択、任意時点でのオンデマンドスキャン、新しい GetPITRMalwareScanResults API による復旧前検証を提供。 |
 
 ## まとめ
 
