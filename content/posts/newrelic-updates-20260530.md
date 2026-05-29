@@ -1,11 +1,13 @@
 ---
 title: "【New Relic】2026/05/30 のアップデートまとめ"
 date: 2026-05-30T08:00:51+09:00
-draft: true
+draft: false
 tags: ["newrelic", "ebpf", "apm", "arm64", "raspberry-pi", "edge-computing", "iot", "graviton"]
 categories: ["New Relic Updates"]
 summary: "2026/05/30 のNew Relicアップデートまとめ"
 ---
+
+![](/images/newrelic-updates-20260530/header.png)
 
 # 2026年5月30日 New Relic アップデート情報
 
@@ -39,7 +41,7 @@ AWS Graviton ベースの ECS タスクや Lambda 関数（ARM64 ランタイム
 
 **すぐに試せる Tips と注意点**
 
-Raspberry Pi 5 や AWS Graviton インスタンスで eBPF APM を試す場合、Linux カーネルバージョンが eBPF をサポートしているか（一般に 4.9 以降、推奨は 5.x 以降）を事前に確認してください。リリースノートの記載に沿えば、Go サーバーのような軽量なアプリケーションでも詳細なパフォーマンス可視化が可能ですが、カーネルレベルの監視であるため、セキュリティポリシーや権限設定には注意が必要です。また、eBPF の動作には CAP_BPF や CAP_SYS_ADMIN などの特権が必要になる場合があるため、コンテナ環境では適切な権限設定を行ってください。
+Raspberry Pi 5 や AWS Graviton インスタンスで eBPF APM を試す場合、Linux カーネルバージョンを事前に確認してください。New Relic の eBPF エージェントは Linux ホストでカーネル **v4.14 以降** をサポート対象としています（最新の対応要件は公式ドキュメントで確認してください）。リリースノートの記載に沿えば、Go サーバーのような軽量なアプリケーションでも詳細なパフォーマンス可視化が可能ですが、カーネルレベルの監視であるため、セキュリティポリシーや権限設定には注意が必要です。また、eBPF の動作には CAP_BPF や CAP_SYS_ADMIN などの特権が必要になる場合があるため、コンテナ環境では適切な権限設定を行ってください。
 
 ## 全アップデート一覧
 
