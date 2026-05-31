@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.158 リリースノートまとめ"
 date: 2026-05-31T08:00:57+09:00
-draft: true
+draft: false
 tags: ["claude-code", "auto-mode", "bedrock", "vertex", "foundry", "opus"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.158 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260531/header.png)
 
 # Claude Code v2.1.158 リリース情報
 
@@ -21,11 +23,17 @@ Claude Code v2.1.158 がリリースされました。今回のアップデー�
 
 環境変数を設定することで Auto mode を有効化できるため、組織のセキュリティポリシーやコンプライアンス要件に応じたプラットフォームを選択しながら、自動化されたコーディング支援を受けられます。マルチクラウド戦略を採用している組織や、特定のクラウドプロバイダーに依存したくない企業にとって、柔軟な選択肢が提供されることになります。
 
-> **Note:** Auto mode は、ユーザーの承認なしに複数のタスクを連続実行できる Claude Code の動作モードです。
+> **Note:** Auto mode は、ツール実行の許可判断をモデルベースの分類器（classifier）に委ねる Claude Code の動作モードです。すべてを無条件に許可する（ガードレールなし）わけではなく、手動承認と「許可の完全スキップ」の中間に位置づけられ、承認疲れ（approval fatigue）を減らしつつ安全性を保つことを狙いとしています。
 
 ## 実用的な活用ポイント
 
-エンタープライズ環境で Claude Code を導入する際、AWS Bedrock、Google Cloud Vertex AI、または Foundry のいずれかのプラットフォームを既に利用している組織は、環境変数の設定だけで Auto mode を有効化できます。これにより、既存のクラウドインフラとの統合を維持しながら、最新の Opus 4.7・4.8 モデルによる高度なコーディング支援を受けられます。
+エンタープライズ環境で Claude Code を導入する際、AWS Bedrock、Google Cloud Vertex AI、または Foundry のいずれかのプラットフォームを既に利用している組織は、環境変数 `CLAUDE_CODE_ENABLE_AUTO_MODE=1` を設定するだけで Auto mode をオプトインできます。
+
+```bash
+export CLAUDE_CODE_ENABLE_AUTO_MODE=1
+```
+
+これにより、既存のクラウドインフラとの統合を維持しながら、最新の Opus 4.7・4.8 モデルによる高度なコーディング支援を受けられます。
 
 複数のプラットフォームに対応したことで、開発チームごとに異なるクラウドプロバイダーを使用している場合でも、統一された Auto mode 体験を提供できるようになります。
 
@@ -33,7 +41,7 @@ Claude Code v2.1.158 がリリースされました。今回のアップデー�
 
 | カテゴリ | 内容 | 概要 |
 |---------|------|------|
-| Feature | Auto mode のプラットフォーム対応拡大 | Bedrock、Vertex、Foundry で Opus 4.7・4.8 に対応。環境変数による有効化をサポート |
+| Feature | Auto mode のプラットフォーム対応拡大 | Bedrock、Vertex、Foundry で Opus 4.7・4.8 に対応。`CLAUDE_CODE_ENABLE_AUTO_MODE=1` でオプトイン |
 
 ## まとめ
 
