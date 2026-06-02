@@ -1,11 +1,13 @@
 ---
 title: "【New Relic】2026/06/02 のアップデートまとめ"
 date: 2026-06-02T08:00:59+09:00
-draft: true
+draft: false
 tags: ["newrelic", "monitoring", "sre", "sli", "slo", "observability", "user-experience"]
 categories: ["New Relic Updates"]
 summary: "2026/06/02 のNew Relicアップデートまとめ"
 ---
+
+![](/images/newrelic-updates-20260602/header.png)
 
 # 2026年6月2日 New Relic アップデート情報
 
