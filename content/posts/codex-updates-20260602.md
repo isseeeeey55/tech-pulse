@@ -1,11 +1,13 @@
 ---
 title: "【Codex CLI】rust-v0.136.0 リリースノートまとめ"
 date: 2026-06-02T08:02:25+09:00
-draft: true
+draft: false
 tags: ["codex", "tui", "archive", "session-management", "app-server", "mcp", "remote-execution", "api-key", "websocket", "windows-sandbox", "osc8", "markdown", "chatgpt-auth", "sandbox", "security", "python-sdk", "bedrock", "image-generation", "vim", "cli"]
 categories: ["Codex CLI Updates"]
 summary: "rust-v0.136.0 のCodex CLIリリースノートまとめ"
 ---
+
+![](/images/codex-updates-20260602/header.png)
 
 ## はじめに
 
