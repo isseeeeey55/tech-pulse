@@ -1,17 +1,19 @@
 ---
 title: "【AWS】2026/06/02 のアップデートまとめ"
 date: 2026-06-02T08:02:28+09:00
-draft: true
+draft: false
 tags: ["aws", "quick", "ec2", "sagemaker", "ses", "bedrock", "kms", "secrets-manager", "vpc", "cloudwatch", "fargate", "lambda", "systems-manager", "eks", "cloudtrail"]
 categories: ["AWS Updates"]
 summary: "2026/06/02 のAWSアップデートまとめ"
 ---
 
+![](/images/aws-updates-20260602/header.png)
+
 # 2026年6月2日 AWS アップデート解説
 
 ## はじめに
 
-2026年6月2日は、AWSから10件のアップデートが発表されました。本日のアップデートは、**セキュリティとエンタープライズガバナンス機能の強化**が大きなテーマとなっています。特に注目すべきは、Amazon QuickがVPC経由でのプライベートMCPサーバー接続に対応した点、そしてAmazon BedrockのAgentCore IdentityがAWS Secrets Managerの既存シークレット参照をサポートした点です。
+本日は、直近で公開されたAWSのアップデート10件をまとめてお届けします。今回のアップデートは、**セキュリティとエンタープライズガバナンス機能の強化**が大きなテーマとなっています。特に注目すべきは、Amazon QuickがVPC経由でのプライベートMCPサーバー接続に対応した点、そしてAmazon BedrockのAgentCore IdentityがAWS Secrets Managerの既存シークレット参照をサポートした点です。
 
 また、Amazon SageMaker HyperPodにAIコーディングアシスタント向けのトラブルシューティングスキルが追加され、大規模MLクラスタの運用効率が大幅に向上しています。インフラ面では、EC2の新世代インスタンス（M8azn、M8i/M8i-flex）が欧州・アジア太平洋地域で利用可能になり、グローバルなワークロード展開がさらに容易になりました。
 
@@ -49,16 +51,12 @@ VPC接続対応により、これらの課題が解消され、**すべての通
 
 VPC接続を有効にしたMCPコネクターの作成は、以下のステップで実行できます：
 
-1. **Amazon Quick コンソールにアクセス**し、「MCP Connectors」セクションを選択
-2. 「Create MCP Connector」ボタンをクリック
-3. 接続タイプとして**「VPC Connection」**を選択
-4. 以下の情報を入力：
-   - **MCP Server URL**: プライベートサーバーのエンドポイント（例：`http://10.0.1.50:8080/mcp`）
-   - **VPC ID**: MCPサーバーが配置されているVPCのID
-   - **Subnet IDs**: コネクターが使用するサブネット（高可用性のため複数推奨）
-   - **Security Group IDs**: 通信を許可するセキュリティグループ
-5. アクセス権限の設定（IAMロールの選択またはインラインポリシーの定義）
-6. 「Create」をクリック
+1. **Amazon Quick コンソール**で「Connectors」を開き、コネクタータイプとして **Model Context Protocol (MCP)** を選択
+2. 事前に用意した **VPC 接続（VPC connection）** を選択する（接続先の VPC・サブネット・セキュリティグループはこの VPC 接続にひも付く）
+3. **MCP サーバーの URL**（プライベートエンドポイント、例：`http://10.0.1.50:8080/mcp`）を指定
+4. 名前やアクセス権限を設定し、コネクターを作成
+
+> ※ 上記は公式発表の「VPC 接続を選択し、MCP サーバーの URL を指定する」という流れに基づく一般的な手順です。コンソールの正確なラベルや項目は[公式の MCP 統合ドキュメント](https://docs.aws.amazon.com/quick/latest/userguide/mcp-integration.html)で確認してください。
 
 #### トラフィックフローとVPCエンドポイントの活用
 
@@ -66,8 +64,8 @@ VPC接続を使用した場合のトラフィックフローは次のように�
 
 ```
 [Amazon Quick] 
-    ↓ (AWS PrivateLinkまたはVPCピアリング)
-[VPC Endpoint / ENI]
+    ↓ (VPC 接続経由でプライベートに到達)
+[VPC 内の ENI]
     ↓ (VPC内ルーティング)
 [Security Group フィルタリング]
     ↓
@@ -118,12 +116,9 @@ $ aws secretsmanager rotate-secret \
     --rotation-lambda-arn arn:aws:lambda:us-east-1:123456789012:function:SecretsManagerRotation \
     --rotation-rules AutomaticallyAfterDays=30
 
-# 3. AgentCore Identityでこのシークレットを参照
-$ aws bedrock create-credential-provider \
-    --identity-id my-agent-identity \
-    --secret-arn arn:aws:secretsmanager:us-east-1:123456789012:secret:my-agentcore-credentials-AbCdEf \
-    --region us-east-1
 ```
+
+続いて、作成済みシークレットの ARN を AgentCore Identity の認証情報プロバイダー（credential provider）から参照するよう構成します。認証情報プロバイダーは `bedrock-agentcore-control` サービス（例：`create-api-key-credential-provider` / `create-oauth2-credential-provider`）で作成・管理します。本アップデートにより、サービスが新規シークレットを自動生成する代わりに、上記で用意した既存シークレットを指定できるようになりました。正確なパラメータ仕様は[公式ドキュメント](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/identity.html)を参照してください。
 
 この構成により、シークレットの**作成・暗号化・タグ付け・ローテーション・アクセス制御**をすべて組織のポリシーに基づいて管理できます。
 
@@ -179,7 +174,7 @@ $ aws bedrock create-credential-provider \
 3. **新旧バージョンの切り替え** - AWSCURRENT ラベルの移動
 4. **旧バージョンの無効化** - AWSPREVIOUS ラベルに格納（ロールバック用）
 
-AgentCore Identityは常に `AWSCURRENT` ラベルのシークレットを参照するため、**ローテーション中もダウンタイムなしで動作**します。ただし、ローテーション直後の数秒間は、キャッシュのリフレッシュにより若干のレイテンシ増加が発生する可能性があります。
+AgentCore Identityは常に `AWSCURRENT` ラベルのシークレットを参照するため、ローテーションが完了して `AWSCURRENT` が新バージョンに移動すれば、アプリケーション側の設定変更なしにシークレットの切り替えが反映されます。
 
 ## SRE視点での活用ポイント
 
@@ -199,22 +194,23 @@ fields @timestamp, srcAddr, dstAddr, bytes
 
 このクエリでMCPサーバーへの通信量が異常に増加したクライアントを特定し、Security Groupのルールを自動更新するLambda関数をトリガーすることで、**インシデント検知から遮断までを数分以内に完結**させられます。
 
-また、Terraformでインフラをコード化している環境であれば、MCP接続の構成を環境ごとに管理できます：
+また、MCP コネクターが利用する VPC・サブネット・セキュリティグループを Terraform 等でコード化しておけば、環境ごとに構成を管理できます。たとえば、コネクターからの通信を制御するセキュリティグループは次のように環境ごとに定義できます：
 
 ```hcl
-resource "aws_quicksight_vpc_connection" "mcp_server" {
-  name               = "mcp-${var.environment}"
-  vpc_id             = var.vpc_id
-  subnet_ids         = var.private_subnet_ids
-  security_group_ids = [aws_security_group.mcp_connector.id]
-  
+resource "aws_security_group" "mcp_connector" {
+  name        = "mcp-connector-${var.environment}"
+  description = "Controls traffic from the Amazon Quick MCP connector"
+  vpc_id      = var.vpc_id
+
   tags = {
     Environment = var.environment
     ManagedBy   = "Terraform"
-    Service     = "QuickAI"
+    Service     = "AmazonQuick"
   }
 }
 ```
+
+> ※ Amazon Quick の MCP コネクター（VPC 接続）そのものを管理する専用の Terraform リソースは、本記事執筆時点では確認できていません。最新の対応状況は[公式の MCP 統合ドキュメント](https://docs.aws.amazon.com/quick/latest/userguide/mcp-integration.html)を参照してください。
 
 本番環境では厳格なSecurity Groupルールを適用し、開発環境では柔軟なアクセスを許可するといった**環境ごとのセキュリティポリシーの差別化**が容易になります。
 
@@ -236,7 +232,7 @@ CloudTrailでSecrets Managerへのアクセスを記録することで、「誰�
 ただし、導入時には以下の点に注意が必要です：
 
 - **IAMポリシーの適切な設計** - 過剰な権限付与を避け、最小権限の原則に従う
-- **KMSキーのキャパシティ管理** - CMK使用時はリクエスト上限（1000 req/sec）に注意
+- **KMSキーのキャパシティ管理** - CMK使用時は、暗号化オペレーションのリクエストクォータ（リージョン・キータイプにより異なる）に注意
 - **リージョン間レプリケーション** - マルチリージョン構成ではSecrets Managerのレプリケーション機能を活用
 - **コストの見積もり** - Secrets Manager利用料（$0.40/secret/月 + API呼び出し料金）を考慮
 
