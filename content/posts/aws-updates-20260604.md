@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/06/04 のアップデートまとめ"
 date: 2026-06-04T08:02:11+09:00
-draft: true
+draft: false
 tags: ["aws", "iot", "sagemaker", "bedrock", "step-functions", "rds", "config", "eks", "aurora", "neptune", "keyspaces", "application-recovery-controller"]
 categories: ["AWS Updates"]
 summary: "2026/06/04 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260604/header.png)
 
 # 2026年6月4日 AWS アップデート情報
 
@@ -80,52 +82,11 @@ AgentCore 統合により、これらの処理が **Step Functions のネイテ�
 
 #### 複数エージェントの並列・順序実行
 
-Step Functions の制御フロー機能を活用することで、複数の AI エージェントを**並列実行または順序実行**でき、タスクの特性に応じた最適な実行パターンを選択できます：
+Step Functions の制御フロー機能を活用することで、1つのワークフロー内の異なる判断ポイントで**複数の AI エージェントを並列実行または順序実行**でき、タスクの特性に応じた最適な実行パターンを選択できます。例えば、ドキュメント分類エージェントとデータ抽出エージェントを `Parallel` ステートで同時に走らせ、両方の結果を統合してから次のステップに進む、といったワークフローが構築可能です。
 
-```json
-{
-  "Comment": "ドキュメント分類と要素抽出のパラレル実行",
-  "StartAt": "ParallelAgentProcessing",
-  "States": {
-    "ParallelAgentProcessing": {
-      "Type": "Parallel",
-      "Branches": [
-        {
-          "StartAt": "DocumentClassificationAgent",
-          "States": {
-            "DocumentClassificationAgent": {
-              "Type": "Task",
-              "Resource": "arn:aws:states:::bedrock:invokeAgent",
-              "Parameters": {
-                "AgentId": "CLASSIFICATION_AGENT_ID",
-                "Input.$": "$.document"
-              },
-              "End": true
-            }
-          }
-        },
-        {
-          "StartAt": "DataExtractionAgent",
-          "States": {
-            "DataExtractionAgent": {
-              "Type": "Task",
-              "Resource": "arn:aws:states:::bedrock:invokeAgent",
-              "Parameters": {
-                "AgentId": "EXTRACTION_AGENT_ID",
-                "Input.$": "$.document"
-              },
-              "End": true
-            }
-          }
-        }
-      ],
-      "Next": "HumanApproval"
-    }
-  }
-}
-```
+また、セッション ID を用いることで**エージェントのコンテキストを呼び出し間で永続化**でき、同一ワークフロー内はもちろん、複数のワークフロー実行をまたいで会話状態を引き継ぐこともできます。
 
-このように、ドキュメント分類と要素抽出を並列実行し、両方の結果を統合して次のステップに進むといったワークフローが構築可能です。
+ステートの正確なリソース指定子やパラメータ構文は、[AWS Step Functions のドキュメント](https://docs.aws.amazon.com/step-functions/)で最新の定義を確認してください。
 
 #### 人間による承認ステップの組み込み
 
@@ -133,24 +94,9 @@ Step Functions の制御フロー機能を活用することで、複数の AI �
 
 #### 実行時パラメータのオーバーライド
 
-既存のエージェントハーネス（Agent 設定）を再利用しつつ、**ワークフロー実行時にモデルやシステムプロンプト、ツールなどのパラメータをオーバーライド**できます。これにより、設定を複製せずに各ワークフロー文脈に合わせてカスタマイズ可能です：
+公式の説明によると、既存のエージェント設定を再利用しつつ、**呼び出しごとにモデル・システムプロンプト・ツールといったパラメータをオーバーライド**できます。これにより、設定を複製することなく、各ワークフローの文脈に合わせてエージェントの挙動を調整可能です。
 
-```json
-{
-  "Type": "Task",
-  "Resource": "arn:aws:states:::bedrock:invokeAgent",
-  "Parameters": {
-    "AgentId": "BASE_AGENT_ID",
-    "ModelOverride": {
-      "ModelId": "anthropic.claude-v3-sonnet"
-    },
-    "SystemPromptOverride": "You are a financial analyst. Focus on risk assessment.",
-    "Input.$": "$.customerData"
-  }
-}
-```
-
-このようなオーバーライド機能により、同じエージェントを異なるビジネスコンテキストで柔軟に活用できます。
+例えば、共通のエージェント定義をベースにしつつ、財務分析ワークフローではリスク評価に特化したシステムプロンプトに差し替える、といった使い分けが、設定の重複なしに実現できます。オーバーライド対象の具体的なフィールド名や指定方法は[公式ドキュメント](https://docs.aws.amazon.com/step-functions/)で確認してください。
 
 ---
 
