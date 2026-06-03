@@ -1,17 +1,19 @@
 ---
 title: "【AWS】2026/06/03 のアップデートまとめ"
 date: 2026-06-03T08:02:24+09:00
-draft: true
+draft: false
 tags: ["aws", "location-service", "config", "security-hub", "deadline-cloud", "sagemaker", "cur", "athena", "redshift", "elasticache", "valkey", "rds", "sql-server", "license-manager", "healthomics"]
 categories: ["AWS Updates"]
 summary: "2026/06/03 のAWSアップデートまとめ"
 ---
 
+![](/images/aws-updates-20260603/header.png)
+
 # 2026年6月3日 AWS アップデート解説
 
 ## はじめに
 
-2026年6月3日、AWSから9件のアップデートが発表されました。本日の注目ポイントは、**Amazon Location ServiceがTransit/Intermodalルーティングに対応**し、公共交通機関を含む複雑な移動計画が可能になったこと、**AWS Configが内部サービスリンク規則をサポート**してセキュリティハブなどのサービスが独立してコンプライアンス評価を実施できるようになったこと、そして**ElastiCache for Valkeyに耐久性機能が追加**され、キャッシュ以外の用途にも本格利用できるようになったことです。また、**AWS Cost and Usage Report 2.0がAthena/Redshift統合**に対応し、コスト分析のハードルが大きく下がりました。HealthOmicsではNextflow v26.04対応とランタイムバージョン指定機能が追加され、ゲノム解析パイプラインの柔軟性が向上しています。
+2026年6月3日のまとめとして、直近で発表されたAWSの9件のアップデートを解説します。本日の注目ポイントは、**Amazon Location ServiceがTransit/Intermodalルーティングに対応**し、公共交通機関を含む複雑な移動計画が可能になったこと、**AWS Configが内部サービスリンク規則をサポート**してセキュリティハブなどのサービスが独立してコンプライアンス評価を実施できるようになったこと、そして**ElastiCache for Valkeyに耐久性機能が追加**され、キャッシュ以外の用途にも本格利用できるようになったことです。また、**AWS Cost and Usage Report 2.0がAthena/Redshift統合**に対応し、コスト分析のハードルが大きく下がりました。HealthOmicsではNextflow v26.04対応とランタイムバージョン指定機能が追加され、ゲノム解析パイプラインの柔軟性が向上しています。
 
 ## 注目アップデート深掘り
 
@@ -125,22 +127,22 @@ Athena統合とRedshift統合のどちらを選ぶべきかは、以下の基準
 
 #### 自動更新フローの確認
 
-CUR 2.0データは通常1日1回更新されます。統合を有効にしている場合、以下のような自動フローが動作します：
+CUR 2.0データは通常1日1回更新されます。CUR 2.0はBCM Data Exports機能の一部として管理されるため、エクスポート設定の確認には `bcm-data-exports` のAPIを使用します：
 
 ```bash
-# CUR 2.0の設定確認
-$ aws cur describe-report-definitions
+# CUR 2.0（Data Exports）のエクスポート一覧を確認
+$ aws bcm-data-exports list-exports
+
+# 個別エクスポートの詳細（テーブル設定やS3出力先）を確認
+$ aws bcm-data-exports get-export --export-arn <export-arn>
 
 # Athenaテーブルの最新パーティション確認
 $ aws athena start-query-execution \
     --query-string "SHOW PARTITIONS cur_database.cur_table" \
     --result-configuration OutputLocation=s3://my-athena-results/
-
-# Glue Crawlerによる自動スキーマ更新状態確認（統合時に自動作成される）
-$ aws glue get-crawler --name cur-crawler
 ```
 
-統合を有効にすることで、これらのインフラ管理が自動化され、データアナリストはSQLクエリの作成に集中できます。
+統合を有効にすると、Parquet形式での配信に加え、Athenaテーブル定義やRedshiftスキーマ、データ読み込み手順といったインフラストラクチャテンプレートが自動的に提供されます。CUR 2.0データの更新も追加のETLなしにテーブルへ自動反映されるため、データアナリストはインフラ管理を意識せずSQLクエリの作成に集中できます。
 
 ## SRE視点での活用ポイント
 
