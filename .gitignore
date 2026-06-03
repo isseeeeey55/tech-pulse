@@ -1,0 +1,7 @@
+# Hugo のビルド成果物（CI が hugo --minify で再生成し Pages にアップロードするため追跡不要）
+public/
+resources/_gen/
+.hugo_build.lock
+
+# OS
+.DS_Store
