@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.162 リリースノートまとめ"
 date: 2026-06-04T08:01:06+09:00
-draft: true
+draft: false
 tags: ["claude-code", "mcp", "remote-control", "devin-desktop", "webfetch", "windows"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.162 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260604/header.png)
 
 # Claude Code v2.1.162 リリース情報
 
@@ -33,7 +35,7 @@ Claude Code v2.1.162 がリリースされました。本バージョンでは�
 
 ### エディタ名称変更：Windsurf から Devin Desktop へ
 
-エディタの名称が Windsurf から Devin Desktop に変更されました。この変更は製品ブランディングやエコシステムの整合性を図るためのものと考えられます。既存ユーザーは設定や統合部分でこの名称変更を認識しておく必要があります。
+Windsurf エディタ自身が Devin Desktop へリブランドしたことを受け、Claude Code でも `/ide` メニュー・`/terminal-setup`・`/scroll-speed` 内の表記が Windsurf から Devin Desktop に変更されました。これらのコマンドを利用しているユーザーは、新しい名称を認識しておく必要があります。
 
 Remote Control の表示改善も同時に行われており、外部エディタとの連携時の視認性が向上しています。
 
@@ -67,7 +69,7 @@ Remote Control の表示改善も同時に行われており、外部エディ�
 
 v2.1.162 は、大きな新機能の追加よりも、既存機能の安定性と使いやすさを向上させることに重点を置いたリリースです。セッション管理の可視化やツール検索の改善といった UX 向上施策と、権限管理やパス処理、タイムアウト設定といったエラーハンドリング周りの堅牢性向上が中心となっています。
 
-特に、Windows 環境やクロスプラットフォームでの安定性が向上しており、より幅広い環境で快適に利用できるようになりました。エディタ名称の変更（Windsurf → Devin Desktop）は、今後のエコシステム展開を見据えた変更と考えられます。
+特に、Windows 環境やクロスプラットフォームでの安定性が向上しており、より幅広い環境で快適に利用できるようになりました。エディタ名称の変更（Windsurf → Devin Desktop）は、Windsurf 自身のリブランドに追従した表記更新です。
 
 ---
 
