@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/06/05 のアップデートまとめ"
 date: 2026-06-05T08:02:03+09:00
-draft: true
+draft: false
 tags: ["aws", "cognito", "bedrock", "mq", "aurora", "dynamodb", "route53", "iam", "cloudwatch"]
 categories: ["AWS Updates"]
 summary: "2026/06/05 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260605/header.png)
 
 # 2026年6月5日のAWSアップデート情報
 
@@ -25,29 +27,11 @@ summary: "2026/06/05 のAWSアップデートまとめ"
 
 #### 構成手順と動作検証
 
-マルチリージョンレプリケーションの設定は、AWS Management Consoleまたはaws-cliから実施できます。以下は、CLIを使った設定例です。
+マルチリージョンレプリケーションの設定は、AWS Management Console、AWS CLI、または AWS SDK から、プライマリユーザープールに**レプリカユーザープールを追加**する形で実施します。公式アナウンスは具体的なコマンド体系を明示していないため、正確な操作手順は[公式ドキュメント](https://docs.aws.amazon.com/cognito/)を参照してください。
 
-```bash
-# プライマリユーザープールに対してレプリケーションを有効化
-$ aws cognito-idp create-user-pool-replication-configuration \
-  --user-pool-id us-east-1_XXXXX \
-  --replica-regions ap-northeast-1
+レプリケーションが有効になると、公式アナウンスによれば認証に必要なデータ — **認証情報（credentials）、ユーザープール設定、フェデレーション設定** — がセカンダリリージョンに同期されます。
 
-# レプリケーションステータスの確認
-$ aws cognito-idp describe-user-pool-replication-configuration \
-  --user-pool-id us-east-1_XXXXX
-```
-
-レプリケーションが有効になると、ユーザープールの以下の要素がセカンダリリージョンに同期されます。
-
-- ユーザーアカウントと認証情報
-- ユーザープールのポリシー設定（パスワードポリシー、MFA設定など）
-- アプリクライアント設定
-- IDプロバイダー（ソーシャルログイン、SAML、OIDC）の設定
-- ラムダトリガー設定（Pre-authentication、Post-confirmationなど）
-- カスタム属性やスキーマ定義
-
-重要なのは、すべての認証方法がセカンダリリージョンでも動作する点です。ユーザー名/パスワード認証、Google/Facebook等のソーシャルIDプロバイダーとのフェデレーション、SAML/OIDCを使ったエンタープライズID連携、マシン間（M2M）認可フローのすべてがサポートされます。
+重要なのは、すべての認証方法がセカンダリリージョンでも動作する点です。ユーザー名/パスワード認証、Google/Facebook 等のソーシャル IDプロバイダーとのフェデレーション、SAML/OIDC を使ったエンタープライズ ID 連携、マシン間（M2M）認可フローがサポートされます。
 
 #### フェイルオーバーの動作確認
 
@@ -102,49 +86,11 @@ Amazon Bedrockの新しいコンソールは、「実験 → 反復 → スケ�
 
 これにより、既存のOpenAI ClientライブラリやAnthropic SDKを使っているプロジェクトを、コードをほとんど変更せずにAmazon Bedrockに移行できます。また、Claude、GPT-4、Llama、Mistralなど、異なるプロバイダーのモデルを統一されたAPIで扱えるため、モデルの比較検証が大幅に簡単になります。
 
-#### OpenAI互換APIの実装例
+#### OpenAI/Anthropic 互換 API の利用
 
-OpenAIのPythonクライアントライブラリを使って、Bedrock上のモデルにアクセスする例です。エンドポイントを変更するだけで、既存のOpenAIコードがそのまま動作します。
+bedrock-mantle エンドポイントは、公式アナウンスによると **OpenAI Responses API・OpenAI Chat Completions API・Anthropic Messages API** をサポートします。そのため、既存の OpenAI クライアントライブラリや Anthropic SDK のエンドポイント設定を bedrock-mantle に向けるだけで、Amazon Bedrock 上のモデルにアクセスできます。認証には **Amazon Bedrock API キー**を使用します。
 
-```python
-from openai import OpenAI
-
-# OpenAI互換エンドポイントとしてBedrock Mantleを指定
-client = OpenAI(
-    base_url="https://bedrock-mantle.us-east-1.amazonaws.com/v1",
-    api_key="your-aws-access-key-id:your-aws-secret-access-key"
-)
-
-# Claude 3.5 Sonnetを呼び出し（OpenAI APIの形式で）
-response = client.chat.completions.create(
-    model="anthropic.claude-3-5-sonnet-20241022-v2:0",
-    messages=[
-        {"role": "user", "content": "AWSのマルチリージョン戦略について説明してください"}
-    ]
-)
-
-print(response.choices[0].message.content)
-```
-
-同様に、Anthropic SDKを使っている場合も、エンドポイントを変更するだけで複数のモデルにアクセスできます。
-
-```python
-import anthropic
-
-client = anthropic.Anthropic(
-    base_url="https://bedrock-mantle.us-east-1.amazonaws.com",
-    api_key="your-aws-credentials"
-)
-
-# GPT-4やLlamaなど、他のモデルもAnthropic SDKで統一的に呼び出し可能
-message = client.messages.create(
-    model="meta.llama3-3-70b-instruct-v1:0",
-    max_tokens=1024,
-    messages=[
-        {"role": "user", "content": "マルチクラウド戦略のメリットとデメリットは？"}
-    ]
-)
-```
+新コンソールは、プロジェクトで選択したモデル ID・リージョン・bedrock-mantle のエンドポイント URL を自動で埋め込んだコードサンプルを生成します。`base_url` や API キーの正確な指定形式は公式アナウンスに具体的記載がないため、コンソールの自動生成サンプルおよび[公式ドキュメント](https://docs.aws.amazon.com/bedrock/)に従ってください。
 
 #### プロジェクト機能による作業の整理
 
@@ -221,7 +167,7 @@ Amazon Bedrockの新コンソールとOpenAI互換APIは、LLMを活用したサ
 | **AWS Databases on Vercel now available in additional AWS Regions** | Vercel上でAurora PostgreSQL、Aurora DSQL、DynamoDBが17リージョンで利用可能に。v0のAI機能による自動設計・デプロイメントが拡充。新アカウント作成で100ドルのクレジット付与（最大6ヶ月） | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-databases-vercel-aws-regions/) |
 | **Amazon Bedrock launches a redesigned console optimized for OpenAI- and Anthropic-compatible APIs** | Bedrockコンソールが全面刷新。bedrock-mantleエンドポイント経由でOpenAI/Anthropic互換APIを提供。Claude、GPT、オープンウェイトモデルを一箇所で比較でき、プロジェクト単位の管理とコード自動生成をサポート | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-bedrock-redesigned-console-optimized-openai-anthropic-compatible-apis/) |
 | **Amazon MQ is now available in the AWS European Sovereign Cloud (Germany) Region** | Amazon MQがEuropean Sovereign Cloud（ドイツ）リージョンで利用可能に。RabbitMQ 4.2、Graviton3ベースのm7gインスタンス（m7g.medium～m7g.16xlarge）に対応。EU内の規制業界・公共部門向けにデータ主権要件を満たす環境を提供 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-mq-eur-sov-cloud/) |
-| **Amazon Cognito now supports multi-Region replication** | Cognitoがマルチリージョンレプリケーション機能をサポート。ユーザーおよびマシンIDデータをほぼリアルタイムでセカンダリリージョンに同期。リージョン障害時のフェイルオーバーにより、既存ユーザーのセッションを保持し再認証なしでアクセス可能。13リージョン以上で利用可能 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-cognito-multi-region/) |
+| **Amazon Cognito now supports multi-Region replication** | Cognitoがマルチリージョンレプリケーション機能をサポート。ユーザーおよびマシンIDデータをほぼリアルタイムでセカンダリリージョンに同期。リージョン障害時のフェイルオーバーにより、既存ユーザーのセッションを保持し再認証なしでアクセス可能。米国・アジアパシフィック・欧州・南米など16リージョンで利用可能 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-cognito-multi-region/) |
 
 ## まとめ
 
