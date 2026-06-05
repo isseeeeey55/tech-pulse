@@ -1,11 +1,13 @@
 ---
 title: "【Codex CLI】rust-v0.137.0 リリースノートまとめ"
 date: 2026-06-05T08:02:37+09:00
-draft: true
+draft: false
 tags: ["codex", "tui", "f-keys", "keybindings", "enterprise", "credit-limits", "cloud-config", "edu-workspaces", "remote-control", "pairing", "app-server", "rpc", "plugin", "json-output", "catalog-cache", "web-tools", "image-tools", "parallel-search", "multi-agent-v2", "runtime", "metadata", "followup-task", "permission", "environment-id", "approval", "mitm-proxy", "ca-bundle", "session-history", "compressed-rollout", "thread-title", "sandbox", "skill-extension", "turn-input", "prompt-injection", "macos", "windows", "sqlite", "zsh-fork", "unified-exec", "guardian", "tool-executor", "python-sdk", "bazel", "builbuddy", "codex-core", "codex-prompts", "context-fragments"]
 categories: ["Codex CLI Updates"]
 summary: "rust-v0.137.0 のCodex CLIリリースノートまとめ"
 ---
+
+![](/images/codex-updates-20260605/header.png)
 
 ## はじめに
 
