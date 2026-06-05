@@ -1,11 +1,13 @@
 ---
 title: "【New Relic】2026/06/05 のアップデートまとめ"
 date: 2026-06-05T08:00:56+09:00
-draft: true
+draft: false
 tags: ["newrelic", "workflow-automation", "alerts", "automation", "sre"]
 categories: ["New Relic Updates"]
 summary: "2026/06/05 のNew Relicアップデートまとめ"
 ---
+
+![](/images/newrelic-updates-20260605/header.png)
 
 # New Relic アップデート情報（2026年6月5日）
 
