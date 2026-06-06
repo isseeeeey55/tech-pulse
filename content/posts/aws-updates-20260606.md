@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/06/06 のアップデートまとめ"
 date: 2026-06-06T08:02:06+09:00
-draft: true
+draft: false
 tags: ["aws", "ecs", "fargate", "eks", "sagemaker", "s3", "glue", "athena", "emr", "redshift", "cloudwatch", "lambda", "kubernetes", "ack", "argocd", "deadline-cloud"]
 categories: ["AWS Updates"]
 summary: "2026/06/06 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260606/header.png)
 
 # 2026年6月6日 AWS アップデート解説
 
@@ -122,80 +124,11 @@ EKS Capabilitiesは、Argo CD（GitOps継続的デリバリー）、ACK（AWS Co
 
 このため、Argo CDでのデプロイメント失敗やACKでのAWSリソース作成エラーが発生しても、**原因調査に必要なログが手元になく、トラブルシューティングが困難**でした。今回のCloudWatch Vended Logs対応により、この課題が解決されます。
 
-#### ログ配信の有効化手順
+#### ログ配信の有効化と分析
 
-AWS CLIでログ配信を有効化する例：
+公式アナウンスによると、各 capability のログは **CloudWatch API または AWS マネジメントコンソールから「CloudWatch Vended Logs の配信ソース（delivery source）」として有効化**します。配信先は CloudWatch Logs・Amazon S3・Amazon Kinesis Data Firehose の3つから選択でき、EKS 側の追加料金は発生せず、配信先に応じた標準の CloudWatch Vended Logs 料金が適用されます。
 
-```bash
-# Argo CD Capability のログ配信を CloudWatch Logs に有効化
-$ aws eks update-addon \
-  --cluster-name my-cluster \
-  --addon-name argo-cd \
-  --configuration-values '{
-    "logging": {
-      "enabled": true,
-      "destinations": ["cloudwatch"]
-    }
-  }'
-
-# ACK コントローラーのログを S3 にも配信
-$ aws eks update-addon \
-  --cluster-name my-cluster \
-  --addon-name ack-s3-controller \
-  --configuration-values '{
-    "logging": {
-      "enabled": true,
-      "destinations": ["cloudwatch", "s3"],
-      "s3": {
-        "bucket": "my-eks-logs-bucket",
-        "prefix": "ack-logs/"
-      }
-    }
-  }'
-```
-
-Terraformでの実装例：
-
-```hcl
-resource "aws_eks_addon" "argocd" {
-  cluster_name = aws_eks_cluster.main.name
-  addon_name   = "argo-cd"
-
-  configuration_values = jsonencode({
-    logging = {
-      enabled      = true
-      destinations = ["cloudwatch", "s3"]
-      s3 = {
-        bucket = aws_s3_bucket.eks_logs.id
-        prefix = "argocd-logs/"
-      }
-    }
-  })
-}
-```
-
-#### CloudWatch Insights によるログ分析
-
-配信されたログはCloudWatch Logsに`/aws/eks/<cluster-name>/capabilities/<capability-name>`というロググループで保存されます。CloudWatch Insightsで分析する例：
-
-```
-# Argo CD のデプロイメント失敗を検索
-fields @timestamp, @message
-| filter @message like /sync failed/
-| sort @timestamp desc
-| limit 20
-
-# ACK コントローラーのエラーイベントを集計
-fields @timestamp, errorType
-| filter level = "error"
-| stats count() by errorType
-| sort count desc
-
-# kro のリソース作成時間を分析
-fields @timestamp, resourceType, duration
-| filter operation = "create"
-| stats avg(duration), max(duration) by resourceType
-```
+CloudWatch Logs に配信したログは CloudWatch Logs Insights でクエリ・集計でき、Argo CD の sync 失敗や ACK のリソース作成エラーを時系列で調査できます。具体的な設定手順・ログのスキーマ・ロググループ名は[Amazon EKS の公式ドキュメント](https://docs.aws.amazon.com/eks/)を参照してください（公式アナウンスは `aws eks update-addon` 等の具体的なコマンド体系やロググループ名は明示していません）。
 
 #### 配信先別の活用シナリオ
 
@@ -215,7 +148,7 @@ fields @timestamp, resourceType, duration
 
 Auto Scalingポリシーでは、CPU使用率だけでなく**リクエストキューの深さやレイテンシ**をメトリクスに含めることで、より適切なスケールアウトタイミングを設定できます。Savings Plansを活用している環境では、32vCPUタスクの予約容量を計画的に購入することで、突発的な負荷にも対応しつつコストを抑制できます。
 
-Fargate Spotとの組み合わせも有効です。バッチ処理やCI/CDパイプラインのように中断耐性のあるワークロードでは、32vCPU Spotタスクを活用することで最大70%のコスト削減が期待できます。
+Fargate Spotとの組み合わせも有効です。32vCPU 構成は標準 Fargate と Fargate Spot の両方で利用できるため、バッチ処理やCI/CDパイプラインのように中断耐性のあるワークロードでは、32vCPU を Fargate Spot で実行することでコストを抑制できます。
 
 ### EKS Capabilities ログ：障害対応ランブックへの組み込み
 
