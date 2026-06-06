@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/06/07 のアップデートまとめ"
 date: 2026-06-07T08:01:59+09:00
-draft: true
+draft: false
 tags: ["aws", "opensearch", "bedrock", "govcloud"]
 categories: ["AWS Updates"]
 summary: "2026/06/07 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260607/header.png)
 
 # AWS アップデート情報 (2026/06/07)
 
@@ -115,7 +117,7 @@ Discover の複数クエリ言語サポートは、障害対応のランブッ�
 
 | サービス | タイトル | 概要 |
 |---------|---------|------|
-| Amazon OpenSearch Service | [Amazon OpenSearch UI is now available in GovCloud regions](https://aws.amazon.com/about-aws/whats-new/2026/06/opensearch-ui-govcloud-region>) | GovCloud (US-East/US-West) で OpenSearch UI が利用可能に。Workspaces によるチームコラボレーション、Discover の刷新により DQL/Lucene/PPL/SQL をサポート、データセレクタで複数ソースの統合分析が可能。OpenSearch 1.3以上のドメインとサーバーレスコレクションに対応。 |
+| Amazon OpenSearch Service | [Amazon OpenSearch UI is now available in GovCloud regions](https://aws.amazon.com/about-aws/whats-new/2026/06/opensearch-ui-govcloud-region) | GovCloud (US-East/US-West) で OpenSearch UI が利用可能に。Workspaces によるチームコラボレーション、Discover の刷新により DQL/Lucene/PPL/SQL をサポート、データセレクタで複数ソースの統合分析が可能。OpenSearch 1.3以上のドメインとサーバーレスコレクションに対応。 |
 | Amazon Bedrock | [Amazon Bedrock AgentCore Runtime introduces interactive shells for terminal access into agent sessions](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-bedrock-agentcore-runtime/) | AgentCore Runtime に InvokeAgentRuntimeCommandShell API が追加され、WebSocket 経由で永続的な対話型ターミナルアクセスが可能に。セッション内でのステート永続化、自動再接続、最大10個の同時シェルをサポート。コーディングエージェントのデバッグに特に有用。 |
 
 ## まとめ
