@@ -1,19 +1,21 @@
 ---
 title: "【AWS】2026/06/10 のアップデートまとめ"
 date: 2026-06-10T08:02:15+09:00
-draft: true
+draft: false
 tags: ["aws", "backup", "eks", "sagemaker", "emr", "s3", "bedrock", "cost-explorer", "cloudwatch", "rds", "postgresql"]
 categories: ["AWS Updates"]
 summary: "2026/06/10 のAWSアップデートまとめ"
 ---
 
+![](/images/aws-updates-20260610/header.png)
+
 # 2026年6月10日 AWS アップデート情報
 
 ## はじめに
 
-2026年6月10日は、AWSから9件のアップデートが発表されました。本日のアップデートは、**データ主権とコンプライアンス対応の強化**、**AI/MLエージェントの実用化**、そして**開発者体験の向上**という3つの軸で展開されています。
+今回は、直近で発表された9件のAWSアップデートを紹介します。今回のアップデートは、**データ主権とコンプライアンス対応の強化**、**AI/MLエージェントの実用化**、そして**開発者体験の向上**という3つの軸で展開されています。
 
-特に注目すべきは、AWS European Sovereign Cloud（ドイツ）リージョンでの機能拡充（AWS Backup for EKS、S3 Access Grants）と、Amazon Qを活用した2つの新しいAIエージェント機能（FinOps AgentとCost Explorerのインテリジェント分析）です。また、データエンジニアリング領域では、EMR ServerlessのSpark Connect対応により、インタラクティブな開発体験が大幅に向上しています。PostgreSQL 19 Beta 1のプレビュー提供や、CloudWatch Logs Insightsへの23個の新機能追加など、運用効率化に直結するアップデートも目立ちます。
+特に注目すべきは、AWS European Sovereign Cloud（ドイツ）リージョンでの機能拡充（AWS Backup for EKS、S3 Access Grants）と、コスト管理を支援する2つの新しいAI機能（AWS FinOps AgentとCost ExplorerのAmazon Q分析）です。また、データエンジニアリング領域では、EMR ServerlessのSpark Connect対応により、インタラクティブな開発体験が大幅に向上しています。PostgreSQL 19 Beta 1のプレビュー提供や、CloudWatch Logs Insightsへの23個の新機能追加など、運用効率化に直結するアップデートも目立ちます。
 
 ## 注目アップデート深掘り
 
@@ -31,7 +33,7 @@ Amazon EMR Serverlessが**Spark Connect**をサポートし、データエンジ
 
 EMRコンソール、Spark UI、Spark History Serverからセッションの監視とデバッグが可能で、個別セッション単位での詳細なコスト・使用状況の可視化も実現されています。これにより、部門別やプロジェクト別のチャージバック対応が容易になり、FinOps実践の観点からも有用です。
 
-インタラクティブセッションの利用により、ad hoc分析やプロトタイピングの段階から本番デプロイまでのサイクルが短縮され、データエンジニアリングの生産性向上が期待できます。EMR 7.13以降で全リージョンにて利用可能です。
+インタラクティブセッションの利用により、ad hoc分析やプロトタイピングの段階から本番デプロイまでのサイクルが短縮され、データエンジニアリングの生産性向上が期待できます。EMRリリース7.13で利用でき、EMR Serverlessが利用可能なすべてのリージョンで提供されています。
 
 > **Note:** Amazon SageMaker Unified Studioと組み合わせることで、EMR ServerlessとAthena Sparkの両方をランタイムとして選択でき、ワークロードの特性に応じた最適なエンジン選択が可能になります。
 
@@ -47,7 +49,7 @@ FinOps Agentの最大の特徴は、**自然言語によるコスト質問への
 
 FinOps Agentは、AWS Cost Optimization HubやAWS Compute Optimizerと統合されており、ライトサイジング、アイドルリソース、Savings Plansの推奨事項を自動的に提示します。さらに、Jiraチケットの自動作成機能により、最適化タスクを運用フローに組み込むことができます。
 
-たとえば、週次でスケジュールされたワークフローが実行され、未使用のEBSボリュームやアイドル状態のRDSインスタンスを検出し、Jiraチケットを自動生成してエンジニアに割り当てる、といった運用が可能になります。プレビュー期間は無料で利用できるため、早期に試用して自社のFinOpsプロセスへの統合可能性を評価することをおすすめします。
+たとえば、スケジュール実行されるワークフローでアイドルリソースの推奨事項を定期的に確認し、Jiraチケットを自動生成してエンジニアに割り当てる、といった運用が可能になります。プレビュー期間は無料で利用できるため、早期に試用して自社のFinOpsプロセスへの統合可能性を評価することをおすすめします。
 
 ### CloudWatch Logs Insightsに23個の新機能 - ログ分析の表現力が大幅拡張
 
@@ -59,7 +61,7 @@ Amazon CloudWatch Logs Insightsのクエリ言語が**23個の新しいコマン
 
 **セキュリティ関連**：ハッシュ関数（md5、sha256）により、ログの改ざん検証やセキュリティ監査が可能になりました。また、IP処理関数（isPrivateIP、isPublicIP、isReservedIP）により、プライベートIPとパブリックIPを自動判別して不正アクセス検知を実装できます。
 
-**データ処理**：型変換関数（toNumber、toInt、toLong、toDouble）により、ログ内の数値文字列を適切な型に変換して統計処理を実行できます。文字列関数では、strccontainsが大文字小文字を区別しない検索に対応し、より柔軟なログ検索が可能になりました。
+**データ処理**：型変換関数（toNumber、toInt、toLong、toDouble）により、ログ内の数値文字列を適切な型に変換して統計処理を実行できます。文字列関数では、strcontainsが大文字小文字を区別しない検索に対応し、より柔軟なログ検索が可能になりました。
 
 **時系列分析**：rate、count_over_time、sum_over_timeなどの分析関数により、APIレスポンスタイムのrate計算やイベント発生頻度の時系列監視が容易になります。histogram関数を使えば、価格帯別の分布やレスポンスタイムの分布を可視化できます。
 
@@ -67,11 +69,11 @@ Amazon CloudWatch Logs Insightsのクエリ言語が**23個の新しいコマン
 
 **クエリ制御**：「limit any N」で先頭N件を取得でき、最大10個のstatsコマンドが使用可能になったことで、複雑な多段階集計が1つのクエリで実現できます。
 
-これらの新機能は全商用AWSリージョンで即日利用可能で、追加料金なしで使用できます。
+これらの新機能は全商用AWSリージョンで利用可能です。
 
 ## SRE視点での活用ポイント
 
-本日のアップデートをSREの観点から見ると、**運用自動化**と**オブザーバビリティ強化**という2つの軸で活用できます。
+今回のアップデートをSREの観点から見ると、**運用自動化**と**オブザーバビリティ強化**という2つの軸で活用できます。
 
 EMR ServerlessのSpark Connect対応により、データエンジニアリングチームとSREの連携が強化されます。たとえば、障害発生時のログ分析パイプラインをノートブック環境で対話的に構築し、検証後にバッチジョブとしてスケジュール実行する、といったワークフローが実現できます。セッション単位のコスト可視化により、分析クエリのコストを追跡し、非効率なクエリを特定して最適化するFinOps活動もやりやすくなります。
 
@@ -85,10 +87,10 @@ AWS European Sovereign Cloud（ドイツ）での機能拡充（AWS Backup for E
 
 | # | タイトル | 概要 |
 |---|----------|------|
-| 1 | [AWS Backup support for Amazon EKS (European Sovereign Cloud - Germany)](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-backup-amazon-eks-aws-european-sovereign-cloud/) | AWS Backup が Amazon EKS に対応し、AWS European Sovereign Cloud（ドイツ）リージョンで利用可能に。フル管理型でポリシーベースのデータ保護、クロスリージョン・クロスアカウントコピー、イミュータブルコンテナなどエンタープライズグレードの機能を提供 |
+| 1 | [AWS Backup support for Amazon EKS (European Sovereign Cloud - Germany)](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-backup-amazon-eks-aws-european-sovereign-cloud/) | AWS Backup が Amazon EKS に対応し、AWS European Sovereign Cloud（ドイツ）リージョンで利用可能に。フル管理型でポリシーベースのデータ保護、クロスリージョン・クロスアカウントコピー、イミュータブルボールト、自動スケジューリング、保持管理などの機能を提供 |
 | 2 | [Amazon SageMaker Unified Studio Notebooks now support EMR Serverless](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-sagemaker-unified-studio-emr/) | SageMaker Unified Studio Notebooks が EMR Serverless with Apache Spark Connect に対応。PySpark と Spark SQL を EMR Serverless 上で実行でき、AI アシスタント「SageMaker Data Agent」による自然言語からのコード生成も可能 |
 | 3 | [Amazon S3 Access Grants (European Sovereign Cloud - Germany)](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-s3-access-grants-european-sovereign-cloud-germany-region) | AWS European Sovereign Cloud（ドイツ）で S3 Access Grants が利用可能に。Microsoft Entra ID や AWS IAM などのディレクトリ内のアイデンティティを S3 データセットにマッピングし、大規模なデータ権限管理を効率化 |
-| 4 | [AWS announces Claude Fable 5](https://aws.amazon.com/about-aws/whats-new/2026/06/claude-fable-5-aws/) | 初の Mythos クラスモデル Claude Fable 5 を一般提供開始。エンタープライズグレードの安全対策を備え、金融・法務・エンジニアリングなど専門分野で自律的にスキルを更新。Amazon Bedrock または Claude Platform on AWS からアクセス可能 |
+| 4 | [AWS announces Claude Fable 5](https://aws.amazon.com/about-aws/whats-new/2026/06/claude-fable-5-aws/) | 初の一般提供 Mythos クラスモデル Claude Fable 5 を発表。強固な安全対策（safeguards）を備え、金融・法務・エンジニアリングなどの分野で学習に基づきスキルを自律的に更新。Amazon Bedrock または Claude Platform on AWS からアクセス可能 |
 | 5 | [Run Interactive Workloads on Amazon EMR Serverless with Spark Connect](https://aws.amazon.com/about-aws/whats-new/2026/05/amazon-emr-serverless-spark-connect) | EMR Serverless が Spark Connect に対応し、インタラクティブセッション機能を提供。クライアント-サーバーアーキテクチャにより、任意のノートブック環境から Spark アプリケーションを開発・実行可能に。セッション単位のコスト可視化にも対応 |
 | 6 | [AWS FinOps Agent (Preview)](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-finops-agent-preview/) | FinOps 実践者向けの AI エージェントをプレビュー提供。コスト質問への回答、最適化機会の提示、コスト異常の自動調査、Slack 通知、Jira チケット自動作成などが可能。プレビュー期間は無料で利用可能（米国東部リージョン） |
 | 7 | [Amazon CloudWatch Logs Insights adds 23 new query commands and functions](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-cloudwatch-logs-insights-new/) | CloudWatch Logs Insights のクエリ言語に 23 個の新機能を追加。ハッシュ関数（md5、sha256）、IP 処理関数（isPrivateIP、isPublicIP等）、分析関数（rate、histogram等）、CSV/XML パース、条件分岐（if）などに対応 |
@@ -97,7 +99,7 @@ AWS European Sovereign Cloud（ドイツ）での機能拡充（AWS Backup for E
 
 ## まとめ
 
-本日のアップデートは、**AIエージェントによる運用自動化**、**データ主権とコンプライアンス対応**、**開発者体験の向上**という3つのテーマが明確です。
+今回のアップデートは、**AIエージェントによる運用自動化**、**データ主権とコンプライアンス対応**、**開発者体験の向上**という3つのテーマが明確です。
 
 特にAI/MLエージェントの実用化が進んでおり、FinOps AgentやCost ExplorerのAmazon Q統合により、コスト管理業務の自動化が現実的になってきました。これらは単なる分析ツールではなく、SlackやJiraと統合された「エージェント」として、人間の意思決定を支援する存在に進化しています。
 
