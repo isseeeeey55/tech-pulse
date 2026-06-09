@@ -1,17 +1,19 @@
 ---
 title: "【AWS】2026/06/09 のアップデートまとめ"
 date: 2026-06-09T08:02:16+09:00
-draft: true
+draft: false
 tags: ["aws", "documentdb", "msk", "kafka", "compute-optimizer", "dynamodb", "elasticache", "memorydb", "workspaces", "sagemaker", "cost-anomaly-detection", "cloudtrail", "aurora", "dsql", "savings-plans", "redshift", "application-migration-service", "opensearch"]
 categories: ["AWS Updates"]
 summary: "2026/06/09 のAWSアップデートまとめ"
 ---
 
+![](/images/aws-updates-20260609/header.png)
+
 # 2026年6月9日 AWS アップデート情報
 
 ## はじめに
 
-2026年6月9日、AWSから9件のアップデートが発表されました。本日のハイライトは、Amazon MSK Express Brokers が Kafka Streams でのトピック自動作成に対応したこと、AWS Compute Optimizer がアイドルリソース検出機能を6つの新しいリソースタイプに拡張したこと、そして AWS Cost Anomaly Detection に AI を活用したコスト調査機能が追加されたことです。これらのアップデートは、開発者の運用負荷軽減とコスト最適化の自動化という、AWS が注力している領域を反映しています。また、Amazon OpenSearch Serverless の Agentic Search や Amazon Redshift の手動スナップショットコスト削減など、AI 活用と経済性向上に関する機能強化も目立ちます。
+2026年6月9日、直近に公開されたAWSのアップデートから9件をまとめてお届けします。本日のハイライトは、Amazon MSK Express Brokers が Kafka Streams でのトピック自動作成に対応したこと、AWS Compute Optimizer がアイドルリソース検出機能を6つの新しいリソースタイプに拡張したこと、そして AWS Cost Anomaly Detection に AI を活用したコスト調査機能が追加されたことです。これらのアップデートは、開発者の運用負荷軽減とコスト最適化の自動化という、AWS が注力している領域を反映しています。また、Amazon OpenSearch Serverless の Agentic Search や Amazon Redshift の手動スナップショットコスト削減など、AI 活用と経済性向上に関する機能強化も目立ちます。
 
 ## 注目アップデート深掘り
 
@@ -39,17 +41,14 @@ MSK Express Brokers は、従来の MSK Brokers と比較して以下の性能�
 
 Kafka Streams のステートフル操作では、以下のような内部トピックが自動的に作成されます。
 
-- **Changelog トピック**: ステートストアの変更履歴を保持
-- **Repartition トピック**: データの再分散に使用
-- **Windowed トピック**: ウィンドウ操作の状態管理に使用
+- **Changelog トピック**: ステートストア（ウィンドウ集計の状態を含む）の変更履歴を保持
+- **Repartition トピック**: 結合やキー変更に伴うデータの再分散に使用
 
 従来はこれらを個別に管理する必要がありましたが、新機能により自動管理されるため、開発者はビジネスロジックに集中できます。
 
 **利用方法と可用性**
 
 この機能は MSK Express Brokers が利用可能なすべての AWS リージョンで即座に利用可能で、追加設定なしで利用開始できます。既存の Kafka Streams アプリケーションをデプロイする際、必要なトピックが自動的に作成されるため、手動のトピック管理作業が不要になります。
-
-> **Note:** Organization Trail を活用している環境では、全メンバーアカウントでこの機能が自動的に有効になります。
 
 ### AWS Cost Anomaly Detection に AI を活用したコスト調査機能が追加
 
@@ -150,7 +149,7 @@ Kafka Streams を使ったリアルタイム監視やメトリクス集計パイ
 | 6 | [AWS Savings Plans Purchase Analyzer now supports target coverage analysis](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-savings-plans-coverage/) | Savings Plans Purchase Analyzer にターゲットカバレッジ分析機能を追加。On-Demand 支出のカバレッジ目標を設定し、過去の利用データから必要な購入額を自動推奨。複数シナリオの比較分析が可能 |
 | 7 | [Amazon Redshift reduces manual snapshot cost for Serverless and RG instances](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-redshift-incremental-manual-snapshots/) | Redshift の手動スナップショット課金モデルを刷新。複数スナップショット間の重複データブロックを除外し、ユニークなデータブロックのみを課金対象に。既存スナップショットにも自動適用され、大幅なコスト削減を実現 |
 | 8 | [AWS Application Migration Service is now AWS Transform MGN](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-transform-mgn-rebrand/) | AWS Application Migration Service（MGN）が AWS Transform MGN に名称変更。手動制御型と自動化型（エージェントワークフロー）の2つの利用方法を提供。FedRAMP High、HIPAA、PCI DSS などのコンプライアンス認定を保有 |
-| 9 | [Amazon OpenSearch Serverless now supports Agentic Search](https://aws.amazon.com/about-aws/whats-new/2026/06/opensearch-agentic-search/) | OpenSearch Serverless に Agentic Search 機能を追加。自然言語による検索が可能に。LLM を搭載した QueryPlanningTool が DSL クエリを自動生成し、API と OpenSearch Dashboards でカスタマイズ可能 |
+| 9 | [Amazon OpenSearch Serverless now supports Agentic Search](https://aws.amazon.com/about-aws/whats-new/2026/05/amazon-opensearch-serverless-next-generation-generally-available/) | OpenSearch Serverless に Agentic Search 機能を追加。自然言語による検索が可能に。LLM を搭載した QueryPlanningTool が DSL クエリを自動生成し、API と OpenSearch Dashboards でカスタマイズ可能 |
 
 ## まとめ
 
