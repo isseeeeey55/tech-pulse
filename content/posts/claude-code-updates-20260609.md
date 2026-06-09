@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.169 リリースノートまとめ"
 date: 2026-06-09T08:01:03+09:00
-draft: true
+draft: false
 tags: ["claude-code", "safe-mode", "mcp", "windows", "macos", "wsl"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.169 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260609/header.png)
 
 # Claude Code v2.1.169 リリース情報
 
@@ -17,7 +19,7 @@ summary: "v2.1.169 のClaude Codeリリースノートまとめ"
 
 ### 安全モード（--safe-mode）によるトラブルシューティング強化
 
-新たに追加された `--safe-mode` フラグは、問題発生時の診断・切り分けを支援するトラブルシューティング機能です。Claude Code の動作に問題が生じた際、このモードで起動することで最小限の設定で動作を確認できるようになります。
+新たに追加された `--safe-mode` フラグ（環境変数 `CLAUDE_CODE_SAFE_MODE` でも指定可能）は、問題発生時の診断・切り分けを支援するトラブルシューティング機能です。このモードで起動すると、CLAUDE.md・プラグイン・スキル・フック・MCP サーバーといったすべてのカスタマイズが無効化された素の状態で動作を確認できます。
 
 エンタープライズ環境では複雑な設定や拡張機能が組み合わさることが多く、問題の原因特定が困難なケースがあります。安全モードは、こうした状況下で問題の切り分けを迅速に行うための手段として提供されます。
 
