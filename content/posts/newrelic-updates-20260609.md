@@ -1,11 +1,13 @@
 ---
 title: "【New Relic】2026/06/09 のアップデートまとめ"
 date: 2026-06-09T08:00:56+09:00
-draft: true
+draft: false
 tags: ["newrelic", "workflow-automation", "secrets-management", "security", "sre"]
 categories: ["New Relic Updates"]
 summary: "2026/06/09 のNew Relicアップデートまとめ"
 ---
+
+![](/images/newrelic-updates-20260609/header.png)
 
 ## はじめに
 
