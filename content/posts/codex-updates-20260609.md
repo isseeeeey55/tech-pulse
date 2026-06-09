@@ -1,11 +1,13 @@
 ---
 title: "【Codex CLI】rust-v0.138.0 リリースノートまとめ"
 date: 2026-06-09T08:01:56+09:00
-draft: true
+draft: false
 tags: ["codex", "codex-cli", "desktop", "app-command", "image-processing", "reasoning-effort", "tui", "plugin", "json", "mcp", "oauth", "goal-workflow", "thread-management", "session-resume", "performance", "workspace", "agents-md", "bash", "proxy", "sandbox", "approval-mode", "profile", "app-server", "personal-access-token", "marketplace"]
 categories: ["Codex CLI Updates"]
 summary: "rust-v0.138.0 のCodex CLIリリースノートまとめ"
 ---
+
+![](/images/codex-updates-20260609/header.png)
 
 ## はじめに
 
