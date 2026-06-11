@@ -1,15 +1,17 @@
 ---
 title: "【AWS】2026/06/12 のアップデートまとめ"
 date: 2026-06-12T08:02:27+09:00
-draft: true
+draft: false
 tags: ["aws", "aurora", "postgresql", "cloudwatch", "eks", "ecs", "lambda", "ec2", "mwaa", "eventbridge", "elastic-beanstalk", "acm", "secrets-manager", "prometheus", "opensearch", "bedrock", "x-ray"]
 categories: ["AWS Updates"]
 summary: "2026/06/12 のAWSアップデートまとめ"
 ---
 
+![](/images/aws-updates-20260612/header.png)
+
 ## はじめに
 
-今回は、直近で発表された9件のAWSアップデートを紹介します。Amazon Aurora の PostgreSQL 18 対応、CloudWatch Application Signals の統合トラブルシューティング機能、Amazon MWAA Serverless の EventBridge 連携、Elastic Beanstalk コンソールへの CloudWatch Logs 統合、AWS Workload Credentials Provider の新登場、Amazon Managed Service for Prometheus の順序外サンプル取り込み、Amazon OpenSearch Service の MCP Apps 対応、Amazon Bedrock での OpenAI GPT-5.4/5.5 提供開始、そして Amazon ECS Managed Daemons のタスク間通信サポートと、多岐にわたるアップデートが含まれています。
+今回は、直近で発表された10件のAWSアップデートを紹介します。Amazon Aurora の PostgreSQL 18 対応、CloudWatch Application Signals の統合トラブルシューティング機能、Amazon MWAA Serverless の EventBridge 連携、Elastic Beanstalk コンソールへの CloudWatch Logs 統合、AWS Workload Credentials Provider の新登場、Amazon Managed Service for Prometheus の順序外サンプル取り込みと Native Histograms 対応、Amazon OpenSearch Service の MCP Apps 対応、Amazon Bedrock での OpenAI GPT-5.4/5.5 提供開始、そして Amazon ECS Managed Daemons のタスク間通信サポートと、多岐にわたるアップデートが含まれています。
 
 特に注目すべきは、オブザーバビリティとトラブルシューティングの効率化に焦点を当てたアップデートが多い点です。CloudWatch Application Signals の強化、OpenSearch Service の agentic IDE 統合、Elastic Beanstalk のログ統合など、複数ツール間の移動を減らし、単一のインターフェースで問題解決を完結させる方向性が見て取れます。また、証明書管理の自動化、メトリクス取り込みの柔軟性向上、エージェント配置の効率化など、運用負荷を軽減する実用的な改善も目立ちます。
 
@@ -43,7 +45,7 @@ unhealthy と判定されたサービスを選択し、インフラストラク�
 
 #### 実用化に向けた考慮事項
 
-インフラストラクチャタブに表示されるメトリクスは、各コンピュート環境（EKS、ECS、Lambda、EC2）によって異なります。Kubernetes 環境では Pod レベルの詳細が、Lambda では実行環境の Cold Start や Concurrent Execution が、ECS では Task レベルのリソース使用状況が確認できます。
+インフラストラクチャタブには、コンピュート環境とランタイム環境、その構成要素、およびキュレートされたデフォルトメトリクスが表示され、関連する監視ツールへのディープリンクも提供されます。表示内容は各コンピュート環境（EKS、ECS、Lambda、EC2）によって異なるため、利用環境での表示粒度は実際に確認することをおすすめします。
 
 また、ログ・トレースタブの検索範囲と時間精度も実運用では重要です。特にトレース情報は X-Ray の既存設定に依存するため、サンプリングレートが低い場合は表示されるトレースが限定的になる点に注意が必要です。
 
@@ -57,7 +59,7 @@ AWS Workload Credentials Provider は、TLS 証明書とシークレット管理
 
 CA/B フォーラムの認証局マンデートにより、公開証明書の最大有効期間が段階的に短縮されています。これにより、年に数回しか発生しなかった証明書更新作業が、月次または週次の定例作業になりつつあります。
 
-従来、ACM からエクスポートした証明書を EC2 や オンプレミスサーバーに配布するには、Amazon EventBridge で証明書更新イベントを検知し、Lambda 関数や Systems Manager Run Command で各サーバーに配布、さらに Apache や NGINX を reload するカスタム自動化が必要でした。この仕組みを数百台規模で維持することは、エラーハンドリング、リトライロジック、監視アラートの設定など、継続的な保守コストを生みます。
+従来、ACM からエクスポートした証明書を EC2 や オンプレミスサーバーに配布するには、Amazon EventBridge で証明書更新を検知して更新済み証明書を配布するカスタム自動化を構築する必要がありました。この仕組みを数百台規模で維持することは、エラーハンドリング、リトライロジック、監視アラートの設定など、継続的な保守コストを生みます。
 
 #### Workload Credentials Provider の仕組み
 
@@ -69,9 +71,9 @@ AWS Workload Credentials Provider は、証明書 ARN、配置先ファイルパ
 
 特にハイブリッドクラウド環境では、オンプレミスの Apache サーバーと AWS 上の ALB で同じドメインの証明書を共有するケースが多く、証明書更新の同期が課題となります。Workload Credentials Provider を使えば、オンプレミス側でも AWS と同一の証明書ライフサイクル管理が可能になり、証明書の不整合による障害リスクが低減します。
 
-また、マルチリージョン構成では、各リージョンの ACM から同じ証明書を参照し、リージョンごとのサーバーに自動配布することで、グローバルな証明書更新を統一的に管理できます。
+エクスポート可能な ACM 証明書と Secrets Manager に対応し、すべての AWS リージョンで利用できるため、複数リージョンにまたがる構成でも統一的な証明書配布の仕組みを組めます。
 
-オープンソースとして GitHub で公開されているため、組織固有の要件（特定の証明書フォーマット、独自のリロードスクリプトなど）に応じたカスタマイズも可能です。セキュリティ監査やコンプライアンス対応では、証明書配布履歴を CloudTrail や Secrets Manager のアクセスログと統合して追跡できる点も重要です。
+オープンソースとして GitHub で公開されているため、組織固有の要件（特定の証明書フォーマット、独自のリロードスクリプトなど）に応じたカスタマイズも可能です。
 
 ### Amazon ECS Managed Daemons のタスク間通信サポート
 
@@ -90,9 +92,9 @@ Amazon ECS Managed Daemons が pidMode と ipcMode の設定をサポートし�
 
 今回追加された **pidMode** と **ipcMode** は、デーモンタスクがインスタンス上の他のプロセスや IPC リソースにアクセスできるようにする設定です。
 
-**pidMode: "shared"** を設定すると、デーモンタスクからインスタンス上のすべてのプロセスが見えるようになります。これにより、Datadog APM や New Relic のようなトレーシングエージェントが、アプリケーションプロセスを検出して自動的にトレースを収集できます。
+**pidMode: "shared"** を設定すると、デーモンタスクからインスタンス上のすべてのプロセスが見えるようになります。これにより、トレーシングエージェントがアプリケーションプロセスを検出してトレースを収集する構成が可能になります。
 
-**ipcMode: "shared"** を設定すると、デーモンタスクが他のコンテナと IPC 名前空間を共有できます。これは、共有メモリを使った高速通信が必要なプロファイリングツール（Pyroscope、Grafana など）や、システムコールを監視するセキュリティエージェント（Falco など）に必要です。
+**ipcMode: "shared"** を設定すると、デーモンタスクが他のコンテナと IPC 名前空間を共有できます。これは、アプリケーションプロセスや共有 IPC リソースへのアクセスを必要とするプロファイリングツールやセキュリティエージェントの動作に必要です。
 
 デフォルトは **"none"** で、デーモンはアプリケーションコンテナから分離されたまま動作します。
 
@@ -110,13 +112,13 @@ CloudWatch Application Signals の統合機能は、特に MTTR（Mean Time To R
 
 統合ビューを活用すれば、unhealthy なサービスをヘルスランキングから選択し、インフラストラクチャタブで CPU/メモリの異常を確認、ログタブで該当エラーメッセージを特定、トレースタブで上流サービスの影響を把握、という一連の調査を1つの画面で完結できます。
 
-導入判断では、既存の監視ツール（Datadog、New Relic など）との重複を評価する必要があります。特に、既に統合オブザーバビリティツールを導入している場合は、AWS ネイティブサービスとサードパーティツールの棲み分けを明確にすることが重要です。一方、CloudWatch と X-Ray を個別に使っている環境では、追加コストなしで統合体験が得られるため、即座に導入価値があります。
+導入判断では、既存の統合オブザーバビリティツールとの重複を評価する必要があります。既にサードパーティの統合ツールを導入している場合は、AWS ネイティブサービスとの棲み分けを明確にすることが重要です。一方、CloudWatch と X-Ray を個別に使っている環境では、ツール間の往復が統合ビューに集約されるため導入価値が高いでしょう（コストは CloudWatch の料金体系に従うため、料金ページでの確認を推奨します）。
 
 ### 証明書ライフサイクル管理の標準化
 
 AWS Workload Credentials Provider は、Terraform で管理しているインフラに組み込むことで、証明書管理の IaC 化が加速します。EC2 インスタンスの user data や Systems Manager の State Manager ドキュメントに組み込むことで、新規インスタンスが起動時から自動的に証明書を取得・更新する仕組みを構築できます。
 
-短寿命証明書時代では、証明書更新の自動化は必須要件です。特に、90日有効の Let's Encrypt 証明書や、今後さらに短縮される可能性がある公開証明書では、手動更新は現実的ではありません。Workload Credentials Provider を導入することで、証明書有効期限切れによる障害リスクを大幅に削減できます。
+短寿命証明書時代では、証明書更新の自動化は必須要件です。CA/B フォーラムのマンデートにより公開証明書の有効期間短縮が進むなか、手動更新は現実的ではありません。Workload Credentials Provider を導入することで、証明書有効期限切れによる障害リスクを大幅に削減できます。
 
 リスクとしては、プロバイダー自体の障害や設定ミスにより、証明書が更新されない可能性があります。そのため、CloudWatch アラームで証明書の有効期限を監視し、更新失敗時に通知する仕組みを並行して構築することが推奨されます。
 
@@ -133,11 +135,12 @@ ECS Managed Daemons の pidMode/ipcMode サポートにより、サイドカー�
 | アップデート | 概要 |
 |------------|------|
 | [Amazon Aurora now supports PostgreSQL major version 18](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-aurora-postgresql-major-version-18/) | Amazon Aurora が PostgreSQL 18 メジャーバージョンに対応しました |
-| [Amazon CloudWatch Application Signals now supports infrastructure, logs, and traces context for faster troubleshooting](https://aws.amazon.com/about-aws/whats-new/2026/06/cloudwatch-application-signals-supports) | CloudWatch Application Signals にヘルスランキング、インフラストラクチャ、ログ、トレースの統合ビューが追加され、複数ツール切り替えなしでトラブルシューティングが可能に |
+| [Amazon CloudWatch Application Signals now supports infrastructure, logs, and traces context for faster troubleshooting](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Application-Monitoring-Sections.html) | CloudWatch Application Signals にヘルスランキング、インフラストラクチャ、ログ、トレースの統合ビューが追加され、複数ツール切り替えなしでトラブルシューティングが可能に（公式 What's New ページの URL が執筆時点で不達のため、リンクは Application Signals 公式ドキュメント） |
 | [Amazon MWAA Serverless now supports Amazon EventBridge notifications](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-mwaa-serverless-eventbridge/) | Amazon MWAA Serverless が EventBridge 連携に対応し、ワークフローとタスクの状態変化をイベント駆動で自動化可能に |
 | [AWS Elastic Beanstalk console now integrates CloudWatch Logs in the Logs tab](https://aws.amazon.com/about-aws/whats-new/2026/06/elastic-beanstalk-cloudwatch-logs/) | Elastic Beanstalk コンソールに CloudWatch Logs が統合され、環境のログを直接確認可能に |
 | [AWS announces AWS Workload Credentials Provider](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-workload-credentials-provider/) | ACM からの証明書と Secrets Manager からのシークレットを自動デプロイ・ローカルキャッシュする軽量クライアント側プロバイダーが登場 |
 | [Amazon Managed Service for Prometheus now supports out of order sample ingestion](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-managed-service-prometheus-outoforder-ingestion/) | Amazon Managed Service for Prometheus が順序外サンプル取り込みとルールクエリオフセットに対応し、分散環境でのデータ損失を削減 |
+| [Amazon Managed Service for Prometheus now supports Native Histograms](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-managed-service-prometheus-native-histograms/) | Prometheus ネイティブヒストグラムの取り込み・保存・クエリに対応。従来 22 時系列を要したヒストグラムが 1 時系列で表現でき、事前のバケット境界定義なしに histogram_quantile() による精緻なテイルレイテンシ分析が可能。課金は実際に観測値が入ったバケットのみが対象 |
 | [Amazon OpenSearch Service launches MCP Apps for agentic observability](https://aws.amazon.com/about-aws/whats-new/2026/06/opensearch-agentic-observability-mcp-app) | OpenSearch Service が MCP Apps に対応し、Claude Desktop や VS Code などの agentic IDE からログ・トレース・メトリクス・アラートを調査可能に |
 | [OpenAI GPT-5.4 and GPT-5.5 models now available in US East (N. Virginia) on Amazon Bedrock](https://aws.amazon.com/about-aws/whats-new/2026/06/openai-gpt-us-east-virginia-amazon/) | Amazon Bedrock で OpenAI の最新モデル GPT-5.4 と GPT-5.5 が米国東部（N. バージニア）リージョンで利用可能に。272K トークンのコンテキストウィンドウとマルチモーダル対応 |
 | [Amazon ECS Managed Daemons now support inter-task visibility and communication](https://aws.amazon.com/about-aws/whats-new/2026/06/ecs-managed-daemons-pid-ipc-modes/) | ECS Managed Daemons が pidMode と ipcMode に対応し、トレーシング・プロファイリング・セキュリティエージェントのデーモン配置が可能に |
