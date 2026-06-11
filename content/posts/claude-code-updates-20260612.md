@@ -1,11 +1,15 @@
 ---
 title: "【Claude Code】v2.1.173 リリースノートまとめ"
 date: 2026-06-12T08:00:51+09:00
-draft: true
+draft: false
 tags: ["claude-code", "fable-5", "sandbox", "windows"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.173 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260612/header.png)
+
+# Claude Code v2.1.173 リリース情報
 
 ## はじめに
 
