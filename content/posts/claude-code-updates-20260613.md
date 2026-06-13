@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.176・v2.1.175・v2.1.174 リリースノートまとめ"
 date: 2026-06-13T08:01:44+09:00
-draft: true
+draft: false
 tags: ["claude-code", "bedrock", "remote-control", "vscode", "mcp"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.176・v2.1.175・v2.1.174 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260613/header.png)
 
 # Claude Code v2.1.176・v2.1.175・v2.1.174 リリース情報
 
