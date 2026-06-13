@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/06/14 のアップデートまとめ"
 date: 2026-06-14T08:01:28+09:00
-draft: true
+draft: false
 tags: ["aws", "lightsail", "route53", "cloudwatch", "sns", "lambda"]
 categories: ["AWS Updates"]
 summary: "2026/06/14 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260614/header.png)
 
 # 直近の AWS アップデート情報まとめ
 
