@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/06/16 のアップデートまとめ"
 date: 2026-06-16T08:02:15+09:00
-draft: true
+draft: false
 tags: ["aws", "cloudwatch", "bedrock", "route53", "cost-explorer", "lambda", "ecs", "devops-agent", "organizations", "billing-conductor", "ec2", "ebs", "eni", "s3", "security-hub", "config", "marketplace", "opentelemetry", "grafana", "promql"]
 categories: ["AWS Updates"]
 summary: "2026/06/16 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260616/header.png)
 
 # 直近の AWS アップデート 9 件まとめ — CloudWatch 統合分析、マルチアカウント監視、DevOps Agent 拡張など
 
@@ -142,7 +144,7 @@ IDE から直接 DevOps Agent を呼び出せるようになったことで、�
 | Amazon Bedrock AgentCore Memory now supports strictly consistent metadata for long-term memory | AgentCore Memory に厳密一貫性メタデータ機能を追加。アプリケーションから直接メタデータ値を指定でき、マルチテナント環境やコンプライアンス境界の実装が可能に | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/05/agentcore-memory-scmetadata/) |
 | Amazon Route 53 Resolver DNS Firewall now supports Palo Alto Networks Advanced DNS Security (Preview) | Route 53 DNS Firewall に Palo Alto Networks の DNS 脅威対策を統合（プレビュー）。別途ファイアウォールをデプロイせずに DNS レイヤーでの脅威対策が可能 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-route-53-resolver-dns/) |
 | AWS launches Cost Explorer historical data retention for accounts in billing groups | Billing Conductor と Billing Transfer で請求グループにマップされたアカウントが、元の AWS 請求レートの履歴データに Cost Explorer でアクセス可能に | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-cost-explorer/) |
-| Amazon CloudWatch Query Studio is now generally available | PromQL と Metrics Insights（SQL）で OpenTelemetry と AWS ネイティブメトリクスを統合クエリできるツールが GA。クロスアカウント・クロスリージョン対応、8 種類以上の可視化タイプをサポート | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-cloudwatch-query-studio-generally-available/) |
+| Amazon CloudWatch Query Studio is now generally available | PromQL と Metrics Insights（SQL）で OpenTelemetry と AWS ネイティブメトリクスを統合クエリできるツールが GA。クロスアカウント・クロスリージョン対応、8 種類の可視化タイプをサポート | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-cloudwatch-query-studio-generally-available/) |
 | Amazon CloudWatch now supports cross-account metrics centralization | 複数の AWS アカウント・リージョンに散在する CloudWatch メトリクスを単一の宛先アカウントに自動レプリケーション。Metrics Insights、ダッシュボード、アラーム、Metric Math、異常検出、Metric Streams、PromQL と完全互換 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-cross-account-metrics-centralization/) |
 | Amazon ECS Express Mode is now available in AWS GovCloud (US) Regions | ECS Express Mode が GovCloud（US）で利用可能に。コンテナイメージを提供するだけで自動的にアプリケーションを展開、AWS 生成ドメイン名により即座にアクセス可能 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-ecs-express-mode-govcloud/) |
 | AWS Lambda Managed Instances now supports Tag Propagation for Managed Resources | Lambda Managed Instances がタグ伝播機能に対応。容量プロバイダーで指定したタグが、LMI が管理する EC2 インスタンス、EBS ボリューム、ENI に自動適用 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-lambda-managed-instances-tag-propagation/) |
