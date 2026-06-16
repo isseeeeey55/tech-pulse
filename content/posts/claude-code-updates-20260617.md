@@ -1,11 +1,15 @@
 ---
 title: "【Claude Code】v2.1.179 リリースノートまとめ"
 date: 2026-06-17T08:01:09+09:00
-draft: true
+draft: false
 tags: ["claude-code", "wsl2", "sandbox", "subagent", "plugin"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.179 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260617/header.png)
+
+# Claude Code v2.1.179 リリース情報
 
 ## はじめに
 
