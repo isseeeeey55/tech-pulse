@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/06/17 のアップデートまとめ"
 date: 2026-06-17T08:02:38+09:00
-draft: true
-tags: ["aws", "cloudwatch", "bedrock", "redshift", "fsx", "marketplace", "partner-central", "management-console", "rds", "aurora", "cognito", "appSync", "api-gateway", "lambda", "ec2", "organizations", "iam", "privatelink", "vpc", "s3", "efs"]
+draft: false
+tags: ["aws", "cloudwatch", "bedrock", "redshift", "fsx", "marketplace", "partner-central", "management-console", "rds", "lambda", "ec2", "privatelink", "vpc"]
 categories: ["AWS Updates"]
 summary: "2026/06/17 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260617/header.png)
 
 # 直近の AWS アップデート情報まとめ — 2026年6月版
 
@@ -29,7 +31,7 @@ Amazon CloudWatchがOpenTelemetry Protocol（OTLP）経由でメトリクスを�
 
 #### 具体的な活用シナリオ
 
-OpenTelemetry Collectorを経由してメトリクスを送信する実装が基本パターンとなります。アプリケーションはOpenTelemetry SDKで計装され、ローカルまたはサイドカーとして動作するCollectorにメトリクスをエクスポートします。Collectorは OTLP 形式でCloudWatchに送信し、CloudWatch側では自動的にメトリクスストアに格納されます。
+OpenTelemetry SDK で計装したアプリケーションから、OTLP 形式で CloudWatch にメトリクスを送信します。OTLP は SDK から直接送信できるほか、OpenTelemetry Collector を経由する構成も選択できます。送信されたメトリクスは CloudWatch 側で自動的にメトリクスストアに格納されます。
 
 従来のPrometheus Query APIと互換性のあるAPIエンドポイントが提供されるため、既存のGrafanaダッシュボードやアラート設定は最小限の変更で移行可能です。PromQLで記述されたクエリは、そのままCloudWatchのメトリクスストアに対して実行できます。これにより、アプリケーションレイヤーのカスタムメトリクス（例：HTTPリクエストレイテンシー、エラー率）とAWSインフラレイヤーのメトリクス（例：EC2 CPU使用率、RDS接続数）を1つのPromQLクエリで結合して分析できます。
 
@@ -57,7 +59,7 @@ AWS Blocksは、この問題を「ローカルで完全に機能するアプリ�
 
 ローカル環境では、Blocksが提供するビルトインのPostgreSQL、認証サービス、リアルタイムメッセージングエンジンが自動的に起動します。開発者はこれらのサービスをTypeScriptのAPIとして利用でき、データベーステーブルの定義、ユーザー認証フローの実装、WebSocketベースのリアルタイム通信の実装などを、すべて同一言語内で完結できます。
 
-本番環境へのデプロイ時には、ローカルで動作していた各コンポーネントが自動的に対応するAWSサービスにマッピングされます。PostgreSQLはAmazon RDS for PostgreSQLまたはAurora Serverless、認証機能はAmazon Cognito、リアルタイムメッセージングはAWS AppSyncまたはAPI Gateway WebSocketに置き換わります。この変換プロセスは完全に自動化されており、開発者がインフラ定義を記述する必要はありません。
+本番環境へのデプロイ時には、ローカルで動作していたアプリケーションコードを変更せずに、そのまま本番の AWS マネージドサービス上で実行できます。各コンポーネントが具体的にどの AWS サービスにマッピングされるかは、プレビュー段階の公式発表では詳細が明示されていません。いずれにせよ、この変換プロセスは自動化されており、開発者がインフラ定義を記述する必要はありません。
 
 #### エンドツーエンドの型安全性
 
@@ -71,7 +73,7 @@ React（Vite）、Next.js、Nuxt、Astroといった主要なフロントエン�
 
 #### コストとカスタマイズ性
 
-AWS Blocks自体に追加料金はかかりません。使用したAWSサービス（RDS、Lambda、API Gatewayなど）の標準料金のみが課金対象となります。また、高度なカスタマイズが必要な場合は、AWS CDKへ直接アクセスして細かいインフラ設定を調整することも可能です。この段階的な学習曲線により、初心者は簡易な構文から始め、経験を積むにつれてより詳細な制御が可能になります。
+AWS Blocks自体に追加料金はかかりません。アプリケーションが使用したAWSサービスの標準料金のみが課金対象となります。また、高度なカスタマイズが必要な場合は、AWS CDKへ直接アクセスして細かいインフラ設定を調整することも可能です。この段階的な学習曲線により、初心者は簡易な構文から始め、経験を積むにつれてより詳細な制御が可能になります。
 
 ## SRE視点での活用ポイント
 
@@ -105,14 +107,14 @@ Terraformでインフラを管理している環境であれば、VPCエンド�
 |---------|------------|------|
 | **開発フレームワーク** | [AWS Blocks（Preview）](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-blocks-preview) | インフラ知識不要でAWSバックエンドを構築できるオープンソースTypeScriptフレームワーク。ローカル開発環境と本番AWSを統一。 |
 | **観測性** | [CloudWatch OpenTelemetryサポート](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-cloudwatch-otel-metrics/) | OTLP経由のメトリクス送信とPromQLクエリをネイティブサポート。カスタムメトリクスとAWSメトリクスを統合管理。 |
-| **AI/機械学習** | [Grok 4.3 on Amazon Bedrock](https://aws.amazon.com/about-aws/whats-new/2026/06/grok-amazon-bedrock/) | xAIの推論特化型モデルをBedrockで提供。常時推論機能とマルチステップエージェント構築に最適化。 |
+| **AI/機械学習** | [Grok 4.3 on Amazon Bedrock](https://aws.amazon.com/about-aws/whats-new/2026/06/grok-amazon-bedrock/) | xAIの推論優先（reasoning-first）モデルをBedrockで提供。推論努力レベルを none/low/medium/high で設定可能で、信頼性の高いエージェント構築に対応。 |
 | **データベース** | [Redshift RG instances拡大](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-redshift-rg-instances-3-additional-regions/) | Graviton搭載RGインスタンスがアフリカ・バンコク・メキシコリージョンで利用可能に。最大2.4倍高速化。 |
 | **ストレージ** | [FSx for OpenZFS オプトインRegionsレプリケーション](https://aws.amazon.com/about-aws/whats-new/2026/06/on-demand-cross-region-replication/) | オプトインRegions間でのオンデマンドデータレプリケーションをサポート。ディザスターリカバリ構築が容易に。 |
 | **移行** | [AWS Transform FSx for ONTAP対応（Preview）](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-transform-vmware-fsx-for-ontap-preview) | ブロックストレージのFSx for ONTAPへの直接移行をサポート。VMware環境からの移行を統合ワークフローで実現。 |
 | **移行** | [AWS Transform メインフレーム統合ワークフロー](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-transform-mainframe-traceable-reimagine-workflow/) | z/OS COBOL/PL/Iアプリの最新化を単一ワークフローで実現。ポートフォリオ評価からコード生成まで追跡可能。 |
 | **セキュリティ** | [AWS Sign-in RCP対応](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-sign-in/) | リソースベースポリシーとRCPによるコンソールサインインのネットワーク制限が可能に。 |
 | **セキュリティ** | [Console Private Access インターネット非接続対応](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-management-console-private/) | VPCエンドポイント経由でのコンソールアクセスが可能に。インターネット接続を完全排除。 |
-| **パートナー** | [Partner Central FTR自動検証](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-partner-central-foundational-technical-review/) | AI活用でFoundational Technical Reviewを数分で完了。SOC 2またはWAFRで自動承認。 |
+| **パートナー** | [Partner Central FTR検証](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-partner-central-foundational-technical-review/) | SOC 2 Type II または WAFR レポートで Foundational Technical Review を数分で完了。承認または改善フィードバックを数分以内に取得。 |
 | **パートナー** | [Marketplace プロフェッショナルサービス手数料引き下げ](https://aws.amazon.com/about-aws/whats-new/2026/06/reduce-listing-fee-professional-services-aws-marketplace) | リスティング手数料を2.5%から0.5%に削減。コンサルティングパートナーの収益性向上。 |
 | **パートナー** | [Marketplace AI支援型リスティング](https://aws.amazon.com/about-aws/whats-new/2026/06/ai-assisted-product-listing/) | AIが既存資産から高品質な商品リストを自動生成。SEO最適化と検索発見性を向上。 |
 | **パートナー** | [Partner Central コセルAIエージェント](https://aws.amazon.com/about-aws/whats-new/2026/06/accelerate-co-selling-with-agents/) | AIがコセル機会をリアルタイム判定・推奨。Opportunity Quality Scoreで案件品質を可視化。 |
