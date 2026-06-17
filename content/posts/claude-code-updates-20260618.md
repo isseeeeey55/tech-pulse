@@ -1,13 +1,15 @@
 ---
 title: "【Claude Code】v2.1.181 リリースノートまとめ"
 date: 2026-06-18T08:01:32+09:00
-draft: true
+draft: false
 tags: ["claude-code", "config", "bun", "apple-events", "mcp", "oauth", "remote-control", "subagent", "aws", "foundry"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.181 のClaude Codeリリースノートまとめ"
 ---
 
 # Claude Code v2.1.181 リリース：プロンプトからの設定変更とストリーミング改善
+
+![](/images/claude-code-updates-20260618/header.png)
 
 ## はじめに
 
@@ -46,7 +48,7 @@ macOS環境では、`CLAUDE_CLIENT_PRESENCE_FILE` 環境変数を設定するこ
 | Improvement | subagentパネル改善 | アイドル状態のsubagentは30秒後に自動非表示、リスト表示は5行まで、キーボードヒントをフッターに表示 |
 | Improvement | MCP OAuth画面の改善 | Claude Codeの視覚スタイルに統一し、成功時に自動クローズ |
 | Improvement | メモリ更新表示の簡素化 | `Improved N memories` 行が詳細モード外では個別ファイルを列挙しないように変更 |
-| Breaking | フルスクリーンモードのURL開封 | Cmd+click（macOS）/ Ctrl+clickを要求（ネイティブターミナルの動作に合わせた変更） |
+| 変更 | フルスクリーンモードのURL開封 | Cmd+click（macOS）/ Ctrl+clickを要求（ネイティブターミナルの動作に合わせた変更） |
 | Fix | カスタム `ANTHROPIC_BASE_URL` とFoundryでのプロンプトキャッシング | リクエストごとの認証トークン変化による読み込み失敗を修正 |
 | Fix | ネットワークドライブでのファイル書き込み | Write/Editが0バイトまたは切り詰められたファイルを生成する問題を修正 |
 | Fix | macOS上での `open`、`osascript`、認証フロー | エラー-600を修正（Apple Events entitlementを追加） |
