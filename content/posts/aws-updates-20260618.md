@@ -1,13 +1,15 @@
 ---
 title: "【AWS】2026/06/18 のアップデートまとめ"
 date: 2026-06-18T08:02:50+09:00
-draft: true
+draft: false
 tags: ["aws", "rds", "postgresql", "mysql", "mariadb", "aurora", "glue", "spark", "sagemaker", "healthomics", "cloudwatch", "bedrock", "s3", "outposts", "continuum", "guardduty", "security hub", "devops", "iam", "vpc", "eventbridge", "sns"]
 categories: ["AWS Updates"]
 summary: "2026/06/18 のAWSアップデートまとめ"
 ---
 
 # 直近のAWSアップデート - 2026年6月版
+
+![](/images/aws-updates-20260618/header.png)
 
 ## はじめに
 
@@ -73,7 +75,7 @@ AWS Continuumは既存のスキャンツールと連携し、発見された脆�
 
 Continuumは脅威モデリングも自動生成します。STRIDE（Spoofing、Tampering、Repudiation、Information Disclosure、Denial of Service、Elevation of Privilege）は、Microsoft が提唱したセキュリティ脅威の分類手法です。従来、このモデリングは経験豊富なセキュリティエンジニアの手作業で行われていましたが、Continuumは自動的にSTRIDE形式の脅威モデルを生成し、コンプライアンス要件への対応を支援します。
 
-現在、AWS Continuumは限定プレビュー段階です。利用を希望する場合は、AWS アカウントチームを通じてアクセスを申請する必要があります。本番環境での効果測定には、既存のGuardDuty・Security Hubとの連携テストやコスト削減効果（手作業削減時間）の定量化が推奨されます。
+現在、AWS Continuumは限定プレビュー段階です。利用を希望する場合は、AWS Continuum の製品ページからアクセスを申請する必要があります。本番環境での効果測定には、既存のGuardDuty・Security Hubとの連携テストやコスト削減効果（手作業削減時間）の定量化が推奨されます。
 
 ## SRE視点での活用ポイント
 
