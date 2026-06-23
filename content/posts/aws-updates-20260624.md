@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/06/24 のアップデートまとめ"
 date: 2026-06-24T08:02:02+09:00
-draft: true
+draft: false
 tags: ["aws", "cognito", "kms", "cloudwatch", "opensearch", "sagemaker", "ec2", "healthomics", "bedrock", "lambda", "nextflow"]
 categories: ["AWS Updates"]
 summary: "2026/06/24 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260624/header.png)
 
 # 直近の AWS アップデート — SRE が押さえておきたい 10 の新機能
 
@@ -62,7 +64,7 @@ HTTP/2、gRPC、WebSocket に対応しており、リアルタイム通信やス
 
 #### 実装の流れ
 
-公式ドキュメントに記載されている手順に沿って、以下のステップで MicroVM を構築できます。
+MicroVM の構築は、おおまかに以下のような流れになります。
 
 1. **コンテナイメージの準備**：Dockerfile からアプリケーションイメージをビルド
 2. **MicroVM の起動**：AWS マネジメントコンソールまたは CloudFormation でリソース定義
