@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.186 リリースノートまとめ"
 date: 2026-06-23T08:01:30+09:00
-draft: true
+draft: false
 tags: ["claude-code", "mcp", "workflows", "bash", "subagent", "skills", "plugin", "iterm2", "aws", "tmux", "pane", "yaml"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.186 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260623/header.png)
 
 # Claude Code v2.1.186 リリース情報
 
@@ -67,13 +69,13 @@ summary: "v2.1.186 のClaude Codeリリースノートまとめ"
 | Improvement | メモリ機能の改善 | サイズ制限に近づいた際に `MEMORY.md` インデックスの圧縮を促すように改善 |
 | Improvement | スキル frontmatter のキー記法対応拡大 | `display-name`, `default-enabled`, `fallback`, `metadata.*` で kebab-case, snake_case, camelCase を許可 |
 | Improvement | 不正な `SKILL.md` YAML frontmatter のハンドリング改善 | 失敗時も空のメタデータでスキル本体を読み込むように改善（サイレント失敗を回避） |
-| Breaking | `CLAUDE_CODE_MAX_RETRIES` の上限変更 | 上限を 15 に制限。無人セッションでは `CLAUDE_CODE_RETRY_WATCHDOG` を使用 |
-| Breaking | バックグラウンド subagent のパーミッションプロンプト表示変更 | 自動拒否ではなくメインセッションでプロンプトを表示。どのエージェントが要求しているか明示され、Esc でそのツールのみ拒否 |
-| Breaking | `/review <pr>` のレビューエンジン変更 | `/code-review medium` と同じエンジンを使用するように変更 |
+| 変更 | `CLAUDE_CODE_MAX_RETRIES` の上限変更 | 上限を 15 に制限。無人セッションでは `CLAUDE_CODE_RETRY_WATCHDOG` を使用 |
+| 変更 | バックグラウンド subagent のパーミッションプロンプト表示変更 | 自動拒否ではなくメインセッションでプロンプトを表示。どのエージェントが要求しているか明示され、Esc でそのツールのみ拒否 |
+| 変更 | `/review <pr>` のレビューエンジン変更 | `/code-review medium` と同じエンジンを使用するように変更 |
 
 ## まとめ
 
-v2.1.186 は、CLI からの MCP サーバー認証や bash コマンド出力への自動応答といった開発体験の向上に加え、スリープ復帰時のストリーミングエラーや UI 表示に関する多数の不具合が修正されたリリースです。バックグラウンド subagent のパーミッションプロンプトがメインセッションに統合されるなど、エージェントチームの運用性も改善されています。破壊的変更として `CLAUDE_CODE_MAX_RETRIES` の上限制限と `/review` のエンジン統一が含まれるため、既存のワークフローへの影響を確認してください。
+v2.1.186 は、CLI からの MCP サーバー認証や bash コマンド出力への自動応答といった開発体験の向上に加え、スリープ復帰時のストリーミングエラーや UI 表示に関する多数の不具合が修正されたリリースです。バックグラウンド subagent のパーミッションプロンプトがメインセッションに統合されるなど、エージェントチームの運用性も改善されています。仕様変更として `CLAUDE_CODE_MAX_RETRIES` の上限制限（15）と `/review` のエンジン統一が含まれるため、既存のワークフローへの影響を確認してください。
 
 ---
 
