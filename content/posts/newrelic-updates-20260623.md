@@ -1,11 +1,13 @@
 ---
 title: "【New Relic】2026/06/23 のアップデートまとめ"
 date: 2026-06-23T08:01:02+09:00
-draft: true
+draft: false
 tags: ["newrelic", "browser", "frontend-monitoring", "isp-analysis", "troubleshooting", "sre"]
 categories: ["New Relic Updates"]
 summary: "2026/06/23 のNew Relicアップデートまとめ"
 ---
+
+![](/images/newrelic-updates-20260623/header.png)
 
 # New Relic アップデート情報（2026年6月23日）
 
@@ -47,7 +49,7 @@ AWS環境でフロントエンドを運用している場合、CloudFrontなど�
 
 ### すぐに試せるTips
 
-まずは、New Relic Browserのデータエクスプローラーやクエリビルダーを使って、ISP（`ispName`属性など）でグループ化したエラー率やページロードタイムを可視化してみることをお勧めします。特定のISPで顕著な傾向が見られれば、そのセグメントに絞り込んだ詳細分析を進めることで、根本原因の特定が加速します。
+まずは、New Relic Browserのデータエクスプローラーやクエリビルダーを使って、ISP（`asnOrganization`属性。New Relicはユーザーの一時的なIPアドレスをASN情報にマッピングし、`asn`にAS番号、`asnOrganization`にISP名を格納します）でグループ化したエラー率やページロードタイムを可視化してみることをお勧めします。特定のISPで顕著な傾向が見られれば、そのセグメントに絞り込んだ詳細分析を進めることで、根本原因の特定が加速します。
 
 アラート設定としては、ISP別のエラー率が全体平均の一定倍率（例：2倍）を超えた場合に通知するルールを作成しておくと、早期発見に繋がります。ただし、トラフィックが少ないISPでは偶然エラー率が高く見えることもあるため、最小サンプル数の条件も併せて設定することが重要です。
 
