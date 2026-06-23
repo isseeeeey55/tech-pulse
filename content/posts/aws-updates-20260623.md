@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/06/23 のアップデートまとめ"
 date: 2026-06-23T08:02:03+09:00
-draft: true
+draft: false
 tags: ["aws", "outposts", "iam-identity-center", "batch", "network-firewall", "service-quotas", "cloudwatch"]
 categories: ["AWS Updates"]
 summary: "2026/06/23 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260623/header.png)
 
 # 直近の AWS アップデート解説：Outposts のセルフサービス化、IAM Identity Center のクォータ分離、Batch の戦略拡張、Network Firewall の信頼性向上
 
@@ -93,9 +95,9 @@ Service Quotas でのクォータ増加リクエストが標準化されたこ�
 
 AWS Batch に追加された顧客定義のインスタンス割り当て戦略は、バッチワークロードの最適化に新たな選択肢をもたらします。従来の自動選択では、AWS が最適と判断したインスタンスタイプが割り当てられていましたが、ワークロードの特性によっては必ずしも最適ではない場合がありました。
 
-新しい BFPO（Best Fit Progressive Ordered）戦略では、オンデマンドインスタンスの優先順位を手動で指定できます。たとえば、GPU コンピューティングワークロードで特定の GPU 世代を優先したい場合や、メモリ集約型のジョブで特定のメモリサイズを持つインスタンスファミリーを優先したい場合に有効です。SCOP（Spot Capacity Optimized Prioritized）戦略は、Spot インスタンス向けに設計されており、コスト効率と安定性のバランスを取りながら優先順位を制御できます。
+新しい `BEST_FIT_PROGRESSIVE_ORDERED` 戦略（オンデマンド向け）では、インスタンスタイプの優先順位を手動で指定できます。たとえば、GPU コンピューティングワークロードで特定の GPU 世代を優先したい場合や、メモリ集約型のジョブで特定のメモリサイズを持つインスタンスファミリーを優先したい場合に有効です。`SPOT_CAPACITY_OPTIMIZED_PRIORITIZED` 戦略は、Amazon EC2 Spot インスタンス向けに設計されており、ワークロード固有の性能特性に基づいてインスタンスタイプの順序を指定しながら優先順位を制御できます。
 
-SRE の観点では、Spot インスタンスの中断リスクを考慮しながらコスト削減を図る際に、SCOP を活用して安定性の高いインスタンスファミリーを優先リストの上位に配置することで、中断頻度を抑えつつコストメリットを享受できます。AWS Batch API の `CreateComputeEnvironment` および `UpdateComputeEnvironment` を通じて設定を行い、Terraform や CloudFormation で管理すれば、環境ごとに異なる戦略を適用し、A/B テストでパフォーマンスとコストを比較することも可能です。
+SRE の観点では、Spot インスタンスの中断リスクを考慮しながらコスト削減を図る際に、`SPOT_CAPACITY_OPTIMIZED_PRIORITIZED` を活用して安定性の高いインスタンスファミリーを優先リストの上位に配置することで、中断頻度を抑えつつコストメリットを享受できます。AWS Batch API の `CreateComputeEnvironment` および `UpdateComputeEnvironment`（または AWS Batch マネジメントコンソール）を通じて設定を行い、Terraform や CloudFormation で管理すれば、環境ごとに異なる戦略を適用し、A/B テストでパフォーマンスとコストを比較することも可能です。
 
 ただし、複雑な優先順位設定を行う場合、ジョブキューの遅延やリソース枯渇のリスクも考慮する必要があります。CloudWatch メトリクスでジョブの待機時間やインスタンスの起動失敗率を監視し、戦略の効果を継続的に評価することが重要です。
 
@@ -115,7 +117,7 @@ SRE の観点では、長時間接続が必要なアプリケーション（ス�
 |---------|------|--------|
 | AWS Outposts のセルフサービスライフサイクル管理 | 構成、見積もり、注文、サブスクリプション管理、更新、廃止を AWS Management Console、CLI、API から直接実行可能に。リアルタイムで費用を算出し、異なる支払いオプションと契約期間を比較できる。 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-outposts-self-service-lifecycle-management) |
 | IAM Identity Center のクォータ独立化 | AWS アカウントとアプリケーションのクォータが独立し、それぞれ最大 7,000 個まで設定可能に。Service Quotas コンソールからクォータ増加をリクエストできる。 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-identity-center-separate-quotas/) |
-| AWS Batch の顧客定義インスタンス割り当て戦略 | BFPO（オンデマンド向け）と SCOP（Spot 向け）の 2 つの新戦略を追加。インスタンスタイプの優先順位を手動で指定し、ワークロード最適化が可能に。 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/06/batch-ordered-allocation-strategies/) |
+| AWS Batch の顧客定義インスタンス割り当て戦略 | `BEST_FIT_PROGRESSIVE_ORDERED`（オンデマンド向け）と `SPOT_CAPACITY_OPTIMIZED_PRIORITIZED`（Spot 向け）の 2 つの新戦略を追加。インスタンスタイプの優先順位を手動で指定し、ワークロード最適化が可能に。 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/06/batch-ordered-allocation-strategies/) |
 | Network Firewall のデフォルト設定変更 | 新規ファイアウォールポリシーのデフォルトが「Application drop established (server-directed only)」に変更され、サーバー起点の正当な TCP パケットが誤ってドロップされる問題を解消。 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-network-firewall-updates-default-drop-action) |
 
 ## まとめ
