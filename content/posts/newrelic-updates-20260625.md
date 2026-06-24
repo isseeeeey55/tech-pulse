@@ -1,11 +1,13 @@
 ---
 title: "【New Relic】2026/06/25 のアップデートまとめ"
 date: 2026-06-25T08:00:52+09:00
-draft: true
+draft: false
 tags: ["newrelic", "synthetic-monitor", "alerts", "nrql", "\u5916\u5f62\u76e3\u8996"]
 categories: ["New Relic Updates"]
 summary: "2026/06/25 のNew Relicアップデートまとめ"
 ---
+
+![](/images/newrelic-updates-20260625/header.png)
 
 # New Relic アップデート情報 (2026/06/25)
 
