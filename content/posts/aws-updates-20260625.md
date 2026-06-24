@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/06/25 のアップデートまとめ"
 date: 2026-06-25T08:02:19+09:00
-draft: true
+draft: false
 tags: ["aws", "iot", "ec2", "emr", "neptune", "guardduty", "cloudwatch", "cloudformation", "organizations"]
 categories: ["AWS Updates"]
 summary: "2026/06/25 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260625/header.png)
 
 # 直近の AWS アップデート情報まとめ（2026年6月）
 
