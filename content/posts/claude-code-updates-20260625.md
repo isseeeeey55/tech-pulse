@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.191・v2.1.190 リリースノートまとめ"
 date: 2026-06-25T08:01:19+09:00
-draft: true
+draft: false
 tags: ["claude-code", "rewind", "clear", "mcp", "oauth", "vim", "permissions", "hooks", "agents"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.191・v2.1.190 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260625/header.png)
 
 # Claude Code v2.1.191・v2.1.190 リリース情報
 
