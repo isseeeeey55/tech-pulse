@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/06/26 のアップデートまとめ"
 date: 2026-06-26T08:02:13+09:00
-draft: true
+draft: false
 tags: ["aws", "bedrock", "s3", "backup", "govcloud", "route53", "redshift", "network-firewall", "opensearch", "ram"]
 categories: ["AWS Updates"]
 summary: "2026/06/26 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260626/header.png)
 
 # 直近発表の AWS アップデート 8 件を徹底解説 — Bedrock の政府対応、S3 バックアップ高速化、DNS ビュー共有など
 
@@ -131,7 +133,7 @@ FedRAMP High や DoD CC SRG IL-4/5 の認可取得には通常長期間を要す
 | 5 | [AWS Network Firewall が VisionHeight のマネージド脅威インテリジェンスルールに対応](https://aws.amazon.com/about-aws/whats-new/2026/06/network-firewall-visionheight-managed-rules) | AWS Marketplace 経由で VisionHeight の「Zero-Day Threat Protection」と「Noisy Scanners and Tor Protection」ルールグループが利用可能に。Pulse テレメトリによる独自脅威インテリジェンスで、公開ブロックリスト掲載前の脅威を検出。 |
 | 6 | [Amazon OpenSearch Ingestion がパリリージョンで利用可能に](https://aws.amazon.com/about-aws/whats-new/2026/06/opensearch-ingestion-europe-paris-region-availability) | Amazon OpenSearch Ingestion がパリリージョン（eu-west-3）で一般提供開始。フルマネージドのデータ取り込み層として、フィルタリング・変換・マスキング・ルーティング機能をノーコードで提供。利用可能リージョンが 17 に拡大。 |
 | 7 | [Amazon Route 53 Global Resolver が DNS ビューのアカウント間共有に対応](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-route-53-global-resolver) | AWS RAM を通じて DNS ビューを他の AWS アカウントと共有可能に。コンシューマーアカウントは所有権を保持したまま、プライベートホストゾーンをグローバルリゾルバーに関連付け可能。マネージドアクセス許可とカスタム権限で柔軟な制御を実現。 |
-| 8 | [Amazon Redshift が RG インスタンスの予約インスタンスに前払いオプションを追加](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-redshift-ri-upfront-pricing-rg-instances) | Redshift RG インスタンスの予約インスタンスに All Upfront（全額前払い）と Partial Upfront（一部前払い）オプションを追加。従来の No Upfront と合わせ 3 つの支払い方法から選択可能に。30 以上のリージョンで利用開始。 |
+| 8 | [Amazon Redshift が RG インスタンスの予約インスタンスに前払いオプションを追加](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-redshift-ri-upfront-pricing-rg-instances) | Redshift RG インスタンスの予約インスタンスに All Upfront（全額前払い）と Partial Upfront（一部前払い）オプションを追加。従来の No Upfront と合わせ 3 つの支払い方法から選択可能に。多数のリージョンで利用開始。 |
 
 ---
 
