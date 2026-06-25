@@ -1,11 +1,15 @@
 ---
 title: "【Claude Code】v2.1.193 リリースノートまとめ"
 date: 2026-06-26T08:01:17+09:00
-draft: true
+draft: false
 tags: ["claude-code", "auto-mode", "opentelemetry", "mcp", "bash", "powershell"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.193 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260626/header.png)
+
+# Claude Code v2.1.193 リリース情報
 
 ## はじめに
 
