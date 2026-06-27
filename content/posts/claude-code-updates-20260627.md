@@ -1,11 +1,15 @@
 ---
 title: "【Claude Code】v2.1.195 リリースノートまとめ"
 date: 2026-06-27T08:02:49+09:00
-draft: true
+draft: false
 tags: ["claude-code", "mcp", "hooks", "plugin", "sox", "macos", "linux", "remote"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.195 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260627/header.png)
+
+# Claude Code v2.1.195 リリース情報
 
 ## はじめに
 
