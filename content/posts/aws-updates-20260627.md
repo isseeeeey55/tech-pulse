@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/06/27 のアップデートまとめ"
 date: 2026-06-27T08:01:59+09:00
-draft: true
+draft: false
 tags: ["aws", "ec2"]
 categories: ["AWS Updates"]
 summary: "2026/06/27 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260627/header.png)
 
 # 直近の AWS アップデート解説：新世代 EC2 インスタンスのリージョン拡大
 
