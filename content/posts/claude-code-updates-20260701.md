@@ -1,11 +1,15 @@
 ---
 title: "【Claude Code】v2.1.197・v2.1.196 リリースノートまとめ"
 date: 2026-07-01T08:01:33+09:00
-draft: true
+draft: false
 tags: ["claude-code", "claude-sonnet-5", "mcp", "oauth", "bedrock", "powershell", "git"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.197・v2.1.196 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260701/header.png)
+
+# Claude Code v2.1.197・v2.1.196 リリース情報
 
 ## はじめに
 
