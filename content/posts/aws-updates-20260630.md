@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/06/30 のアップデートまとめ"
 date: 2026-06-30T08:02:04+09:00
-draft: true
+draft: false
 tags: ["aws", "s3", "cloudwatch", "mwaa", "ram", "athena", "redshift", "sagemaker"]
 categories: ["AWS Updates"]
 summary: "2026/06/30 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260630/header.png)
 
 # 直近の AWS アップデート情報（2026年6月）
 
@@ -38,7 +40,7 @@ Amazon S3 のサーバアクセスログは、バケットへのリクエスト�
 |--------|--------------|----------|--------|----------|
 | S3 バケット（従来） | 数時間のラグ | Athena 等で別途クエリ | 無料（S3 ストレージのみ） | 長期保存、定期分析 |
 | CloudWatch Logs | ほぼリアルタイム | Logs Insights でクエリ、アラーム設定可能 | CloudWatch Logs 料金 | リアルタイム監視、アラート |
-| S3 Tables（Iceberg） | 数分～数十分 | Athena/Redshift で標準 SQL | 追加ストレージコスト無料 | 大規模データ分析、BI 統合 |
+| S3 Tables（Iceberg） | 準リアルタイム | Athena/Redshift で標準 SQL | 追加ストレージコスト無料 | 大規模データ分析、BI 統合 |
 
 #### CloudWatch Logs 配信の活用パターン
 
