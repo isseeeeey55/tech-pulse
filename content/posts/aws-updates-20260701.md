@@ -1,11 +1,15 @@
 ---
 title: "【AWS】2026/07/01 のアップデートまとめ"
 date: 2026-07-01T08:02:29+09:00
-draft: true
+draft: false
 tags: ["aws", "cloudformation", "cdk", "cloudwatch", "logs", "neptune", "rds", "elasticache", "parallel-computing-service", "end-user-messaging", "sagemaker", "iam", "workspaces", "ec2", "bedrock", "waf", "govcloud"]
 categories: ["AWS Updates"]
 summary: "2026/07/01 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260701/header.png)
+
+# 直近の AWS アップデート情報（2026年7月）
 
 ## はじめに
 
@@ -41,10 +45,6 @@ fields @timestamp, @message
 ```
 
 このクエリにより、本番環境かつDataEngineeringチームが所有するリソースのログだけを一発で抽出できます。従来は各ログエントリに手動でこうした情報を埋め込むか、リソースIDからタグ情報を逆引きする複雑なクエリが必要でした。
-
-**権限分離とコスト分析への応用**
-
-権限分離の観点では、IAMポリシーでタグベースのアクセス制御を組み合わせることで、各チームが自身のログのみ閲覧可能な環境を構築できます。コスト分析では、コストセンタータグで各部門のログ処理コストを正確に把握し、チャージバックやショーバックの精度を向上させることができます。
 
 **導入の考慮点**
 
@@ -112,7 +112,7 @@ AWS WAFのBedrock AgentCore Gateway対応は、エージェント型AIアプリ�
 
 | # | タイトル | 概要 |
 |---|----------|------|
-| 1 | [AWS CloudFormation and CDK accelerate development feedback loops with pre-deployment validation on all stack operations](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-cloudformation-cdk-pre-deployment-validation/) | CloudFormationとCDKがすべてのスタック操作でデプロイ前検証をサポート、開発フィードバックループを加速 |
+| 1 | [AWS CloudFormation and CDK accelerate development feedback loops with pre-deployment validation on all stack operations](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-cloudformation/) | CloudFormationとCDKがすべてのスタック操作でデプロイ前検証をサポート、開発フィードバックループを加速 |
 | 2 | [Amazon CloudWatch Logs enriches log events with AWS resource tags](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-cloudwatch-logs-resource-tags/) | CloudWatch LogsがAWSリソースタグでログイベントを自動拡張、コード変更なしで組織メタデータを付与可能に |
 | 3 | [Amazon Neptune announces dual stack support with IPv6](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-neptune-ipv6/) | Neptuneがデュアルスタック対応、IPv4/IPv6両方のプロトコルで同時接続を受け入れ可能に |
 | 4 | [Amazon RDS Enhances IAM Database Authentication with Connection Rate Scaling](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-rds-iam/) | RDSのIAM認証に動的接続スケーリング機能を追加、インスタンスリソースに応じて自動スケール |
