@@ -1,17 +1,19 @@
 ---
 title: "【Codex CLI】rust-v0.142.4 リリースノートまとめ"
 date: 2026-06-30T08:01:19+09:00
-draft: true
+draft: false
 tags: ["codex", "rust-v0.142.4", "chores", "maintenance", "release-management"]
 categories: ["Codex CLI Updates"]
 summary: "rust-v0.142.4 のCodex CLIリリースノートまとめ"
 ---
 
+![](/images/codex-updates-20260630/header.png)
+
 # OpenAI Codex CLI rust-v0.142.4 リリース情報
 
 ## はじめに
 
-2026年6月30日、OpenAI Codex CLI の **rust-v0.142.4** がリリースされました。本バージョンは内部改善を中心としたマイナーアップデートであり、公式リリースノートには「ユーザー向けの変更点は特定されていない（No user-facing changes）」と記載されています。主に内部的な保守作業（Chores）が実施されたリリースとなります。
+2026年6月29日、OpenAI Codex CLI の **rust-v0.142.4** がリリースされました。本バージョンは内部改善を中心としたマイナーアップデートであり、公式リリースノートには「ユーザー向けの変更点は特定されていない（No user-facing changes）」と記載されています。主に内部的な保守作業（Chores）が実施されたリリースとなります。
 
 表面的な機能追加がない一方で、こうした定期的なメンテナンスリリースは、ツールの長期的な安定性と保守性を支える重要な役割を果たします。
 
