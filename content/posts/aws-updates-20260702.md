@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/07/02 のアップデートまとめ"
 date: 2026-07-02T08:02:43+09:00
-draft: true
+draft: false
 tags: ["aws", "bedrock", "guardduty", "ec2", "eks", "ecs", "artifact", "appconfig", "lambda", "partner-central", "marketplace", "rds", "cloudformation", "cdk", "security-agent", "prometheus", "govcloud"]
 categories: ["AWS Updates"]
 summary: "2026/07/02 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260702/header.png)
 
 # 直近の AWS アップデート 11 件を SRE 視点で深掘り解説
 
@@ -61,7 +63,7 @@ Express Mode では、CloudFormation がリソース設定の適用を確認し�
 
 #### デプロイ時間の具体的な改善
 
-CloudFront ディストリビューションを含むスタックを例にとると、従来モードでは完全なデプロイに 10 分以上を要していたものが、Express Mode では 1～2 分程度に短縮されます。これは、ディストリビューションの作成自体は数秒で完了し、エッジロケーションへの伝播はバックグラウンドで進行するためです。
+CloudFront ディストリビューションを含むスタックを例にとると、従来モードではエッジロケーション全体への伝播完了まで 5～10 分待たされていたものが、Express Mode では設定適用が数秒で完了しデプロイが返ります。伝播はバックグラウンドで進行するため、全体としてデプロイ時間は最大 4 倍高速化されます。
 
 Lambda 関数、DynamoDB テーブル、S3 バケットなどの比較的単純なリソースでも、複数リソースの並列処理最適化により、全体のデプロイ時間が短縮されます。
 
@@ -100,7 +102,7 @@ Kubernetes のバージョンアップグレードは、新機能の利用やセ
 
 #### EKS Auto Mode でのロールバック
 
-EKS Auto Mode を使用している場合、ワーカーノードのロールバックも自動的に管理されます。コントロールプレーンのバージョンがロールバックされると、EKS は自動的にワーカーノードのバージョンも調整し、クラスタ全体の整合性を保ちます。
+EKS Auto Mode を使用している場合、ワーカーノードのロールバックも自動的に管理されます。EKS は設定したディスラプション制御に従い、コントロールプレーンを戻す前にワーカーノードのロールバックを実施することで、クラスタ全体の整合性を保ちます。
 
 従来の管理型ノードグループや自己管理型ノードを使用している場合は、コントロールプレーンのロールバック後に、手動でノードグループのバージョンを調整する必要があります。
 
@@ -154,7 +156,7 @@ Istio や Karpenter などの複雑なアドオンを使用している環境で
 | 4 | [AWS AppConfig launches managed experimentation tools for A/B testing](https://aws.amazon.com/about-aws/whats-new/2026/6/aws-appconfig-experimentation/) | AWS AppConfig に実験管理ツールが正式リリース。別途実験インフラを構築せずに A/B テストや多変量実験を実施可能。Amazon の 25 年以上のベストプラクティスに基づき、AI 駆動のガイダンスで堅牢な実験設計をサポート。EC2、Lambda、ECS、EKS、オンプレミス環境全体で動作。 |
 | 5 | [AWS Partner Central now supports AWS Marketplace listings for co-selling](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-marketplace-co-selling-support/) | AWS Partner Central が AWS Marketplace のリスティングをコセリング機会に直接関連付けることをサポート。最大 10 個の Marketplace ソリューションとプロダクトを 1 つの機会に紐付け可能。Partner Central Selling API 経由でプログラマティックにも実装できる。 |
 | 6 | [Amazon RDS announces Cross-Region Automated Backups in four additional AWS Regions](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-rds-cross-region-automated-backups-additional-aws-regions/) | RDS のクロスリージョン自動バックアップ機能が、メキシコ（中央）、台北、ニュージーランド、タイの 4 リージョンで利用可能に。スナップショットとトランザクションログを対象リージョンに自動レプリケートし、RPO を数分以内に抑えた災害復旧を実現。 |
-| 7 | [Amazon EKS now supports Kubernetes version rollback](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-eks-version-rollback>) | EKS が Kubernetes バージョンのロールバック機能をサポート。アップグレード後 7 日以内であれば前のマイナーバージョンに戻すことが可能。ロールバック前に API 互換性、バージョンスキュー、アドオン互換性、クラスタ健全性を自動チェック。EKS Auto Mode ではワーカーノードのロールバックも自動管理。 |
+| 7 | [Amazon EKS now supports Kubernetes version rollback](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-eks-version-rollback/) | EKS が Kubernetes バージョンのロールバック機能をサポート。アップグレード後 7 日以内であれば前のマイナーバージョンに戻すことが可能。ロールバック前に API 互換性、バージョンスキュー、アドオン互換性、クラスタ健全性を自動チェック。EKS Auto Mode ではワーカーノードのロールバックも自動管理。 |
 | 8 | [Amazon Bedrock AgentCore now available in four additional AWS Regions](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-bedrock-agentcore-four-additional-regions/) | Amazon Bedrock AgentCore がバンコク、マレーシア、ミラノ、スペインの 4 リージョンで利用可能に。AI エージェントを構築・接続・最適化するためのプラットフォームで、エンドユーザーに近い場所でのエージェント実行により低レイテンシーを実現。 |
 | 9 | [AWS Security Agent now available in Asia Pacific (Mumbai), Asia Pacific (Singapore), and South America (São Paulo)](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-security-agent-asia-pacific/) | AWS Security Agent がムンバイ、シンガポール、サンパウロの 3 リージョンで利用可能に。STRIDE ベースの脅威モデリング、GitHub/GitLab/Bitbucket/Confluence 全体でのコードレビュー、IDE プラグインと MCP 統合、オンデマンド侵入テストを提供し、開発ライフサイクル全体を通じてアプリケーションを保護。 |
 | 10 | [Amazon Managed Service for Prometheus achieves FedRAMP High and DoD IL-4/5 authorization in AWS GovCloud (US)](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-managed-service-prometheus-fedramp-high/) | Amazon Managed Service for Prometheus が AWS GovCloud (US) で FedRAMP High および DoD CC SRG IL-4/5 認可を取得。連邦機関や厳格なコンプライアンス要件を持つ組織が、Prometheus 互換のモニタリング・アラート機能を規制基準を満たしながら利用可能に。 |
