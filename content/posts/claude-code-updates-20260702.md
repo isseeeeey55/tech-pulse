@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.198 リリースノートまとめ"
 date: 2026-07-02T08:01:28+09:00
-draft: true
+draft: false
 tags: ["claude-code", "chrome", "agents", "notification", "hooks", "dataviz", "gateway", "anthropicaws", "aws", "worktree", "explore", "opus", "haiku", "ssh", "warp", "macos"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.198 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260702/header.png)
 
 # Claude Code v2.1.198 リリース情報
 
