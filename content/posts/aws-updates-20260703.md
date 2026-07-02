@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/07/03 のアップデートまとめ"
 date: 2026-07-03T08:02:17+09:00
-draft: true
+draft: false
 tags: ["aws", "ec2", "config", "ecs", "cloudwatch", "api-gateway", "s3", "network-firewall", "opensearch", "sns", "eventbridge"]
 categories: ["AWS Updates"]
 summary: "2026/07/03 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260703/header.png)
 
 # AWS アップデート情報まとめ（2026年7月版）
 
@@ -13,7 +15,7 @@ summary: "2026/07/03 のAWSアップデートまとめ"
 
 今回は、直近で発表された6件のAWSアップデートを紹介します。EC2の新インスタンスタイプの地域拡大、AWS Configの対応リソース拡充、機密コンピューティング機能の強化、そしてECSやCloudWatchの運用効率を大きく向上させる新機能が含まれています。
 
-特に注目すべきは、**ECS Service Connectのゾーン認識ルーティング**と**CloudWatchのログクエリベースアラーム作成機能**です。これらはいずれも、追加コストなしで運用コストの削減と監視の効率化を実現できる重要なアップデートです。また、Amazon EC2 X8iインスタンスの東京リージョン対応により、日本国内のデータレジデンス要件を満たしながら高性能なメモリ集約型ワークロードを実行できる選択肢が増えました。
+特に注目すべきは、**ECS Service Connectのゾーン認識ルーティング**と**CloudWatchのログクエリベースアラーム作成機能**です。前者は追加コストなしでクロスAZのデータ転送コストを削減でき、後者はログ分析ワークフロー内でアラーム設定を簡素化できる重要なアップデートです。また、Amazon EC2 X8iインスタンスの東京リージョン対応により、日本国内のデータレジデンス要件を満たしながら高性能なメモリ集約型ワークロードを実行できる選択肢が増えました。
 
 ## 注目アップデート深掘り
 
@@ -101,7 +103,7 @@ fields @timestamp, @message
 
 ECS Service Connectのゾーン認識ルーティングは、SREチームがコスト削減と高可用性を両立させる強力な手段となります。Terraformでマルチリージョン・マルチAZ構成のECSクラスターを管理している場合、既存のサービス定義を再デプロイするだけでこの最適化を適用できます。導入時のリスクは極めて低く、障害時の自動フェイルオーバーにより可用性が損なわれることはありません。
 
-定量的な効果測定が重要です。VPC Flow Logsを活用してクロスAZトラフィックの削減率を測定し、Cost Explorerでデータ転送コストの実際の削減額を追跡することで、経営層への報告資料としても活用できます。特に、数十から数百のマイクロサービスを運用している環境では、月次で数千ドル規模のコスト削減も期待できるでしょう。
+定量的な効果測定が重要です。VPC Flow Logsを活用してクロスAZトラフィックの削減率を測定し、Cost Explorerでデータ転送コストの実際の削減額を追跡することで、経営層への報告資料としても活用できます。特に、数十から数百のマイクロサービスを運用し、AZ間通信量が多い環境ほど、データ転送コストの削減効果は大きくなります。
 
 ### 運用監視の効率化とMTTR短縮
 
@@ -131,7 +133,7 @@ EC2 Dedicated HostsでのAMD SEV-SNPサポートは、金融機関や医療機�
 | **AWS Config** | [8つの新しいリソースタイプをサポート（API Gateway、EC2、S3 Vectorsなど）](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-config-new-resource-types) | ⭐⭐ |
 | **Amazon EC2** | [Dedicated HostsでAMD SEV-SNP（機密コンピューティング）をサポート](https://aws.amazon.com/about-aws/whats-new/2026/07/ec2-amd-sev-snp-dedicated-hosts) | ⭐⭐⭐ |
 | **Amazon ECS** | [コンソールでリアルタイムデプロイメント監視機能を提供開始](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-ecs-aws-management-console/) | ⭐⭐⭐ |
-| **Amazon ECS** | [Service Connectがゾーン認識ルーティングに対応](https://aws.amazon.com/about-aws/whats-new/2026/07/ecs-service-connect-zone-aware/) | ⭐⭐⭐⭐ |
+| **Amazon ECS** | [Service Connectがゾーン認識ルーティングに対応](https://aws.amazon.com/blogs/containers/announcing-zone-aware-routing-in-amazon-ecs-service-connect/) | ⭐⭐⭐⭐ |
 | **Amazon CloudWatch** | [ログクエリから直接アラームを作成可能に](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-cloudwatch-log-alarms/) | ⭐⭐⭐⭐ |
 
 ### 各アップデートの概要
@@ -143,7 +145,7 @@ Intel Xeon 6プロセッサを搭載し、前世代X2iと比較して最大43%�
 API Gateway（DomainNameV2、VpcLink）、EC2（VPCEncryptionControl）、Network Firewall（ContainerAssociation）、OpenSearch Serverless（SecurityPolicy）、OSIS Pipeline、S3 Vectors（VectorBucket、VectorBucketPolicy）に対応。自動記録が有効な場合、新しいリソースタイプは自動的に追跡されます。
 
 **EC2 Dedicated Hosts での AMD SEV-SNP サポート**  
-機密コンピューティングワークロードを完全に専有の物理サーバー上で実行可能に。実行中のメモリを暗号化し、ゲストメモリを物理的に隔離することで、高度なセキュリティを実現します。金融、医療、法務など規制の厳しい業界での活用が期待されます。
+機密コンピューティングワークロードを完全に専有の物理サーバー上で実行可能に。SEV-SNP により実行中のメモリを暗号化し、インスタンス配置の制御やホストアフィニティ（同一物理サーバーへの継続配置）と組み合わせられます。金融、医療、法務など規制の厳しい業界での活用に適しています。
 
 **ECS リアルタイムデプロイメント監視**  
 ライブデプロイメントタイムライン、リアルタイム健全性監視、障害診断の高速化機能を提供。サーキットブレーカーステータス、タスク障害、ヘルスチェック状態をコンソール上でリアルタイムに追跡し、CloudTrailなどへのディープリンクで迅速な診断が可能です。
@@ -158,7 +160,7 @@ CloudWatch Logs Insightsクエリから直接アラームを作成可能に。�
 
 今回紹介したアップデートは、コスト最適化、運用効率化、セキュリティ強化という3つの重要なテーマをカバーしています。
 
-ECS Service Connectのゾーン認識ルーティングとCloudWatchのログクエリベースアラームは、どちらも追加コストなしで大きな価値を提供する点で特に注目です。前者はマイクロサービス環境でのデータ転送コスト削減、後者は監視設定の簡素化とMTTR短縮を実現します。
+ECS Service Connectのゾーン認識ルーティングとCloudWatchのログクエリベースアラームは、いずれも運用に大きな価値を提供する点で特に注目です。前者は追加コストなしでマイクロサービス環境のデータ転送コストを削減し、後者は監視設定の簡素化とMTTR短縮を実現します。
 
 EC2 X8iインスタンスの東京リージョン対応は、日本国内でのデータレジデンス要件を満たしながら、SAP HANAなどのメモリ集約型ワークロードに最高クラスの性能を提供します。AMD SEV-SNPのDedicated Hostsサポートは、機密コンピューティングの選択肢を広げ、金融・医療など規制の厳しい業界でのクラウド活用を加速させるでしょう。
 
