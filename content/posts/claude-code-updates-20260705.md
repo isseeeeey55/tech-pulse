@@ -1,11 +1,15 @@
 ---
 title: "【Claude Code】v2.1.201 リリースノートまとめ"
 date: 2026-07-05T08:00:59+09:00
-draft: true
+draft: false
 tags: ["claude-code", "claude-sonnet-5", "system-role"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.201 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260705/header.png)
+
+# Claude Code v2.1.201 リリース情報
 
 ## はじめに
 
@@ -35,7 +39,7 @@ Claude Code **v2.1.201** がリリースされました。このバージョン�
 
 この変更は Claude Code の内部実装に関するもので、ユーザーが直接意識する必要はありません。Claude Sonnet 5 を使用している場合、これまで通りの操作で引き続き利用できます。
 
-セッション処理の変更により、会話の流れがよりシンプルな構造になるため、長時間のセッションでも一貫した応答品質が期待できます。特に複雑なコード生成や多段階の分析タスクを実行する際に、内部処理のオーバーヘッドが軽減される可能性があります。
+この変更は内部メカニズムの簡素化に留まり、応答内容や操作性に対するユーザー影響はありません。Claude Sonnet 5 を利用しているワークフローも、アップデート後にそのまま継続できます。
 
 ## 全変更点一覧
 
