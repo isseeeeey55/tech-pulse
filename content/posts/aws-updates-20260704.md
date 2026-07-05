@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/07/04 のアップデートまとめ"
 date: 2026-07-04T08:01:51+09:00
-draft: true
+draft: false
 tags: ["aws", "sagemaker", "hyperpod", "terraform", "iam", "eks"]
 categories: ["AWS Updates"]
 summary: "2026/07/04 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260704/header.png)
 
 # 直近の AWS アップデート情報（2026年7月）
 
@@ -51,7 +53,7 @@ Amazon SageMaker HyperPod は、大規模な基盤モデルの学習ワークロ
 
 #### 対象環境と利用可能リージョン
 
-この機能は、Amazon EKS でオーケストレーションされた HyperPod クラスタが対象となります。全 AWS リージョンで利用可能です。
+この機能は、Amazon EKS でオーケストレーションされた HyperPod クラスタが対象となります。SageMaker HyperPod がサポートされる全 AWS リージョンで利用可能です。
 
 ### Amazon SageMaker Unified Studio の Terraform 対応
 
@@ -130,7 +132,7 @@ CI/CD パイプライン（GitHub Actions、AWS CodePipeline、GitLab CI など�
 
 | タイトル | 概要 |
 |---------|------|
-| [Amazon SageMaker HyperPod now supports AMI versioning and auto-patching](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-sagemaker-hyperpod-ami-version-auto-patch) | SageMaker HyperPod に AMI バージョン管理と自動セキュリティパッチ機能が追加。セマンティックバージョニング形式での可視化、UpdateClusterSoftware API によるロールバック、後方互換性のあるパッチの自動適用が可能に。実行中のワークロードは中断されず、メジャー・マイナーバージョンは変更されない。Amazon EKS でオーケストレーションされた HyperPod クラスタが対象（全 AWS リージョン）。 |
+| [Amazon SageMaker HyperPod now supports AMI versioning and auto-patching](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-sagemaker-hyperpod-ami-version-auto-patch) | SageMaker HyperPod に AMI バージョン管理と自動セキュリティパッチ機能が追加。セマンティックバージョニング形式での可視化、UpdateClusterSoftware API によるロールバック、後方互換性のあるパッチの自動適用が可能に。実行中のワークロードは中断されず、メジャー・マイナーバージョンは変更されない。Amazon EKS でオーケストレーションされた HyperPod クラスタが対象（HyperPod がサポートされる全リージョン）。 |
 | [Amazon SageMaker Unified Studio now supports Terraform for provisioning](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-sagemaker-unified-studio-terraform) | SageMaker Unified Studio が Terraform に対応。オープンソースの `terraform-aws-sagemaker-unified-studio` モジュールを使用して、ドメインのインフラストラクチャ、IAM ロール、ブループリント、プロジェクトプロファイル、プロジェクトをコードで管理可能に。既存の IaC パイプラインへの統合により、開発・ステージング・本番環境全体で一貫性を保つことができる。AWS Cloud Control Provider を使用して実装されている。 |
 
 ## まとめ
@@ -141,7 +143,7 @@ SageMaker HyperPod の AMI バージョン管理と自動パッチ適用は、�
 
 SageMaker Unified Studio の Terraform 対応は、データ・AI プラットフォームを Infrastructure as Code で管理する道を開くものです。オープンソースの Terraform モジュールにより、既存の IaC パイプラインとの統合が容易になり、マルチアカウント・マルチ環境での一貫した環境管理が実現できます。
 
-いずれも、SRE やプラットフォームエンジニアリングの観点で重要な機能追加であり、セキュリティ、可用性、運用効率のバランスを取りながら、大規模な機械学習基盤を安定的に運用するための選択肢が広がったといえます。今後、これらの機能を活用した運用ベストプラクティスの確立が期待されます。
+いずれも、SRE やプラットフォームエンジニアリングの観点で重要な機能追加であり、セキュリティ、可用性、運用効率のバランスを取りながら、大規模な機械学習基盤を安定的に運用するための選択肢が広がったといえます。これらの機能は、大規模な機械学習基盤における運用ベストプラクティスの確立を後押しするものです。
 
 ---
 
