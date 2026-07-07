@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/07/07 のアップデートまとめ"
 date: 2026-07-07T08:01:52+09:00
-draft: true
+draft: false
 tags: ["aws", "sagemaker", "cloudwatch", "vmware", "secrets-manager", "certificate-manager", "codepipeline", "ec2", "eks", "cloudtrail"]
 categories: ["AWS Updates"]
 summary: "2026/07/07 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260707/header.png)
 
 # 直近の AWS アップデート解説：SageMaker HyperPod の推論最適化から ACM の ACME 対応まで
 
