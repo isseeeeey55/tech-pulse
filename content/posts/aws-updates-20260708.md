@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/07/08 のアップデートまとめ"
 date: 2026-07-08T08:01:54+09:00
-draft: true
+draft: false
 tags: ["aws", "rds", "oracle", "redshift", "eks", "emr", "ecs", "ec2", "securityhub", "sagemaker", "cognito", "iam", "cloudwatch", "graviton"]
 categories: ["AWS Updates"]
 summary: "2026/07/08 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260708/header.png)
 
 # 今回は、直近で発表された9件のAWSアップデートを紹介します
 
