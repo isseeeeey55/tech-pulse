@@ -1,11 +1,15 @@
 ---
 title: "【Claude Code】v2.1.205・v2.1.204 リリースノートまとめ"
 date: 2026-07-09T08:01:25+09:00
-draft: true
+draft: false
 tags: ["claude-code", "auto-mode", "json-schema", "hook", "mcp", "sessionstart"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.205・v2.1.204 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260709/header.png)
+
+# Claude Code v2.1.205・v2.1.204 リリース情報
 
 ## はじめに
 
