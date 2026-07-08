@@ -1,11 +1,15 @@
 ---
 title: "【New Relic】2026/07/09 のアップデートまとめ"
 date: 2026-07-09T08:00:55+09:00
-draft: true
+draft: false
 tags: ["newrelic", "infrastructure-agent", "security", "stability", "fluent-bit", "prometheus", "docker", "flex"]
 categories: ["New Relic Updates"]
 summary: "2026/07/09 のNew Relicアップデートまとめ"
 ---
+
+![](/images/newrelic-updates-20260709/header.png)
+
+# New Relic 2026/07/09 アップデート情報
 
 ## はじめに
 
