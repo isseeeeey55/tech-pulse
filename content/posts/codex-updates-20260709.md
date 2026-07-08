@@ -1,11 +1,15 @@
 ---
 title: "【Codex CLI】rust-v0.143.0 リリースノートまとめ"
 date: 2026-07-09T08:01:57+09:00
-draft: true
+draft: false
 tags: ["codex", "remote-plugins", "system-proxy", "pac", "wpad", "amazon-bedrock", "gpt-5.6", "reasoning-effort", "mcp", "tool-search", "session-auth", "remote-control", "pairing", "app-server", "environment-inspection", "thread-fork", "windows", "conpty", "sandbox", "tui", "exec-server", "websocket", "installer", "uuid7", "openssl", "security", "npm-marketplace", "sol", "terra", "luna"]
 categories: ["Codex CLI Updates"]
 summary: "rust-v0.143.0 のCodex CLIリリースノートまとめ"
 ---
+
+![](/images/codex-updates-20260709/header.png)
+
+# OpenAI Codex CLI rust-v0.143.0 リリース情報
 
 ## はじめに
 
@@ -42,18 +46,11 @@ OpenAI Codex CLI の Rust 版 **v0.143.0** がリリースされました。本�
 
 Amazon Bedrock を通じて利用可能な新モデル **GPT-5.6 Sol、Terra、Luna** が追加され、推論努力（reasoning effort）パラメータとして `max` が第一級サポートされました（#30285, #30467）。推論努力は、モデルがタスクに対してどれだけ深く考慮するかを制御するパラメータであり、`max` 設定により最大限のパフォーマンスを引き出せます。
 
-この変更により、AWS インフラ上で Codex を運用する組織は、最新の GPT-5.6 系列モデルを活用でき、複雑なコード生成やインフラ設計支援タスクにおいて、より高精度な出力を期待できるようになります。特に、CloudFormation や Terraform といったインフラコードの生成精度向上が見込まれます。
+この変更により、AWS インフラ上で Codex を運用する組織は、Bedrock 経由で最新の GPT-5.6 系列モデル（Sol/Terra/Luna）を選択し、推論努力として `max` を指定できるようになりました。
 
 **具体的な使い方**
 
-リリースノートには、Bedrock カタログに GPT-5.6 バリアント（Sol、Terra、Luna）が追加されたこと（#30285）、および `max` を第一級の推論努力として扱うようになったこと（#30467）が記載されています。モデル選択時にこれらのバリアントを指定し、推論努力として `max` を設定することで、最高レベルの推論品質を利用できます。
-
-```bash
-# 例: Bedrock 経由で GPT-5.6 Terra モデルを使用し、推論努力を max に設定
-$ codex chat --model bedrock/gpt-5.6-terra --reasoning-effort max
-```
-
-> **Note:** `--reasoning-effort` フラグの正確な指定方法は公式ドキュメントを参照してください。上記はイメージ例です。
+リリースノートには、Bedrock カタログに GPT-5.6 バリアント（Sol、Terra、Luna）が追加されたこと（#30285）、および `max` を第一級の推論努力として扱うようになったこと（#30467）が記載されています。モデル選択時にこれらのバリアントを指定し、推論努力として `max` を設定することで、最高レベルの推論品質を利用できます。具体的なモデル指定名やフラグの正確な構文は、公式ドキュメントを参照してください。
 
 **Before/After**
 
@@ -79,7 +76,7 @@ $ codex chat --model bedrock/gpt-5.6-terra --reasoning-effort max
 ### SRE/インフラエンジニアの視点での活用シーン
 
 - **プロキシ環境でのロールアウト**: PAC/WPAD 対応により、社内ネットワークポリシーに準拠した Codex CLI の全社展開が容易になります。ユーザーごとの個別設定が不要なため、サポートコストを削減できます。
-- **Bedrock モデルの活用**: AWS 上で Codex を運用している場合、GPT-5.6 モデル群を活用して、インフラコード生成精度を向上させましょう。`max` 推論努力を設定することで、複雑な CloudFormation/Terraform スニペットの生成品質が向上します。
+- **Bedrock モデルの活用**: AWS 上で Codex を運用している場合、追加された GPT-5.6 モデル群（Sol/Terra/Luna）を選択できます。タスクに応じて `max` 推論努力を指定することで、モデルがより深く推論するよう制御できます。
 - **環境検査と履歴フォーク**: app-server クライアントが環境検査、子孫スレッド一覧表示、特定ターンを通じた履歴フォーク機能を利用可能になりました（#30291, #29591, #30277）。これにより、複数環境の状態管理やデバッグ履歴の追跡が容易になり、インフラ運用の可視性が向上します。
 
 ---
@@ -109,7 +106,7 @@ $ codex chat --model bedrock/gpt-5.6-terra --reasoning-effort max
 
 Codex CLI v0.143.0 は、エンタープライズ環境での利用を強く意識したアップデートとなっています。システムプロキシの自動認識対応により、企業ネットワーク内での展開障壁が大幅に下がり、リモートプラグインのデフォルト有効化とマーケットプレイス連携により、開発者がツールを発見・導入しやすい環境が整いました。
 
-また、Amazon Bedrock の GPT-5.6 モデル群追加と `max` 推論努力サポートは、AWS 環境で Codex を運用する組織にとって大きなメリットです。インフラコード生成の精度向上やコンプライアンス対応が求められるシーンでの活用が期待されます。
+また、Amazon Bedrock の GPT-5.6 モデル群追加と `max` 推論努力サポートにより、AWS 環境で Codex を運用する組織は、最新モデルと推論努力の細かな制御を選択できるようになりました。
 
 MCP 周りの改善や app-server クライアント機能拡張、多数のバグ修正も含め、全体として安定性と使い勝手が向上した、本番運用に適したリリースといえるでしょう。企業ユーザーは特に、プロキシ対応とリモートプラグイン機能を中心に、導入・運用の再評価を検討する価値があります。
 
