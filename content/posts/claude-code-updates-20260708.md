@@ -1,11 +1,15 @@
 ---
 title: "【Claude Code】v2.1.203 リリースノートまとめ"
 date: 2026-07-08T08:01:37+09:00
-draft: true
+draft: false
 tags: ["claude-code", "mcp", "roots", "notifications", "vscode", "macos", "windows", "bash", "worktree", "lsp", "taskstop", "taskoutput", "anthropic_base_url", "effortlevel", "worktreecreate"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.203 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260708/header.png)
+
+# Claude Code v2.1.203 リリース情報
 
 ## はじめに
 
@@ -78,10 +82,10 @@ MCP（Model Context Protocol）の `roots/list` に、セッションの追加�
 | Improvement | レスポンス配信時の応答性 | 長いレスポンスのストリーム中、ライブプレビュー更新が画面全体を再レンダリングしなくなり応答性が向上 |
 | Improvement | サブエージェント動作 | エージェントがタスク全体を別のサブエージェントに再委譲する頻度を削減 |
 | Improvement | バイナリサイズとメモリ削減 | 大きなバンドル依存関係を遅延ロードに変更し、バイナリサイズを約7MB、起動時メモリを約7MB削減 |
-| Breaking | 左矢印キー動作変更 | バックグラウンドタスク、diff、ワークフロー詳細ビューを閉じるキーをEscに変更（左矢印から変更） |
-| Breaking | 空エージェントビュー表示 | 空の `claude agents` ビューで常に整理されたセクション（Needs input / Working / Completed）と説明を表示 |
-| Breaking | 起動警告の移動 | "claude command missing or broken"警告を起動時から `/doctor` および `/status` に移動 |
-| Breaking | フッターヒント削除 | `claude agents` フッターから冗長なナビゲーションヒントを削除 |
+| 変更 | 左矢印キー動作変更 | バックグラウンドタスク、diff、ワークフロー詳細ビューを閉じるキーをEscに変更（左矢印から変更） |
+| 変更 | 空エージェントビュー表示 | 空の `claude agents` ビューで常に整理されたセクション（Needs input / Working / Completed）と説明を表示 |
+| 変更 | 起動警告の移動 | "claude command missing or broken"警告を起動時から `/doctor` および `/status` に移動 |
+| 変更 | フッターヒント削除 | `claude agents` フッターから冗長なナビゲーションヒントを削除 |
 
 ## まとめ
 
