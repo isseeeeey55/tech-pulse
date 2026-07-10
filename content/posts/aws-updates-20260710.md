@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/07/10 のアップデートまとめ"
 date: 2026-07-10T08:02:23+09:00
-draft: true
+draft: false
 tags: ["aws", "msk", "kafka", "timestream", "influxdb", "eventbridge", "sagemaker", "glue", "s3", "bedrock", "mwaa", "vpc", "builder-center"]
 categories: ["AWS Updates"]
 summary: "2026/07/10 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260710/header.png)
 
 # 直近のAWSアップデート解説 - MSK Replicator、SageMaker、EventBridge ほか7件
 
@@ -80,7 +82,7 @@ EventBridge 統合により、データベースの状態変化が発生した�
 
 #### 実装例とワークフロー設計
 
-EventBridge のルールを作成する際は、イベントソースとして `aws.timestream-influxdb` を指定します。リリースノートには具体的な JSON スキーマの記載はありませんが、各イベントタイプ（スケーリング完了、再起動成功、障害発生など）ごとに、イベント内容を識別するための `detail-type` フィールドが提供されると想定されます。
+EventBridge のルールを作成し、イベントパターンでイベントタイプ（スケーリング完了、再起動成功、障害発生など）をフィルタリングすることで、必要なイベントだけをターゲットにルーティングできます。具体的なイベントソース名や JSON スキーマの詳細は、公式ドキュメントおよび Timestream for InfluxDB のリリースノートを参照してください。
 
 例えば、以下のようなユースケースが考えられます。
 
