@@ -1,11 +1,15 @@
 ---
 title: "【Codex CLI】rust-v0.144.0 リリースノートまとめ"
 date: 2026-07-10T08:01:44+09:00
-draft: true
+draft: false
 tags: ["codex", "codex-cli", "app-approval", "writes-mode", "mcp", "authentication", "oauth", "sandbox", "windows", "macos", "intel", "ultra-reasoning", "multi-agent", "pnpm", "websocket", "proxy", "phishing", "device-code", "chatgpt", "code-mode", "review", "branch-picker", "amazon-bedrock", "gpt-5.6", "tui", "rust-v0.144.0"]
 categories: ["Codex CLI Updates"]
 summary: "rust-v0.144.0 のCodex CLIリリースノートまとめ"
 ---
+
+![](/images/codex-updates-20260710/header.png)
+
+# OpenAI Codex CLI rust-v0.144.0 リリース情報
 
 ## はじめに
 
@@ -92,4 +96,4 @@ rust-v0.144.0 は、認証基盤の強化と開発ワークフローの効率化
 ## 📚 Codex CLIをもっと深く学ぶなら
 
 - [OpenAI Codex CLI 公式リポジトリ](https://github.com/openai/codex)
-- [OpenAI Platform ドキュメント](https://platform.openai.com/docs)
+- [OpenAI 開発者ドキュメント](https://developers.openai.com/)
