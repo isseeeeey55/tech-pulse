@@ -1,11 +1,15 @@
 ---
 title: "【Claude Code】v2.1.206 リリースノートまとめ"
 date: 2026-07-11T08:01:25+09:00
-draft: true
+draft: false
 tags: ["claude-code", "cd", "add-dir", "doctor", "commit-push-pr", "git", "mcp", "oauth", "login", "gateway", "bedrock", "code-review", "claude-opus-4-8"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.206 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260711/header.png)
+
+# Claude Code v2.1.206 リリース情報
 
 ## はじめに
 
