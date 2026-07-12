@@ -1,21 +1,23 @@
 ---
 title: "【Claude Code】v2.1.207 リリースノートまとめ"
 date: 2026-07-12T08:01:28+09:00
-draft: true
+draft: false
 tags: ["claude-code", "auto-mode", "bedrock", "vertex-ai", "foundry", "remote-control", "deep-research", "mcp", "opus-4.8"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.207 のClaude Codeリリースノートまとめ"
 ---
 
+![](/images/claude-code-updates-20260712/header.png)
+
 # Claude Code v2.1.207 リリース情報
 
 ## はじめに
 
-Claude Code v2.1.207 がリリースされました。このバージョンでは、Auto mode が Bedrock、Vertex AI、Foundry で正式に一般提供され、オプトインフラグなしで利用可能になったほか、ターミナルの応答性改善、設定管理の不具合修正、セキュリティ強化など、20 件を超える修正と改善が含まれています。
+Claude Code v2.1.207 がリリースされました。このバージョンでは、Auto mode が Bedrock、Vertex AI、Foundry でオプトインフラグなしで利用可能になったほか、ターミナルの応答性改善、設定管理の不具合修正、セキュリティ強化など、合計 24 件の変更が含まれています。
 
 ## 注目アップデート深掘り
 
-### Auto mode の一般提供と設定変更
+### Auto mode のオプトイン不要化と設定変更
 
 Auto mode が Bedrock、Vertex AI、Foundry で `CLAUDE_CODE_ENABLE_AUTO_MODE` フラグなしで利用可能になりました。これまでは環境変数による明示的なオプトインが必要でしたが、今回のリリースでこれらのプラットフォームでは標準機能として提供されます。無効化したい場合は、設定ファイルの `disableAutoMode` オプションで制御できます。
 
@@ -33,13 +35,13 @@ Auto mode が Bedrock、Vertex AI、Foundry で `CLAUDE_CODE_ENABLE_AUTO_MODE` �
 
 また、`cd` を含む複合コマンドで `/dev/null` へのリダイレクトのみの場合に不要な権限プロンプトが表示される問題が修正され、ワークフローがスムーズになります。自動更新機能による `~/.local/bin/claude` のカスタムランチャースクリプトやシンボリックリンクの上書きも修正され、`/doctor` コマンドで外部管理されたランチャーが報告されるようになりました。
 
-Bedrock ユーザー向けには、IAM Identity Center からの AWS SSO 認証情報の繰り返し要求が修正され、Windows での AWS 認証情報解決のスタール時に無期限ハングが発生する問題に 60 秒のタイムアウトガードが追加されました。
+Bedrock ユーザー向けには、IAM Identity Center からの AWS SSO 認証情報の繰り返し要求が修正され、Windows での AWS 認証情報解決のスタール時に無期限ハングが発生する問題では、60 秒のスタールガードが正しく発火するようになりました。
 
 ## 全変更点一覧
 
 | カテゴリ | 内容 | 概要 |
 |---------|------|------|
-| Feature | Auto mode の一般提供 | Bedrock、Vertex AI、Foundry で `CLAUDE_CODE_ENABLE_AUTO_MODE` なしで利用可能に。設定での無効化は `disableAutoMode` で可能 |
+| Feature | Auto mode のオプトイン不要化 | Bedrock、Vertex AI、Foundry で `CLAUDE_CODE_ENABLE_AUTO_MODE` なしで利用可能に。設定での無効化は `disableAutoMode` で可能 |
 | Fix | ターミナルフリーズの修正 | 非常に長いリスト、テーブル、段落、コードブロックを含む応答のストリーミング中にターミナルがフリーズしキーストロークが遅延する問題を修正 |
 | Fix | リモート管理設定の永続化問題の修正 | 非インタラクティブ実行（`claude -p`、SDK）でのリモート管理設定がセキュリティ同意ダイアログを表示せず永続的に同意済みとして記録される問題を修正 |
 | Fix | 誤検知のプロンプトインジェクション警告の修正 | システム生成の会話更新により誤って発生するプロンプトインジェクション警告を修正 |
@@ -57,16 +59,16 @@ Bedrock ユーザー向けには、IAM Identity Center からの AWS SSO 認証�
 | Fix | Bedrock 認証情報の再要求問題の修正 | Bedrock が毎回の API リクエストで IAM Identity Center から新しい AWS SSO 認証情報を繰り返し要求する問題を修正 |
 | Improvement | エージェントビューの貼り付け改善 | 同じテキストを再度貼り付けると、2 つ目を追加する代わりに折りたたまれた `[Pasted text #N]` プレースホルダーを展開するように改善 |
 | Improvement | エージェントビューのセッション表示改善 | ブロックされたセッションのピークビューで質問を先頭に表示し、同じタイムスタンプを 2 回表示する代わりに語句による鮮度時計（`waiting 3m`）を表示 |
-| Breaking | デフォルトモデルの変更 | Bedrock、Vertex、Claude Platform on AWS のデフォルトを Claude Opus 4.8 に変更 |
-| Breaking | Auto mode 設定読み込み元の変更 | `.claude/settings.local.json`（リポジトリ内）からの `autoMode` 読み込みを廃止。`~/.claude/settings.json` を使用 |
-| Fix | Windows での AWS 認証情報スタールハング修正 | AWS 認証情報解決がスタール時（例: スタックした `credential_process`）に Windows で無期限ハングする問題を修正。60 秒のスタールガードを実装 |
-| Breaking | プラグインのシェルインジェクション修正 | プラグイン hooks/monitors/MCP headersHelper でシェル形式コマンド内の `${user_config.*}` を拒否。hooks は exec 形式または `$CLAUDE_PLUGIN_OPTION_<KEY>` を使用、monitors と headersHelper はスクリプト内で値を読み取る |
-| Breaking | プラグイン設定の読み込み制限 | プロジェクトレベル `.claude/settings.json` からのプラグインオプション値（`pluginConfigs`）読み込みを無効化。ユーザー設定、`--settings`、管理された設定からのみ読み込み |
+| Changed | デフォルトモデルの変更 | Bedrock、Vertex、Claude Platform on AWS のデフォルトを Claude Opus 4.8 に変更 |
+| Changed | Auto mode 設定読み込み元の変更 | `.claude/settings.local.json`（リポジトリ内）からの `autoMode` 読み込みを廃止。`~/.claude/settings.json` を使用 |
+| Fix | Windows での AWS 認証情報スタールハング修正 | AWS 認証情報解決がスタール時（例: スタックした `credential_process`）に Windows で無期限ハングする問題を修正。60 秒のスタールガードが発火するようになった |
+| Changed | プラグインのシェルインジェクション対策 | プラグイン hooks/monitors/MCP headersHelper でシェル形式コマンド内の `${user_config.*}` を拒否。hooks は exec 形式または `$CLAUDE_PLUGIN_OPTION_<KEY>` を使用、monitors と headersHelper はスクリプト内で値を読み取る |
+| Changed | プラグイン設定の読み込み制限 | プロジェクトレベル `.claude/settings.json` からのプラグインオプション値（`pluginConfigs`）読み込みを無効化。ユーザー設定、`--settings`、管理された設定からのみ読み込み |
 | Fix | `/usage-credits` 入力検証の改善 | 不正な値（タイムスタンプなど）を数字に無言で削除する代わりにエラーで拒否。$1,000 超の金額は入力確認が必要 |
 
 ## まとめ
 
-v2.1.207 は、Auto mode の一般提供という大きな機能変更に加え、ターミナルの応答性、設定管理、セキュリティ、バックグラウンドセッション、Remote Control、Deep Research など、幅広い領域での安定性と信頼性を向上させるメンテナンスリリースです。特にプラグインのシェルインジェクション対策と設定読み込み制限は、セキュリティ強化のための重要な変更です。Bedrock ユーザーにとっては認証情報の繰り返し要求問題の修正が大きな改善となるでしょう。デフォルトモデルの Opus 4.8 への変更により、より高性能なモデルが標準で利用可能になりました。
+v2.1.207 は、Auto mode がオプトイン不要になったことに加え、ターミナルの応答性、設定管理、セキュリティ、バックグラウンドセッション、Remote Control、Deep Research など、幅広い領域での安定性と信頼性を向上させるリリースです。特にプラグインのシェルインジェクション対策と設定読み込み制限は、セキュリティ強化のための重要な変更です。Bedrock ユーザーにとっては認証情報の繰り返し要求問題の修正が大きな改善となるでしょう。また、Bedrock、Vertex、Claude Platform on AWS では、デフォルトモデルが Claude Opus 4.8 に変更されています。
 
 ---
 
