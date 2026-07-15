@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/07/16 のアップデートまとめ"
 date: 2026-07-16T08:02:07+09:00
-draft: true
+draft: false
 tags: ["aws", "cognito", "cloudwatch", "mq", "msk", "rds", "aurora", "opensearch", "ec2", "lambda"]
 categories: ["AWS Updates"]
 summary: "2026/07/16 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260716/header.png)
 
 # 直近のAWSアップデートまとめ — 2026年7月
 
@@ -23,7 +25,7 @@ Amazon CloudWatch Logs に**インテリジェントストレージティアリ�
 
 #### なぜこのアップデートが重要なのか
 
-従来、CloudWatch Logs は単一のストレージ層しか持たず、長期保存が必要なログデータは S3 へのエクスポートやサードパーティツールへの転送が必要でした。しかし、これらの運用には以下の課題がありました。
+従来、CloudWatch Logs にはアクセス頻度に応じて自動的にストレージ層を移動する仕組みがなく、長期保存コストの最適化には S3 へのエクスポートやサードパーティツールへの転送が使われてきました。しかし、これらの運用には以下の課題がありました。
 
 - S3 エクスポートの定期実行とライフサイクル管理の運用負荷
 - エクスポートしたログの検索性低下（CloudWatch Insights が使えない）
@@ -44,15 +46,15 @@ Amazon CloudWatch Logs に**インテリジェントストレージティアリ�
 
 #### 実装と検証のポイント
 
-この機能は AWS Management Console、CLI、SDK から有効化できます。既存のロググループに対しても適用可能であり、有効化後は自動的にアクセスパターンの監視が開始されます。
+この機能は AWS Management Console、CLI、SDK から有効化できます。告知によると、30日間アクセスがないデータは Infrequent Access へ、90日間アクセスがないデータは Archive Instant Access へ自動分類され、古いデータへアクセスするとそのデータは30日間 Standard 層へ自動昇格します。中東（バーレーン）と中東（UAE）を除くすべての AWS 商用リージョンで利用可能です。
 
 検証すべきポイントとしては、以下が挙げられます。
 
-1. **アクセスパターンの監視期間**: どの程度の期間アクセスがないと下位層に移動するのか
-2. **自動昇格のレイテンシ**: アーカイブ層から Standard への昇格にかかる時間
+1. **下位層への移行タイミング**: 30日（Infrequent Access）・90日（Archive Instant Access）という自動分類の閾値が、自社のログアクセスパターンと合っているか
+2. **クエリ体験**: 告知ではどの層にデータがあっても同じクエリ体験が得られるとされているため、実際のクエリ応答を検証で確認
 3. **コスト削減効果**: 実際のログボリュームとアクセスパターンに基づいた試算
 
-特にコスト面では、高ボリュームなアプリケーションログやセキュリティ監査ログで数十パーセントのコスト削減が期待できます。30日以上保持が必要で、かつ日常的なアクセスが少ないログであれば、導入効果が大きいでしょう。
+告知では下位層は低コスト（lower-cost tiers）と説明されていますが、具体的な削減率は明示されていません。30日以上保持し、かつ日常的なアクセスが少ないログを対象に、自社のログ量で効果を試算するのがよいでしょう。
 
 ### Amazon Cognito のパスワードハッシュインポート対応
 
@@ -78,7 +80,7 @@ Amazon Cognito が CSV ユーザーインポート時に**パスワードハッ�
 - **Argon2id**: 最新の推奨アルゴリズム、サイドチャネル攻撃に強い
 - **PBKDF2 with SHA-256**: Java や .NET 環境で一般的
 
-インポート作成時にソースシステムで使用されているアルゴリズムを指定すると、Cognito はユーザーの初回サインイン時にインポートされたハッシュに対してパスワードを検証します。重要なのは、すべてのインポートハッシュに対して追加の暗号化保護層が適用される点です。これにより、万が一のデータ漏洩時にも二重の保護が機能します。
+インポート作成時にソースシステムで使用されているアルゴリズムを指定すると、Cognito はユーザーの初回サインイン時にインポートされたハッシュに対してパスワードを検証します。また、すべてのインポート済みハッシュは保存前に追加の暗号化保護層を受け取ると告知に明記されています。
 
 #### 実装シナリオ
 
@@ -97,11 +99,11 @@ Amazon Cognito が CSV ユーザーインポート時に**パスワードハッ�
 
 CloudWatch Logs のインテリジェントティアリングは、ログ管理戦略を根本から見直す機会となります。特に以下のシナリオで効果を発揮します。
 
-Terraform や CloudFormation でインフラを管理している環境では、既存のロググループリソースに対してティアリング設定を追加するだけで有効化できます。重要なのは、有効化後の効果測定です。CloudWatch のコストと使用状況レポートで、ストレージコストの推移を追跡し、どの程度のログが各層に分散されているかを定期的にモニタリングします。
+有効化の手段として告知に明記されているのは AWS Management Console、CLI、SDK の3つです（IaC ツールの対応状況は各プロバイダーのリリースを確認してください）。重要なのは、有効化後の効果測定です。コストと使用状況レポートでストレージコストの推移を追跡し、導入前後の変化を定期的にモニタリングします。
 
-また、CloudWatch アラームと組み合わせることで、アーカイブ層からのアクセスが頻繁に発生している場合（本来 Standard にあるべきログがアーカイブされている）を検知できます。これはアプリケーションのログ出力パターンやアクセスパターンの変化を示す指標となります。
+また、古いデータにアクセスすると該当データは30日間 Standard 層へ自動昇格するため、障害調査などで一時的に古いログを繰り返し参照するケースでも、その間のアクセスは Standard 層で処理されます。
 
-注意すべき点として、コンプライアンス要件で即座のログアクセスが求められる環境では、Archive 層への移行タイミングを慎重に評価する必要があります。また、既存の S3 エクスポート運用がある場合、段階的な移行計画を立てることで、運用の複雑化を避けられます。
+移行の閾値（30日で Infrequent Access、90日で Archive Instant Access）は自動管理であり、告知時点でカスタマイズ可能とは明記されていません。コンプライアンス要件やログの参照パターンにこの固定的な挙動が合うかを事前に確認しましょう。また、既存の S3 エクスポート運用がある場合、段階的な移行計画を立てることで、運用の複雑化を避けられます。
 
 ### Cognito パスワードハッシュインポートの移行計画
 
@@ -123,7 +125,7 @@ Cognito へのユーザー移行プロジェクトでは、このアップデー
 | Amazon MSK Express | Apache Kafka 4.2 に対応（ELR 機能強化、新リバランスプロトコル、Streams Rebalance Protocol 追加） | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-msk-express-version-42/) |
 | Amazon RDS for Db2 | 5つの新リージョンで利用可能に（タイ、マレーシア、台北、メキシコ中部、カナダ西部） | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-rds-db2-available-additional-aws-commercial-regions) |
 | Amazon RDS / Aurora | R8gd と M8gd インスタンスを複数リージョンに拡大（Optimized Reads 対応、R6g 比最大 165% スループット向上） | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-rds-aurora-r8gd-m8gd-regions/) |
-| Amazon RDS / Aurora | Graviton4 ベースの R8g と M8g インスタンスを複数リージョンに拡大（Graviton3 比最大 40% パフォーマンス向上、29% コスト効率改善） | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/7/amazon-rds-aurora-r8g-m8g-regions/) |
+| Amazon RDS / Aurora | Graviton4 ベースの R8g と M8g インスタンスを複数リージョンに拡大（Graviton3 比最大 40% パフォーマンス向上、オンデマンド料金で最大 29% の価格性能比向上） | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/7/amazon-rds-aurora-r8g-m8g-regions/) |
 | Amazon OpenSearch Service | Agent Toolkit for AWS に対応（Claude Code、Kiro、Cursor などの AI コーディングエージェントから自然言語で操作可能） | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-opensearch-service-agent/) |
 | Amazon RDS | 24時間のローリングウィンドウ内で最大4回のストレージ修正が可能に（6時間クールオフ期間が不要に） | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-rds-upto-four-storage-modifications-24-hours) |
 | Amazon CloudWatch | lookup processor 機能を追加（CSV 参照データを使用したログエンリッチメントを自動化） | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-cloudwatch-lookup-processor/) |
