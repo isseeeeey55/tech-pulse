@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/07/15 のアップデートまとめ"
 date: 2026-07-15T08:02:02+09:00
-draft: true
+draft: false
 tags: ["aws", "flink", "drs", "ec2", "ebs", "iam-identity-center", "aurora", "guardduty", "bedrock", "sagemaker", "security-hub", "workspaces", "storage-gateway", "cloudfront", "documentdb", "managed-service-for-prometheus", "s3", "cloudtrail", "organizations"]
 categories: ["AWS Updates"]
 summary: "2026/07/15 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260715/header.png)
 
 # 直近の AWS アップデート情報まとめ（2026年7月）
 
@@ -25,19 +27,19 @@ AWS Elastic Disaster Recovery (AWS DRS) に、AWS 上で既に実行されてい
 
 従来、AWS DRS は主にオンプレミスから AWS への DR ソリューションとして利用されてきましたが、AWS 上で既に実行されているワークロードを別リージョンやアカウントへレプリケートする "AWS-to-AWS" の DR シナリオも増加しています。しかし、既に AWS 環境で動作しているワークロードは、AWS 互換のドライバーや設定を備えているにもかかわらず、これまでは復旧時に不要な準備ステップを実行していました。
 
-今回のアップデートでは、AWS 上の EC2 インスタンスであることを検知し、不要な準備処理（ドライバーインストール、ネットワーク設定の再構成など）をスキップすることで、復旧プロセスを大幅に効率化しています。
+今回のアップデートでは、Amazon EC2 上で稼働するソースサーバーについて、これらのワークロードに不要となった準備ステップをスキップすることで、復旧を高速化しています。
 
 #### 高速復旧の仕組みと設定方法
 
 AWS DRS の高速復旧機能は、ソースサーバーが既に AWS EC2 上で動作している場合に自動的に適用可能になります。設定は **アカウント全体** または **個別サーバー単位** で有効化でき、必要に応じていつでも切り替えられる柔軟な設計になっています。
 
-復旧時には以下のステップが最適化されます：
+高速化のポイントは以下のとおりです：
 
-- **ドライバーインストールのスキップ**: AWS 互換ドライバーが既にインストールされているため、再インストール処理が不要
-- **ネットワーク設定の自動適用**: VPC・サブネット・セキュリティグループなどは自動的に適用されるため、手動設定が不要
-- **ライセンス処理の簡素化**: AWS 上のライセンス管理システムが既に適用されているため、再認証処理が削減
+- **不要な準備ステップのスキップ**: AWS 上で稼働するワークロードは AWS 互換のドライバーと設定を既に備えているため、より少ないステップで起動できます
+- **自動適用は維持**: ネットワーク、ドライバー、ライセンスは引き続き自動的に適用されるため、復旧はシンプルかつハンズオフのままです
+- **柔軟な切り替え**: 設定はアカウント全体または個別サーバー単位で有効化でき、必要に応じていつでも変更できます
 
-この最適化により、アプリケーションがより迅速にオンライン化され、RTO（目標復旧時間）の達成がより確実になります。
+この最適化により、アプリケーションをより早くオンラインに戻すことができます。
 
 #### 従来の方法との比較
 
@@ -55,21 +57,17 @@ Amazon GuardDuty に **AI Protection** という新機能が追加され、Amazo
 
 #### AI ワークロード特有のセキュリティ課題
 
-組織が生成 AI や機械学習を急速に導入する中で、セキュリティチームは AI ワークロード特有の脅威に対する可視性を欠いていることが課題となっています。具体的には以下のような脅威が想定されます：
+組織が生成 AI や機械学習を急速に導入する中で、セキュリティチームは AI ワークロード特有の脅威に対する可視性を欠いていることが課題となっています。告知では以下の脅威が挙げられています：
 
-- **異常なモデル呼び出しパターン**: 正規ユーザーの通常利用パターンから逸脱した API 呼び出し
-- **コスト搾取攻撃**: 攻撃者が盗んだ認証情報を使い、GPU リソースやトークンを過剰消費させる攻撃
-- **プロンプトインジェクション**: 悪意のあるプロンプトを注入し、モデルの出力を操作する攻撃
+- **異常なモデル呼び出し（anomalous model invocations）**: 通常の利用パターンから逸脱したモデル呼び出し
+- **コスト搾取攻撃（cost harvesting attacks）**: GPU 時間やトークンを過剰に消費させる攻撃
+- **プロンプトインジェクションの試行（prompt injection attempts）**
 
 これらは従来の Web アプリケーションやデータベースに対する攻撃とは異なる特性を持ち、専用の検知ロジックが必要です。
 
 #### GuardDuty AI Protection の動作原理
 
-GuardDuty AI Protection は **CloudTrail のログを分析** し、疑わしい活動を自動検知します。カスタム設定や追加ツールは不要で、GuardDuty を有効化するだけで以下のような脅威を検知できます：
-
-- **Bedrock へのアクセスパターン異常**: 通常と異なる頻度・時間帯・地域からの InvokeModel 呼び出し
-- **SageMaker エンドポイントへの過剰リクエスト**: 推論エンドポイントへの異常なトラフィックスパイク
-- **コスト異常の検出**: トークン消費量や GPU 利用時間の急激な増加
+GuardDuty AI Protection は **CloudTrail の管理イベントとデータイベントを分析** し、疑わしい活動を自動検知します。手動設定やカスタムツールは不要で、Amazon Bedrock と Amazon SageMaker を対象に、前述の異常なモデル呼び出し・コスト搾取攻撃・プロンプトインジェクションの試行を検知します。
 
 検出された脅威は **AWS Security Hub に直接連携**され、他のセキュリティイベントと一元的に管理・対応できます。
 
@@ -114,10 +112,10 @@ GuardDuty AI Protection は、**AI/ML パイプラインを本番環境で運用
 | # | タイトル | 概要 |
 |---|---------|------|
 | 1 | [Amazon Managed Service for Apache Flink now offers AI Agent Skills](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-managed-service-flink-agent-skills/) | Apache Flink アプリケーションの構築・運用を簡素化する AI Agent Skills を提供開始 |
-| 2 | [AWS Elastic Disaster Recovery reduces recovery time for AWS-to-AWS workloads](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-drs-fast-recovery/) | AWS EC2 ベースのワークロード復旧を高速化。Windows で最大 65%、Linux で最大 40% の復旧時間短縮 |
+| 2 | [AWS Elastic Disaster Recovery reduces recovery time for AWS-to-AWS workloads](https://docs.aws.amazon.com/drs/) | AWS EC2 ベースのワークロード復旧を高速化。Windows で最大 65%、Linux で最大 40% の復旧時間短縮（告知ページが未公開のため公式ドキュメントへリンク） |
 | 3 | [AWS Elastic Disaster Recovery now supports Amazon EBS volume initialization rate](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-drs-fast-hydration/) | EBS ボリューム初期化レート機能をサポート。スナップショット復旧後のフルパフォーマンス到達時間を短縮 |
 | 4 | [AWS IAM Identity Center achieves FedRAMP Class C Certification](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-identity-center-fedramp/) | IAM Identity Center が FedRAMP Class C 認証を取得。米国政府機関向けアクセス管理が可能に |
-| 5 | [Amazon Aurora DSQL is now available in Europe (Spain)](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-aurora-dsql-available-in-spain/) | Aurora DSQL がスペインリージョンで利用可能に。計 20 以上のグローバルリージョンで展開 |
+| 5 | [Amazon Aurora DSQL is now available in Europe (Spain)](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-aurora-dsql-available-in-spain/) | Aurora DSQL がスペインリージョンで利用可能に。スペインを含む計 20 リージョンで展開 |
 | 6 | [Introducing Amazon GuardDuty AI Protection for AWS AI workloads](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-guardduty-ai-protection-aws/) | Bedrock・SageMaker などの AI サービスを対象とした脅威検知機能を追加 |
 | 7 | [AWS Security Hub now provides AI inventory for organization-wide visibility of AI assets](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-security-hub-ai/) | 組織全体の AI アセット（Bedrock、SageMaker、自己ホスト型 LLM など）を一元管理する AI インベントリ機能を追加 |
 | 8 | [Amazon WorkSpaces Personal simplifies bulk PCoIP to DCV protocol migration](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-workspaces-personal-pcoip/) | WorkSpaces の PCoIP から DCV への大規模マイグレーション機能を強化。自動ロールバック機能と停止状態対応を追加 |
