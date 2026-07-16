@@ -1,11 +1,15 @@
 ---
 title: "【Claude Code】v2.1.211 リリースノートまとめ"
 date: 2026-07-17T08:01:34+09:00
-draft: true
+draft: false
 tags: ["claude-code", "subagent", "pretooluse", "mcp", "bedrock", "vertex", "mantle", "foundry", "chrome", "vscode", "vim"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.211 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260717/header.png)
+
+# Claude Code v2.1.211 リリースノートまとめ
 
 ## はじめに
 
@@ -61,16 +65,16 @@ PreToolUse フックの `ask` 判定がサンドボックス化されていな�
 | Fix | バックグラウンドセッションタイトル | プロンプトにリンクが含まれる場合にモデルの拒否テキストが表示される問題を修正 |
 | Fix | バックグラウンドエージェントの自動再起動 | ユーザーが終了したエージェントが自動再起動し、古いプロンプトを再実行する問題を修正 |
 | Fix | ルーチンの次回実行時刻 | スケジュールがないルーチンが西暦1年を次回実行時刻として報告する問題を修正 |
-| Fix | Windows でのスキル/プラグインディレクトリ命名 | 同期されたディレクトリの命名を堅牢化し、`/clear` 後も CCR web fetch/search プロキシが動作するよう維持 |
+| Improvement | Windows でのスキル/プラグインディレクトリ命名 | 同期されたディレクトリの命名を堅牢化し、`/clear` 後も CCR web fetch/search プロキシが動作するよう維持 |
 | Fix | Bedrock/Vertex/Mantle/Foundry でのプロンプトキャッシング | 末尾のシステムコンテキストブロックが毎回新規入力トークンとして課金される問題を修正 |
 | Improvement | ターミナルレイアウトとレンダリングパフォーマンス | ターミナルのレイアウトとレンダリング性能を改善 |
 | Improvement | バックグラウンドエージェントの結果報告 | 実行中のエージェントのステータスを報告し、結果を捏造せず実際の完了を待機 |
 | Improvement | メモリインデックスの上限警告 | frontmatter と HTML コメントを除外し、読み込まれたコンテンツのみを測定 |
 | Improvement | 整数型環境変数の入力形式 | 科学的記法と桁区切り記法（`1e6`、`64_000`）をサポート |
 | Improvement | ドキュメントリンクの更新 | 現在のドキュメントサイトへのリンクを更新 |
-| Breaking | "always allow" 権限ルールの保存場所 | リポジトリルートに保存するよう変更し、git ワークツリー間で承認が永続化 |
-| Breaking | `/usage-credits` コマンドの確認 | 組織管理者へのリクエスト送信前に確認を求めるように変更 |
-| Breaking | Vim モード `s` と `S` の動作 | NORMAL モードで動作するよう変更し、vim の動作に一致 |
+| Changed | "always allow" 権限ルールの保存場所 | リポジトリルートに保存するよう変更し、git ワークツリー間で承認が永続化 |
+| Changed | `/usage-credits` コマンドの確認 | 組織管理者へのリクエスト送信前に確認を求めるように変更 |
+| Changed | Vim モード `s` と `S` の動作 | NORMAL モードで動作するよう変更し、vim の動作に一致 |
 | Improvement | [VSCode] リモートコントロールバナー | 機能の説明を含むよう更新 |
 | Improvement | Claude in Chrome: ファイルアップロードパス検証 | パス検証を堅牢化 |
 | Improvement | Claude in Chrome: スクリーンショットの `save_to_disk` | 画像をディスクに書き込みパスを返すように変更（従来は何もしなかった） |
