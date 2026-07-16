@@ -1,17 +1,19 @@
 ---
 title: "【AWS】2026/07/17 のアップデートまとめ"
 date: 2026-07-17T08:02:39+09:00
-draft: true
+draft: false
 tags: ["aws", "ec2", "ssm", "managed-grafana", "sustainability", "redshift", "rds", "postgresql", "s3", "eventbridge", "control-tower", "cloudwatch-logs"]
 categories: ["AWS Updates"]
 summary: "2026/07/17 のAWSアップデートまとめ"
 ---
 
-# 直近の AWS アップデート 11 件を徹底解説：EC2、CloudWatch Logs、Control Tower の進化に注目
+![](/images/aws-updates-20260717/header.png)
+
+# 直近の AWS アップデート 10 件を徹底解説：EC2、CloudWatch Logs、Control Tower の進化に注目
 
 ## はじめに
 
-今回は、直近で発表された **11 件の AWS アップデート** を紹介します。EC2 では公開 AMI の SSM パラメータ自動表示機能や、高性能な G7e・U7in インスタンスの新リージョン対応が実現しました。CloudWatch Logs Insights には 25 の新しいクエリコマンドが追加され、ログ分析の幅が大きく広がっています。Control Tower Account Factory for Terraform では OU 間のアカウント移動時に自動でカスタマイズが再適用される機能が登場し、運用の自動化がさらに進化しました。また、Amazon Redshift の新 RG インスタンス、PostgreSQL 19 Beta 2 のプレビュー提供、S3 イベント通知のシステム生成タグ対応、AWS Sustainability サービスへの水使用量データ追加など、データベース、ストレージ、サステナビリティ領域でも重要な機能追加が行われています。
+今回は、直近で発表された **10 件の AWS アップデート** を紹介します。EC2 では公開 AMI の SSM パラメータ自動表示機能や、高性能な G7e・U7in インスタンスの新リージョン対応が実現しました。CloudWatch Logs Insights には 25 の新しいクエリコマンドが追加され、ログ分析の幅が大きく広がっています。Control Tower Account Factory for Terraform では OU 間のアカウント移動時に自動でカスタマイズが再適用される機能が登場し、運用の自動化がさらに進化しました。また、Amazon Redshift の新 RG インスタンス、PostgreSQL 19 Beta 2 のプレビュー提供、S3 イベント通知のシステム生成タグ対応、AWS Sustainability サービスへの水使用量データ追加など、データベース、ストレージ、サステナビリティ領域でも重要な機能追加が行われています。
 
 それぞれのアップデートについて、技術的な背景と実務での活用方法を掘り下げて解説していきます。
 
@@ -151,7 +153,7 @@ CloudWatch Logs Insights の新コマンド群は、インシデント発生時�
 
 ### リソース選択とコスト最適化の判断基準
 
-Redshift の新 RG インスタンスや EC2 の G7e、U7in インスタンスの追加は、ワークロードの性能要件とコスト制約のバランスを取る際の選択肢を増やします。RG インスタンスは RA3 比で vCPU あたり 30% 低価格かつ最大 2.4 倍高速ですが、既存クラスタからの移行にはスナップショット・リストアやエラスティックリサイズが必要です。移行時のダウンタイムや検証工数を考慮し、まずはステージング環境で性能・互換性を確認することが推奨されます。G7e インスタンスは LLM 推論ワークロードで G6e 比 2.3 倍の性能向上を実現しますが、GPU メモリや EFA の構成によってはアプリケーション側の最適化も必要です。新リージョン（フランクフルト、ストックホルム、ムンバイ）での提供開始は、ユーザー近接性やデータレジデンシー要件を満たす選択肢を提供します。
+Redshift の新 RG インスタンスや EC2 の G7e、U7in インスタンスの追加は、ワークロードの性能要件とコスト制約のバランスを取る際の選択肢を増やします。RG インスタンスは RA3 比で vCPU あたり 30% 低価格かつ最大 2.4 倍高速ですが、既存クラスタからの移行にはスナップショット・リストアやエラスティックリサイズが必要です。移行時のダウンタイムや検証工数を考慮し、まずはステージング環境で性能・互換性を確認することが推奨されます。G7e インスタンスは LLM 推論ワークロードで G6e 比最大 2.3 倍の性能向上を実現しますが、GPU メモリや EFA の構成によってはアプリケーション側の最適化も必要です。新リージョン（フランクフルト、ストックホルム、ムンバイ）での提供開始は、ユーザー近接性やデータレジデンシー要件を満たす選択肢を提供します。
 
 ---
 
@@ -168,13 +170,13 @@ Redshift の新 RG インスタンスや EC2 の G7e、U7in インスタンス�
 | 7 | [Amazon S3 Event Notifications now include system-generated tags](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-s3-event-notifications-system-generated-tags/) | S3 イベント通知にシステム生成タグが含まれ、タグベースのフィルタリングで大規模バケット管理が効率化 |
 | 8 | [AWS Control Tower Account Factory for Terraform now re-applies customizations when accounts move between OUs](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-control-tower-account/) | AFT がアカウントの OU 間移動時に自動的にカスタマイズを再適用し、運用の一貫性を維持 |
 | 9 | [Amazon CloudWatch Logs Insights adds 25 new query commands and functions](https://aws.amazon.com/about-aws/whats-new/2026/7/amazon-cloudwatch-logs-insights-ql/) | 型変換、日時処理、統計、異常検知、セッション化など 25 の新コマンドでログ分析が大幅強化 |
-| 10 | [Amazon EC2 G7e instances now available in additional regions](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-g7e-additional-regions/) | NVIDIA RTX PRO 6000 Blackwell 搭載の G7e インスタンスが欧州・アジア太平洋リージョンで提供開始。G6e 比 2.3 倍の推論性能 |
+| 10 | [Amazon EC2 G7e instances now available in additional regions](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-g7e-additional-regions/) | NVIDIA RTX PRO 6000 Blackwell 搭載の G7e インスタンスが欧州・アジア太平洋リージョンで提供開始。G6e 比最大 2.3 倍の推論性能 |
 
 ---
 
 ## まとめ
 
-今回紹介した 11 件のアップデートは、AWS の運用自動化、ガバナンス、分析、性能最適化の各領域で重要な進化をもたらします。特に EC2 の AMI 管理、Control Tower の OU 移動時自動適用、CloudWatch Logs Insights の高度なクエリ機能は、SRE チームが日常的に直面する運用課題に対する実践的な解決策となります。
+今回紹介した 10 件のアップデートは、AWS の運用自動化、ガバナンス、分析、性能最適化の各領域で重要な進化をもたらします。特に EC2 の AMI 管理、Control Tower の OU 移動時自動適用、CloudWatch Logs Insights の高度なクエリ機能は、SRE チームが日常的に直面する運用課題に対する実践的な解決策となります。
 
 Redshift の RG インスタンスや EC2 の G7e・U7in インスタンスは、性能とコストのバランスを取る際の選択肢を増やし、ワークロードの特性に応じた最適なリソース選択を可能にします。PostgreSQL 19 Beta 2 のプレビュー提供は、次期メジャーバージョンへの移行準備を早期に開始できる機会を提供します。
 
