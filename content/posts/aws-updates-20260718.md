@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/07/18 のアップデートまとめ"
 date: 2026-07-18T08:01:37+09:00
-draft: true
+draft: false
 tags: ["aws", "opensearch", "billing", "cost-management", "cost-optimization-hub"]
 categories: ["AWS Updates"]
 summary: "2026/07/18 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260718/header.png)
 
 # 直近のAWSアップデートまとめ（2026年7月）
 
@@ -39,7 +41,7 @@ Amazon OpenSearch Service では、レガシーな OpenSearch Dashboards から�
 
 また、移行対象となる保存オブジェクトの棚卸しも重要です。不要になった古いダッシュボードや重複するビジュアライゼーションを事前に整理しておくことで、移行後の環境をクリーンに保つことができます。
 
-移行自体はゼロダウンタイムで実行されますが、移行中のオブジェクト作成や更新がどのように扱われるかを理解しておくことも推奨されます。移行失敗時のロールバック手順についても、事前に検証し文書化しておくべきでしょう。
+移行中のオブジェクト作成や更新がどのように扱われるかを理解しておくことも推奨されます。移行失敗時のロールバック手順についても、事前に検証し文書化しておくべきでしょう。
 
 ### コスト効率可視化のための Cost Efficiency ウィジェット
 
@@ -83,7 +85,7 @@ FinOps と SRE の協働において、Cost Efficiency ウィジェットは共�
 
 | サービス | アップデート内容 | リンク |
 |---------|----------------|--------|
-| Amazon OpenSearch Service | OpenSearch UI へのワンクリック移行機能をサポート。レガシー Dashboards から複数テナントと保存オブジェクトを自動移行可能に。ゼロダウンタイムで実行可能 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-opensearch-ui-one-click-dashboard-migration) |
+| Amazon OpenSearch Service | OpenSearch UI へのワンクリック移行機能をサポート。レガシー Dashboards から複数テナントと保存オブジェクトを自動移行可能に。移行先は新規／既存いずれのワークスペースも選択可能 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-opensearch-ui-one-click-dashboard-migration) |
 | AWS Billing and Cost Management | 新しい Cost Efficiency ウィジェットを追加。効率スコアの時系列推移をダッシュボード上で追跡可能。Cost Optimization Hub と連携し、推奨事項に基づくアクションを容易に実行可能 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/07/monitor-cost-efficiency-using-dashboards) |
 
 ## まとめ
@@ -92,7 +94,7 @@ FinOps と SRE の協働において、Cost Efficiency ウィジェットは共�
 
 両機能に共通するのは、「既存資産の活用」と「継続的な改善」という視点です。手動での再作成や個別のレポート集計といった運用負荷を削減しながら、組織全体での統一的な管理を可能にする設計思想が貫かれています。
 
-これらの機能は追加費用なく全 AWS 商用リージョンで利用可能であり、導入障壁が低い点も特筆すべきです。既存の AWS 環境を運用している組織であれば、すぐにでも活用を検討する価値があるでしょう。特に、複数アカウント・リージョンを運用する中〜大規模組織や、FinOps 活動を本格化させようとしている組織にとって、今回のアップデートは実用的な改善機会を提供します。
+Cost Efficiency ウィジェットは全 AWS 商用リージョンで追加費用なく利用でき、OpenSearch UI へのワンクリック移行も OpenSearch UI が提供されている全リージョンで利用可能と、いずれも導入障壁が低い点が特筆すべきです。既存の AWS 環境を運用している組織であれば、すぐにでも活用を検討する価値があるでしょう。特に、複数アカウント・リージョンを運用する中〜大規模組織や、FinOps 活動を本格化させようとしている組織にとって、今回のアップデートは実用的な改善機会を提供します。
 
 ---
 
