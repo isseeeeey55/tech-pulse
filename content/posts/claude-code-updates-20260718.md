@@ -1,11 +1,15 @@
 ---
 title: "【Claude Code】v2.1.212 リリースノートまとめ"
 date: 2026-07-18T08:01:59+09:00
-draft: true
+draft: false
 tags: ["claude-code", "fork", "subtask", "auto-mode", "websearch", "subagent", "mcp", "resume", "plan-mode", "bash", "worktree", "hook", "sigterm", "windows", "powershell", "ultrareview", "opentelemetry", "otlp", "prompt-caching", "bedrock", "vertex", "agent-view", "enterprise", "sdk"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.212 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260718/header.png)
+
+# Claude Code v2.1.212 リリースノートまとめ
 
 ## はじめに
 
@@ -86,7 +90,7 @@ WebSearch と subagent の上限設定は、ループによるリソース消費
 | Improvement | `/fork` のセッション名付け | セッションにタイトルがない場合はプロンプト内容から名前を付け、agent view で識別可能に |
 | Improvement | bare `/btw` の動作変更 | 最新のやり取りで side-question パネルを再開し、過去の回答を閲覧可能に |
 | Improvement | バックグラウンドエージェント完了通知 | 入力待ちがない場合でも `←` フッターヒントが `N done` と一瞬点滅 |
-| Breaking | Task ツール `mode` パラメータの非推奨化 | 無視されるよう変更、subagent は親セッションの許可モードをデフォルトで継承 |
+| Improvement | Task ツール `mode` パラメータの非推奨化 | 無視されるよう変更、subagent は親セッションの許可モードをデフォルトで継承 |
 | Improvement | Enterprise `forceLoginMethod` の適用範囲拡大 | VS Code 拡張、SDK、`setup-token`、`install-github-app` ログインにも適用 |
 | Improvement | セッショントランスクリプトに reasoning effort level 記録 | 各 assistant メッセージに reasoning effort level を記録 |
 | Improvement | headless/SDK セッションの mid-turn モデル変更 | `set_model` 制御リクエストをターン中に適用、次のラウンドトリップから新モデルを使用 |
