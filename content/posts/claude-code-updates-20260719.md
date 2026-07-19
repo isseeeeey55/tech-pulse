@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.214 リリースノートまとめ"
 date: 2026-07-19T08:02:01+09:00
-draft: true
+draft: false
 tags: ["claude-code", "bash", "powershell", "docker", "podman", "opentelemetry", "endconversation", "mcp", "github"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.214 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260719/header.png)
 
 # Claude Code v2.1.214 リリースノート
 
@@ -88,8 +90,8 @@ OpenTelemetry のログイベントには、`message.uuid`、`client_request_id`
 | Fix | OTel ログイベントのトレースコンテキスト欠落修正 | ターンの非同期コンテキスト外で発行される OTel ログイベントが、インタラクションスパンのトレースコンテキストを欠落する問題を修正 |
 | Fix | MCP 一時エラーのリソースクリア修正 | prompts/resources のリフレッシュ中に MCP 一時エラーが発生すると、サーバーのスラッシュコマンドとリソースがクリアされる問題を修正 |
 | Improvement | ホームディレクトリでのワークスペーストラストエラー改善 | ホームディレクトリでの `claude rc` ワークスペーストラストエラーメッセージを改善し、信頼がそこでは保存されないことを明示し、プロジェクトディレクトリからの実行を提案 |
-| Breaking | `dir/**` フック条件のマッチング変更 | 単一セグメント `dir/**` フック `if:` 条件を `<cwd>/dir` のみにマッチするよう変更。任意の深さのマッチングには `**/dir/**` を使用。`deny`/`ask` 許可ルールは任意深さマッチングを維持 |
-| Breaking | `file` コマンドの権限要求化 | `-m`/`--magic-file` または `-f`/`--files-from` を使用する `file` コマンドを、読み取り専用として自動許可せず権限を要求するよう変更 |
+| Improvement | `dir/**` フック条件のマッチング変更 | 単一セグメント `dir/**` フック `if:` 条件を `<cwd>/dir` のみにマッチするよう変更。任意の深さのマッチングには `**/dir/**` を使用。`deny`/`ask` 許可ルールは任意深さマッチングを維持 |
+| Improvement | `file` コマンドの権限要求化 | `-m`/`--magic-file` または `-f`/`--files-from` を使用する `file` コマンドを、読み取り専用として自動許可せず権限を要求するよう変更 |
 | Improvement | keep-alive 接続プーリングの改善 | stale-connection エラー後に keep-alive 接続プーリングを無効化し、リトライ時に新しいソケットを開くよう変更 |
 | Improvement | SessionStart フックの fork ソース表示 | セッションが fork として開始される場合、SessionStart フックで `"resume"` ではなく `"fork"` ソースを報告するよう変更 |
 
