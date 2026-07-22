@@ -1,17 +1,21 @@
 ---
 title: "【AWS】2026/07/23 のアップデートまとめ"
 date: 2026-07-23T08:02:36+09:00
-draft: true
+draft: false
 tags: ["aws", "ec2", "entity-resolution", "lambda", "kms", "network-load-balancer", "corretto", "secrets-manager", "eventbridge", "direct-connect", "eks", "elastic-disaster-recovery", "ecs"]
 categories: ["AWS Updates"]
 summary: "2026/07/23 のAWSアップデートまとめ"
 ---
 
+![](/images/aws-updates-20260723/header.png)
+
+# 直近の AWS アップデート情報まとめ（2026年7月）
+
 ## はじめに
 
 今回は、直近で発表された10件のAWSアップデートを紹介します。新しいEC2インスタンスタイプのリージョン拡大、AWS Entity Resolutionのリアルタイム処理強化、Lambda Durable Functionsのセキュリティ機能拡充、Network Load Balancerのルーティング機能追加など、コンピューティング、ネットワーク、セキュリティ、コンテナ管理に渡る幅広いアップデートが含まれています。
 
-特に注目すべきは、AWS Entity Resolutionのリアルタイム高度マッチング機能とNetwork Load Balancerのリスナールール対応です。前者はこれまでバッチ処理に限定されていた複雑なマッチングロジックをミリ秒単位で実行可能にし、後者はIPv4/IPv6混在環境での運用を大幅に簡素化します。また、AWS Secrets ManagerがEventBridgeと統合され、シークレット変更を起点としたイベント駆動アーキテクチャの構築が容易になった点も実務上のインパクトが大きいでしょう。
+特に注目すべきは、AWS Entity Resolutionのリアルタイム高度マッチング機能とNetwork Load Balancerのリスナールール対応です。前者はこれまでバッチ処理に限定されていた複雑なマッチングロジックをミリ秒単位で実行可能にし、後者はIPv4/IPv6混在環境での運用を大幅に簡素化します。また、AWS Secrets ManagerがEventBridgeと統合され、シークレット変更を起点としたイベント駆動アーキテクチャの構築が容易になった点も実務上のインパクトが大きい要素です。
 
 ## 注目アップデート深掘り
 
@@ -126,7 +130,7 @@ Network Load Balancerのリスナールール機能は、IPv4/IPv6デュアル�
 
 リージョン拡大（M8aインスタンスのハイデラバード、DRSの6リージョン、Direct Connectのリマ）は、グローバルなワークロード配置とデータレジデンシー要件への対応を容易にします。EKSのEFAサポートやECSの高度なデプロイメント戦略のSovereign Cloud対応は、コンテナ基盤での高度なユースケースを標準機能で実現できる範囲を広げています。
 
-これらのアップデートを活用することで、運用の複雑性を削減しながら、セキュリティとパフォーマンスを向上させることができるでしょう。各組織の要件に応じて、段階的に導入を検討することをお勧めします。
+これらのアップデートを活用することで、運用の複雑性を削減しながら、セキュリティとパフォーマンスを向上させることができます。各組織の要件に応じて、段階的に導入を検討することをお勧めします。
 
 ---
 
