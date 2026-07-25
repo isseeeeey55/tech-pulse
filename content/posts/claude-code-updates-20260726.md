@@ -1,17 +1,19 @@
 ---
 title: "【Claude Code】v2.1.220 リリースノートまとめ"
 date: 2026-07-26T08:00:48+09:00
-draft: true
+draft: false
 tags: ["claude-code"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.220 のClaude Codeリリースノートまとめ"
 ---
 
+![](/images/claude-code-updates-20260726/header.png)
+
 # Claude Code v2.1.220 リリース情報
 
 ## はじめに
 
-2026年7月26日、Claude Code v2.1.220 がリリースされました。本リリースは、バグ修正と信頼性向上に焦点を当てたメンテナンスリリースです。
+2026年7月25日、Claude Code v2.1.220 がリリースされました。本リリースは、バグ修正と信頼性向上に焦点を当てたメンテナンスリリースです。
 
 ## 全変更点一覧
 
