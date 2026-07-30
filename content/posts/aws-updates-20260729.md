@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/07/29 のアップデートまとめ"
 date: 2026-07-29T08:02:40+09:00
-draft: true
+draft: false
 tags: ["aws", "datasync", "efs", "fsx", "eks", "glue", "s3", "neptune", "outposts", "iam"]
 categories: ["AWS Updates"]
 summary: "2026/07/29 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260729/header.png)
 
 # 直近の AWS アップデート 2026年7月 — DataSync Enhanced 対応拡大、EKS HPA 高速化、Glue Data Quality 異常検知など全9件
 
@@ -25,7 +27,7 @@ summary: "2026/07/29 のAWSアップデートまとめ"
 
 AWS DataSync Enhanced mode は、従来の Basic mode と比較してデータ並列処理、ファイル数制限の撤廃、詳細メトリクスの提供により、大規模データ移行を劇的に効率化する機能です。これまで EFS や FSx for Lustre との間の転送には Basic mode しか使えませんでしたが、今回の対応により、Enhanced mode を利用できるようになりました。さらに、Hadoop 分散ファイルシステム（HDFS）、Azure Blob Storage、自社管理のオブジェクトストレージへの対応、そして Microsoft Hyper-V 上でのエージェント展開が可能になったことで、マルチクラウドやレガシー環境との統合が飛躍的に容易になります。
 
-特に規制産業では、HDFS の複数 NameNode 構成による高可用性と Kerberos 認証付き Transparent Data Encryption（TDE）への対応が重要です。これにより、ペタバイト規模の暗号化データを安全に AWS へ移行できるようになります。
+特に規制産業では、HDFS の複数 NameNode 構成による高可用性と Kerberos 認証付き Transparent Data Encryption（TDE）への対応が重要です。暗号化されたデータを、暗号化と認証の構成を維持したまま AWS へ移行できます。
 
 #### Enhanced mode と Basic mode の違い
 
@@ -39,9 +41,9 @@ Enhanced mode では、以下の利点を享受できます。
 
 #### HDFS 対応の実装ポイント
 
-HDFS との統合では、複数 NameNode 構成のクラスタに接続できるため、Hadoop クラスタのダウンタイムなしに移行作業を進められます。Kerberos 認証と TDE の組み合わせにより、金融・医療・政府機関などの規制要件を満たしながら、安全にデータを AWS に転送可能です。
+告知は「Enhanced mode の HDFS サポートには、高可用性のための複数 NameNode 構成と、Kerberos 認証付きの Transparent Data Encryption（TDE）が含まれる」と述べています。暗号化と認証を維持したまま転送できるため、規制要件のある環境でも扱いやすくなります。
 
-設定時は、DataSync エージェントを Hyper-V 上にデプロイし、HDFS の NameNode エンドポイント、Kerberos プリンシパル、TDE 設定を DataSync コンソールまたは CLI で指定します。具体的なコマンド体系や設定項目の詳細については、[AWS DataSync 公式ドキュメント](https://docs.aws.amazon.com/datasync/) を参照してください。
+なお、告知には具体的な設定項目やコマンドの記載はありません。エージェントの展開手順や HDFS ロケーションの設定項目については、[AWS DataSync 公式ドキュメント](https://docs.aws.amazon.com/datasync/) を参照してください。本機能は AWS DataSync が提供されるすべての AWS リージョンで利用できます。
 
 #### Azure Blob Storage とのマルチクラウド連携
 
@@ -52,7 +54,7 @@ Azure Blob Storage への対応により、マルチクラウド戦略を採用�
 実際に導入を検討する際は、以下のステップで効果を確認することをおすすめします。
 
 1. **性能比較テスト**: 同じデータセットを Basic mode と Enhanced mode で転送し、転送時間とスループットを比較測定
-2. **ファイル数制限の検証**: Basic mode では制限されていたファイル数の上限が、Enhanced mode でどの程度緩和されるかを確認
+2. **ファイル数制限の検証**: Basic mode で上限に達していたファイル数のデータセットが、Enhanced mode で問題なく転送できることを確認
 3. **並列処理とメトリクスの確認**: DataSync コンソールまたは CloudWatch で、並列処理の動作と詳細メトリクスの種類を把握
 4. **HDFS 接続テスト**: 実際の Hadoop クラスタに対して DataSync エージェントを接続し、Kerberos 認証と TDE の動作を検証
 5. **コスト試算**: 転送データ量、処理時間の短縮によるリソース削減効果、DataSync 自体の利用料金を総合的に試算
@@ -67,13 +69,9 @@ Kubernetes 環境において、Horizontal Pod Autoscaler（HPA）はワーク�
 
 #### スケーリング遅延がもたらす課題
 
-従来、HPA の処理能力が不足している環境では、以下のような課題がありました。
+告知が改善対象として挙げているのは、負荷増加に対するスケール（スケールアウト方向）に要する時間です。スケールアウトが遅れると、トラフィック急増時にポッドの追加が間に合わずレスポンスタイムが悪化し、それを見越して常に余剰リソースを確保する運用になりがちです。並行処理性能が上がることで、この待ち時間が短縮されます。
 
-- **スケールアウトの遅延**: トラフィック急増時にポッドの追加が遅れ、エンドユーザーへのレスポンスタイムが悪化
-- **過剰なリソース配置**: 遅延を見越して常に余剰リソースを確保しておく必要があり、コストが増加
-- **スケールダウンの精度低下**: 負荷が下がった後のスケールダウンも遅れるため、不要なリソースがしばらく維持される
-
-並行処理性能が向上することで、これらの課題が緩和され、より正確かつタイムリーなオートスケーリングが実現します。
+なお告知はスケールイン方向の改善には言及していないため、スケールダウンの挙動が変わることを前提にした設計は避けたほうが安全です。
 
 #### 具体的な検証アプローチ
 
@@ -92,7 +90,7 @@ Kubernetes 環境において、Horizontal Pod Autoscaler（HPA）はワーク�
 
 #### 注意点と制限事項
 
-並行処理性能の向上は制御プレーンのリソース消費にも影響します。大量の HPA オブジェクトを運用する場合は、制御プレーンの CPU やメモリ使用状況を CloudWatch で監視し、必要に応じてクラスタ構成を見直すことが推奨されます。また、HPA の metrics サーバーやカスタムメトリクスを使用している場合、それらのパフォーマンスも全体のスケーリング速度に影響するため、統合的な監視が重要です。
+告知は制御プレーンのリソース消費やリージョン提供状況について触れていません。一般論として、HPA の metrics サーバーやカスタムメトリクスを使用している場合はそれらの応答性能も全体のスケーリング速度に影響するため、同期並行性だけを見るのではなくメトリクス供給側も含めて監視することが有効です。実際の効果と影響は自環境で計測して確認してください。
 
 ### AWS Glue Data Quality の異常検知と Catalog 統合 — ML 駆動の品質監視
 
@@ -104,16 +102,16 @@ Kubernetes 環境において、Horizontal Pod Autoscaler（HPA）はワーク�
 
 #### ML ベースの異常検知の仕組み
 
-ML ベースの異常検知は、過去のデータ統計の傾向を学習し、現在の統計値が通常の範囲から逸脱しているかを判定します。従来のしきい値ベースでは「行数が 100 万件を下回ったらアラート」といった固定的なルールでしたが、ML ベースでは「過去 30 日間のトレンドから予測される範囲を大きく外れた場合」といった動的な判定が可能です。
+告知は「ML を活用した時系列予測」により、データ統計の予期しない変化を特定できると説明しています。具体例として挙げられているのは、GDC テーブルにおける distinct 値の急激な低下と行数のスパイクです。従来のしきい値ベースが「行数が一定件数を下回ったらアラート」という固定的なルールであるのに対し、時系列予測では過去の傾向から予測される範囲との比較で判定されます（学習に用いる期間は告知に明記されていません）。
 
-これにより、季節変動や段階的なデータ増加など、正常な範囲内の変動は無視しつつ、真の異常だけを検出できます。信頼度スコアも併せて記録されるため、検出結果の妥当性を評価しやすくなります。
+異常予測は **信頼区間（confidence bounds）付き** で記録されるため、検出結果の幅を踏まえて妥当性を評価できます。
 
 #### Data Catalog への書き込みによるトレーサビリティ
 
 評価結果が Data Catalog のテーブルに記録されることで、以下のメリットが得られます。
 
 - **完全な監査証跡**: すべての品質評価の履歴が Catalog に保持され、規制対応やコンプライアンス要件を満たせる
-- **SQL によるクエリ**: Athena を使用して、任意の時点での品質評価結果を SQL でクエリ可能。長期トレンド分析やダッシュボード構築が容易
+- **SQL によるクエリ**: ルール評価結果、プロファイリングメトリクス、異常予測が記録され、標準 SQL で任意の時点の結果をクエリ可能。長期トレンド分析やダッシュボード構築が容易
 - **統一的な品質管理**: ETL ジョブ内での評価と、Catalog テーブルの直接評価の結果を一元管理でき、運用が簡素化される
 
 #### 検証と導入のステップ
@@ -128,7 +126,9 @@ ML ベースの異常検知は、過去のデータ統計の傾向を学習し�
 
 #### 分布統計による補完的な分析
 
-同時に追加された Distribution Analyzer 機能も、データ品質管理の強化に貢献します。数値列のヒストグラムやカテゴリ列の分布を自動生成し、スキューネス、外れ値、予期しないパターンを視覚的に識別できます。異常検知と併用することで、「なぜ異常と判定されたのか」を分布統計から追跡し、根本原因の特定が容易になります。
+同時に追加された **Distribution Analyzer** も、データ品質管理の強化に貢献します。告知によると、数値列にはヒストグラム、カテゴリ列・日付列・ブール列には値の分布を生成し、スキューネス、外れ値、予期しないパターンをカスタムコードを書かずに識別できます。既存の DQDL ルールセットと統合され、1回の評価実行で取得できます。異常検知と併用することで、分布統計から根本原因を追跡しやすくなります。
+
+異常検知・分布統計はいずれも、すべての AWS コマーシャルリージョンと AWS GovCloud (US) リージョンで利用できます。
 
 ## SRE 視点での活用ポイント
 
@@ -164,7 +164,7 @@ Athena で Catalog に蓄積された評価結果をクエリし、定期的な�
 | 2 | [Amazon EKS Provisioned Control Plane now delivers faster pod autoscaling](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-eks-provisioned-control/) | EKS の HPA 同期並行性が最大 40 倍に向上。負荷検出からスケーリングまでの遅延を大幅削減 |
 | 3 | [AWS DataSync Enhanced mode adds HDFS, Azure Blob, and object storage locations with Hyper-V agent support](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-datasync-hdfs-azure-blob-hyper-v/) | DataSync Enhanced mode が HDFS、Azure Blob、Hyper-V に対応。マルチクラウド・ハイブリッド環境でのデータ移行を効率化 |
 | 4 | [AWS Console Home now supports the Cost and Usage widget in the AWS European Sovereign Cloud (Germany) Region](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-console-home-cost-and-usage-eu-sovereign-cloud/) | AWS European Sovereign Cloud（ドイツ）で Cost and Usage ウィジェットが利用可能に。コンソールから直接コスト動向を監視可能 |
-| 5 | [Second-generation AWS Outposts racks now supported in the AWS Asia Pacific (Mumbai) Region](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-outposts-asia-pacific-mumbai/) | 第2世代 Outposts ラックがムンバイリージョンで利用可能に。インドの規制要件に対応しながら AWS サービスをオンプレミスで利用 |
+| 5 | [Second-generation AWS Outposts racks now supported in the AWS Asia Pacific (Mumbai) Region](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-outposts-asia-pacific-mumbai/) | 第2世代 Outposts ラックがアジアパシフィック（ムンバイ）リージョンで利用可能に。オンプレミスに残す必要のあるデータをデータレジデンシー要件に沿って管理・処理できる |
 | 6 | [Amazon S3 Tables now support the Variant data type for Apache Iceberg V3](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-s3-tables-variant-iceberg-v3/) | S3 Tables が Iceberg V3 の Variant データ型に対応。スキーマ事前定義なしで半構造化データを効率的に分析可能 |
 | 7 | [AWS Glue Data Quality now supports distribution statistics for data profiling](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-glue-data-quality-distribution-profiling/) | Glue Data Quality に Distribution Analyzer が追加。ヒストグラムや分布統計を自動生成し、コード不要でデータパターンを分析 |
 | 8 | [AWS Glue Data Quality now supports anomaly detection and writing results to the AWS Glue Data Catalog](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-glue-data-quality-catalog-anomaly-detection-write-results/) | Glue Data Quality に ML ベースの異常検知機能と Catalog への結果書き込み機能が追加。品質評価の履歴を SQL でクエリ可能に |
