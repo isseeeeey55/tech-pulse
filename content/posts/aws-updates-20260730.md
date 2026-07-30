@@ -1,17 +1,19 @@
 ---
 title: "【AWS】2026/07/30 のアップデートまとめ"
 date: 2026-07-30T08:02:08+09:00
-draft: true
+draft: false
 tags: ["aws", "waf", "ec2", "redshift", "iam", "efs", "cloudformation", "auto-scaling", "govcloud"]
 categories: ["AWS Updates"]
 summary: "2026/07/30 のAWSアップデートまとめ"
 ---
 
+![](/images/aws-updates-20260730/header.png)
+
 # 直近の AWS アップデート情報 (2026年7月) — マルチクラウド・高可用性・セキュリティ強化に注目
 
 ## はじめに
 
-今回は、直近で発表された7件のAWSアップデートを紹介します。内容はセキュリティ強化（AWS WAF の新テキスト変換機能）、高可用性とディザスタリカバリー（EFS クロスアカウントレプリケーション、IAM Identity Center マルチリージョン対応）、デプロイ自動化（EC2 Auto Scaling の CloudFormation 統合）、データ処理効率化（Redshift Data API の改善）、そしてマルチクラウド接続（AWS Interconnect - multicloud の GA）と多岐にわたります。特に注目したいのは、**AWS WAF のプリパーステキスト変換**と**EC2 Auto Scaling の Instance Refresh が CloudFormation で統合された点**です。前者はアプリケーションセキュリティの盲点を塞ぎ、後者は IaC による安全なデプロイメントを大きく前進させるものです。
+今回は、直近で発表された6件のAWSアップデートを紹介します。内容はセキュリティ強化（AWS WAF の新テキスト変換機能）、高可用性とディザスタリカバリー（EFS クロスアカウントレプリケーション、IAM Identity Center マルチリージョン対応）、デプロイ自動化（EC2 Auto Scaling の CloudFormation 統合）、データ処理効率化（Redshift Data API の改善）、そしてマルチクラウド接続（AWS Interconnect - multicloud の GA）と多岐にわたります。特に注目したいのは、**AWS WAF のプリパーステキスト変換**と**EC2 Auto Scaling の Instance Refresh が CloudFormation で統合された点**です。前者はアプリケーションセキュリティの盲点を塞ぎ、後者は IaC による安全なデプロイメントを大きく前進させるものです。
 
 ---
 
@@ -21,9 +23,9 @@ summary: "2026/07/30 のAWSアップデートまとめ"
 
 #### なぜこのアップデートが重要なのか
 
-従来の WAF ルールでは、攻撃者が複数のエンコード手法や HTTP パラメータ汚染を組み合わせることで、ルールをバイパスできるケースがありました。たとえば、クエリ文字列の解析方法がアプリケーションと WAF で微妙に異なる場合、攻撃者はその差異を悪用して WAF を素通りし、アプリケーション側で悪意のあるペイロードを実行できてしまいます。これを **パーサ微分回避攻撃** と呼びます。
+クエリ文字列の解析方法がアプリケーションと WAF で異なる場合、攻撃者はその差異を悪用してルールをすり抜けられる可能性があります。AWS はこの種のギャップを **HTTP パラメータ汚染（HTTP parameter pollution）** および **パーサ微分回避（parser differential evasion）のギャップ** と表現しています。
 
-今回の **プリパーステキスト変換** は、クエリ文字列がキーバリューペアに解析される **前** に生のクエリ文字列を正規化します。これにより、WAF とアプリケーションの解析方法の差異を埋め、HTTP パラメータ汚染やパーサ微分回避のギャップを塞ぐことができます。
+今回の **プリパーステキスト変換** は、AWS WAF がクエリ文字列をキーバリューペアに解析する **前** に、生のクエリ文字列を正規化します。告知はこの機能が上記のギャップに対処するものと位置づけています。
 
 #### 機能の詳細
 
@@ -33,7 +35,7 @@ summary: "2026/07/30 のAWSアップデートまとめ"
 - **重複クエリ引数の結合**: 同じキーが複数回現れる場合、それらの値をコンマで結合
 - **セミコロンをアンパサンドに置換**: 一部のアプリケーションがセミコロンをパラメータ区切り文字として扱うケースに対応
 
-最大 **10 個の変換** をチェーン接続でき、さらに従来のポストパース変換（解析後の変換）を重ねることも可能です。これにより、多段階でエンコードされた攻撃ペイロードも正規化して検査できるようになります。
+最大 **10 個の変換** をチェーン接続でき、単一のルールステートメント内でさらに標準のポストパース変換（解析後の変換）を重ねることも可能です。
 
 また、任意のルールステートメントで使用可能な **10 種類の新しいテキスト変換** も追加されました。大文字化、トリミング、空白削除、SHA256 ハッシュ化などの業界標準オプションに加え、Amazon Threat Research Team が開発した **OS 対応コマンドラインデコード機能** と **JavaScript デコード機能** が含まれます。これにより、JavaScript インジェクションや OS コマンドインジェクションの難読化されたペイロードを可視化して検査できます。
 
@@ -57,29 +59,20 @@ HTTP パラメータ汚染やパーサ微分回避攻撃の具体例を調査し
 
 #### なぜこのアップデートが重要なのか
 
-従来、CloudFormation を使った Auto Scaling グループの更新では、ローリング更新中にスケーリングポリシーやヘルスチェックが一時的に機能しなくなるケースがありました。また、インスタンスの置き換えが必要なプロパティ変更（AMI の更新など）を安全にロールアウトする方法が限られていました。
+CloudFormation に新しいアップデートポリシー **`AutoScalingInstanceRefresh`** が追加され、インスタンスの置き換えが必要なプロパティ更新時に、CloudFormation が **Instance Refresh** をトリガーするようになりました。
 
-今回、CloudFormation に新しいアップデートポリシー **`AutoScalingInstanceRefresh`** が追加され、インスタンスの置き換えが必要なプロパティ更新時に、CloudFormation が自動的に **Instance Refresh** をトリガーするようになりました。これにより、**ローリング更新中もスケーリングポリシーとヘルスチェックが動作し続ける** ため、デプロイ中もサービスの可用性が保たれます。
+告知は「スケーリングポリシーやヘルスチェックといった Auto Scaling の機能は更新中も引き続き有効であり、デプロイ中にサービスの健全性が損なわれることはない」と述べています。つまり、IaC 側からインスタンス置き換えを伴う更新を仕掛けても、Auto Scaling 本来の制御が効いたまま入れ替えが進みます。
 
 #### Instance Refresh の高度な機能が CloudFormation で利用可能に
 
-Instance Refresh には以下のような高度な機能があり、すべて CloudFormation で制御できるようになりました。
+告知が挙げている Instance Refresh の機能は以下の4点です。
 
-- **ルートボリュームのインプレース更新**: インスタンスを置き換えることなく、ルートボリュームのみを更新
-- **段階的なロールアウト**: 一定の割合のインスタンスを更新してから次の段階へ進む（カナリアデプロイメント的な運用が可能）
-- **アラームベースの監視**: CloudWatch アラームと連携し、更新中に異常を検知したら自動的にロールバック
-- **チェックポイント**: 更新を一時停止し、手動で確認してから次へ進める
-- **ベイクタイム**: 新しいインスタンスが起動してから、一定時間の安定稼働を確認してから次のインスタンスを更新
+- **ルートボリュームの置き換えによるインプレース更新**（replace root volume for in-place updates）
+- **launch-before-terminate**: 新しいインスタンスを起動してから、古いインスタンスを終了する
+- **アラームベースの監視**（alarm-based monitoring）
+- **チェックポイントとベイクタイム**: 制御されたロールアウトのため、更新を段階的に区切って待機時間を挟む
 
-#### 従来の方法との比較
-
-従来の CloudFormation のローリング更新では、`AutoScalingRollingUpdate` ポリシーを使用していましたが、以下のような制約がありました。
-
-- ローリング更新中にスケーリングポリシーが機能しない
-- 段階的なロールアウトやチェックポイント機能が限定的
-- アラームベースの自動ロールバックが未対応
-
-新しい `AutoScalingInstanceRefresh` ポリシーでは、これらの制約が解消され、より安全で柔軟なデプロイメントが可能になります。
+本機能はすべての AWS リージョンで、追加コストなしに利用できます。
 
 #### 検証のポイント
 
@@ -98,21 +91,21 @@ Instance Refresh には以下のような高度な機能があり、すべて Cl
 
 ### AWS WAF のプリパーステキスト変換
 
-セキュリティインシデント対応のランブックに、「攻撃パターンの多様化に対応するため、WAF ルールを定期的に見直す」というタスクが含まれている組織は多いでしょう。今回のプリパーステキスト変換を活用すれば、既存のルールを補強し、パーサ微分回避や HTTP パラメータ汚染といった高度な攻撃手法に対する防御を強化できます。
+WAF ルールを定期的に見直す運用を持っている環境では、今回のプリパーステキスト変換を既存ルールの補強材料として検討できます。告知が対象として挙げているのは、パーサ微分回避と HTTP パラメータ汚染のギャップです。
 
 Terraform で WAF ルールを管理している環境では、新しいテキスト変換を `aws_wafv2_web_acl` リソースの `rule` ブロック内で定義し、段階的にロールアウトすることが可能です。まずは検出モードでログを収集し、誤検知がないことを確認してから、ブロックモードへ切り替えるアプローチが安全です。
 
-導入時の注意点として、変換のチェーンが深くなるほど WCU 消費量が増加するため、Web ACL 全体の WCU 上限（デフォルト 1500 WCU）に余裕があるかを事前に確認しておく必要があります。また、アプリケーションと WAF の解析方法の差異を完全に把握するには、アプリケーション開発チームとの連携が不可欠です。
+導入時の注意点として、新しい変換は1つあたり 10 WCU を消費するため、変換をチェーンするほど消費量が積み上がります。Web ACL の WCU 上限（アカウントの Service Quotas で確認できる）に余裕があるかを事前に確認しておく必要があります。また、アプリケーションと WAF の解析方法の差異を把握するには、アプリケーション開発チームとの連携が欠かせません。
 
 ### EC2 Auto Scaling の Instance Refresh と CloudFormation 統合
 
-IaC を使ったインフラ管理を実践している組織では、デプロイの自動化と安全性のトレードオフが常に課題となります。従来、CloudFormation でのローリング更新は「動作するが、本番環境で使うには少し不安」という声も聞かれました。今回の `AutoScalingInstanceRefresh` ポリシーは、その不安を大きく軽減します。
+IaC を使ったインフラ管理では、デプロイの自動化と安全性のトレードオフが課題になりがちです。`AutoScalingInstanceRefresh` ポリシーは、更新中もスケーリングポリシーとヘルスチェックが有効なまま入れ替えが進むため、CloudFormation からのインスタンス置き換えを扱いやすくします。
 
 CloudWatch アラームと組み合わせれば、デプロイ中にエラー率や応答時間が閾値を超えた場合に自動的にロールバックする仕組みを構築できます。たとえば、ALB のターゲットヘルスチェック失敗率やアプリケーションメトリクスをアラームとして設定し、Instance Refresh に紐付けることで、人手を介さない自動復旧が可能になります。
 
 Terraform ユーザーにとっては、Terraform の `aws_autoscaling_group` リソースで `instance_refresh` ブロックを定義することで、同様の機能を実現できます。CloudFormation と Terraform のどちらを使用するかは、既存のツールチェーンや組織のポリシーに依存しますが、いずれにせよ「安全なローリング更新」が標準化されたことは大きな前進です。
 
-導入時の判断基準として、以下を考慮すると良いでしょう。
+導入時の判断基準としては、以下が検討ポイントになります。
 
 - **トラフィックパターン**: ピーク時間帯を避けてデプロイするか、段階的ロールアウトで影響を最小化
 - **ヘルスチェックの信頼性**: ヘルスチェックが正しく機能しているか事前に確認
@@ -124,13 +117,12 @@ Terraform ユーザーにとっては、Terraform の `aws_autoscaling_group` �
 
 | # | タイトル | 概要 |
 |---|----------|------|
-| 1 | [AWS WAF adds pre-parse text transformations and new text transformations](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-waf>) | プリパーステキスト変換と10種類の新テキスト変換を追加。HTTP パラメータ汚染やパーサ微分回避攻撃のギャップを塞ぐ。最大10個の変換をチェーン接続可能。各変換は10 WCUを消費。すべてのリージョンで利用可能。 |
-| 2 | [Amazon EC2 Auto Scaling now supports Instance Refresh in CloudFormation](https://aws.amazon.com/about-aws/whats-new/2026/07/ec2-auto-scaling-instance-refresh-cloudformation>) | CloudFormationに新しいアップデートポリシー「AutoScalingInstanceRefresh」を追加。ローリング更新中もスケーリングポリシーとヘルスチェックが動作し続ける。段階的ロールアウト、アラームベース監視などの高度な機能を利用可能。 |
-| 3 | [Amazon Redshift Data API announces long polling, session management, and flexible batch execution](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-redshift-data-api-longpolling-listsession-flexiblebatchexecute>) | ロングポーリングによりAPI呼び出しを削減。ListSessionsでセッション管理を簡素化。AUTO_COMMITモードで各ステートメントが独立実行。Provisioned・Serverless両方に対応。 |
-| 4 | [AWS IAM Identity Center extends multi-Region support to Identity Center directory](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-iam-identity-center-extends-multi-region-support-to-identity-center-directory>) | Identity Centerディレクトリでもマルチリージョンレプリケーションをサポート。プライマリリージョン障害時も他リージョンでアクセス継続可能。17のAWSコマーシャルリージョンで利用可能。カスタマー管理KMSキーが必要。 |
-| 5 | [Amazon EFS now supports cross-account Replication in AWS GovCloud (US)](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-efs-cross-account-replication-aws-gov-cloud-us>) | AWS GovCloud (US)でEFSのクロスアカウントレプリケーションが利用可能に。複数アカウント間でファイルシステムを自動レプリケーション。ビジネス継続性、DR、コンプライアンス要件に対応。Console、CLI、CloudFormation、APIで設定可能。 |
-| 6 | [AWS announces AWS Interconnect - multicloud connectivity with Oracle Cloud Infrastructure in GA](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-announces-AWS-interconnect-multicloud-OCI-GA>) | Oracle Cloud Infrastructure (OCI)とのマルチクラウド接続ソリューション「AWS Interconnect - multicloud」が一般提供開始。標準化された仕様で一貫性のある接続体験を提供。Google Cloudも対応、Microsoft Azureは2026年後半対応予定。us-east-1で利用可能。 |
-| 7 | [Amazon EFS now supports cross-account Replication in AWS GovCloud (US)](https://aws.amazon.com/amazon-efs-cross-account-replication-aws-gov-cloud-us>) | （アップデート5と同内容）AWS GovCloud (US)でEFSのクロスアカウントレプリケーションをサポート。マルチテナント環境でのディザスタリカバリー、コンプライアンス対応に有効。 |
+| 1 | [AWS WAF adds pre-parse text transformations and new text transformations](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-waf/) | プリパーステキスト変換と10種類の新テキスト変換を追加。HTTP パラメータ汚染やパーサ微分回避のギャップに対処。最大10個の変換をチェーン接続可能。各変換は10 WCUを消費し、標準料金以外の追加費用なし。すべてのリージョンで利用可能。 |
+| 2 | [Amazon EC2 Auto Scaling now supports Instance Refresh in CloudFormation](https://aws.amazon.com/about-aws/whats-new/2026/07/ec2-auto-scaling-instance-refresh-cloudformation) | CloudFormationに新しいアップデートポリシー「AutoScalingInstanceRefresh」を追加。更新中もスケーリングポリシーとヘルスチェックが有効なまま。ルートボリューム置き換え、launch-before-terminate、アラームベース監視、チェックポイントとベイクタイムに対応。全リージョンで追加コストなし。 |
+| 3 | [Amazon Redshift Data API announces long polling, session management, and flexible batch execution](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-redshift-data-api-longpolling-listsession-flexiblebatchexecute/) | ロングポーリングによりSQLステートメントのメタデータ/結果取得のAPI呼び出しを削減。ListSessionsでセッション管理。AUTO_COMMITモードでバッチ内の各ステートメントが独立実行され、1件の失敗でバッチ全体がロールバックされなくなる。Provisioned・Serverless両方、全コマーシャルリージョンとGovCloud (US)で利用可能。 |
+| 4 | [AWS IAM Identity Center extends multi-Region support to Identity Center directory](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-iam-identity-center-extends-multi-region-support-to-identity-center-directory) | Identity Centerディレクトリでもマルチリージョンレプリケーションをサポート。プライマリリージョンで障害が発生しても、追加リージョンにプロビジョニング済みの権限でAWSアカウントへのアクセスを継続できる。デフォルトで有効な17のコマーシャルリージョンが対象。組織インスタンスにマルチリージョンのカスタマー管理KMSキー（CMK）の設定が必要。 |
+| 5 | [Amazon EFS now supports cross-account Replication in AWS GovCloud (US)](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-efs-cross-account-replication-aws-gov-cloud-us) | AWS GovCloud (US)でEFSのクロスアカウントレプリケーションが利用可能に。複数アカウント間でファイルシステムを自動レプリケーション。ビジネス継続性、DR、コンプライアンス要件に対応。 |
+| 6 | [AWS announces AWS Interconnect - multicloud connectivity with Oracle Cloud Infrastructure in GA](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-announces-AWS-interconnect-multicloud-OCI-GA/) | Oracle Cloud Infrastructure (OCI)とのマルチクラウド接続「AWS Interconnect - multicloud」が一般提供開始。OCIとGoogle Cloudで同じ一貫した接続体験を利用できる。Microsoft Azureは2026年後半にローンチ予定。OCI向けはus-east-1（バージニア北部）リージョンで利用可能。 |
 
 ---
 
@@ -138,9 +130,9 @@ Terraform ユーザーにとっては、Terraform の `aws_autoscaling_group` �
 
 今回紹介したアップデートは、**セキュリティ、高可用性、デプロイ自動化、マルチクラウド接続** という多様な領域にわたります。特に AWS WAF のプリパーステキスト変換は、攻撃手法の高度化に対応するセキュリティ強化の一例であり、EC2 Auto Scaling の CloudFormation 統合は IaC を使った安全なデプロイメントの実現に大きく貢献します。
 
-また、IAM Identity Center のマルチリージョン対応や EFS のクロスアカウントレプリケーションは、グローバル展開や高可用性要件を持つ組織にとって重要な基盤機能です。AWS Interconnect - multicloud の GA は、マルチクラウド戦略を推進する企業にとって、複雑なネットワーク構築から解放される選択肢を提供します。
+また、IAM Identity Center のマルチリージョン対応や EFS のクロスアカウントレプリケーションは、高可用性やコンプライアンス要件を持つ環境の基盤となる機能です。AWS Interconnect - multicloud の GA により、OCI と Google Cloud を同じ接続体験で扱えるようになりました。
 
-これらのアップデートを組み合わせることで、より堅牢で柔軟なクラウド環境を構築できるでしょう。詳細は各リリースノートおよび公式ドキュメントを参照し、自社の要件に合わせて段階的に導入を検討することをおすすめします。
+詳細は各告知および公式ドキュメントを参照し、自社の要件に合わせて段階的に導入を検討することをおすすめします。
 
 ---
 
