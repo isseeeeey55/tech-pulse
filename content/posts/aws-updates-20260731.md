@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/07/31 のアップデートまとめ"
 date: 2026-07-31T08:02:03+09:00
-draft: true
+draft: false
 tags: ["aws", "iam", "redshift", "direct-connect", "msk", "bedrock", "transit-gateway", "opensearch", "glue", "s3"]
 categories: ["AWS Updates"]
 summary: "2026/07/31 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260731/header.png)
 
 # 直近のAWSアップデートまとめ（2026年7月版）
 
@@ -99,7 +101,7 @@ SaaSプロバイダーのAPIから定期的にデータを抽出し、Data Lake�
 - **レート制限対策**: APIのレート制限に応じて、適切なリトライポリシーを設定
 - **データスキーマの変化**: API仕様変更に対応するため、AWS Glue Data Catalogのスキーマ進化機能を活用
 
-従来のカスタムコード方式と比較すると、開発工数が大幅に削減され、標準化されたコネクタによる保守性の向上が期待できます。
+従来のカスタムコード方式では、これらを自前で実装・保守する必要がありました。標準化されたコネクタを使うことで、その実装分の開発・保守対象を減らせます。
 
 ---
 
@@ -109,7 +111,7 @@ SaaSプロバイダーのAPIから定期的にデータを抽出し、Data Lake�
 
 **Transit Gateway PBR**は、障害対応のランブックに組み込むことで、障害発生時に特定のトラフィックを自動的に迂回ルートに切り替える仕組みを構築できます。Terraformで管理しているインフラがあれば、ポリシーテーブルとルールをコード化し、環境間で再現可能な構成管理が実現できます。導入時は、既存のルーティング設定との整合性を慎重に検証し、段階的にルールを追加していくアプローチが推奨されます。ルール評価順序が重要なため、設計段階で優先順位を明確にし、テスト環境で十分な検証を行うことが重要です。
 
-**MSK ExpressのS3/Iceberg配信**は、ストリーミングデータの永続化戦略を大幅にシンプル化します。CloudWatchアラームと組み合わせると、配信失敗時の自動通知や、スループット監視によるキャパシティプランニングが可能になります。既存のKafka Connect構成からの移行を検討する場合、データフォーマットの互換性、配信レイテンシーの変化、コスト削減効果を事前に評価することが重要です。特に、Iceberg配信では小ファイル問題が自動的に解決されるため、ダウンストリームのクエリ性能向上が期待できますが、コンパクション設定の調整が必要になる場合があります。
+**MSK ExpressのS3/Iceberg配信**は、ストリーミングデータの永続化戦略を大幅にシンプル化します。CloudWatchアラームと組み合わせると、配信失敗時の自動通知や、スループット監視によるキャパシティプランニングが可能になります。既存のKafka Connect構成からの移行を検討する場合、データフォーマットの互換性、配信レイテンシーの変化、コスト削減効果を事前に評価することが重要です。特に、Iceberg配信ではインラインコンパクションが小ファイルによる性能影響を排除するため、ダウンストリームのクエリコストを最大30%削減できます。
 
 **Glue REST APIコネクタの拡張**は、SaaSとの連携において運用負荷を大幅に削減します。VPCサポートにより、プライベートネットワーク内のAPIエンドポイントへの安全なアクセスが可能になり、セキュリティポリシーとの整合性が保たれます。フィルタプッシュダウンとパーティション機能を組み合わせることで、大規模APIからのデータ取得時間とコストを最適化できますが、APIのレート制限やページングロジックに応じた適切な設定が必要です。Glueジョブのメトリクスを定期的に監視し、パフォーマンスチューニングを継続的に行うことで、安定したデータパイプラインを維持できます。
 
@@ -124,7 +126,7 @@ SaaSプロバイダーのAPIから定期的にデータを抽出し、Data Lake�
 | AWS Direct Connect | BGPルート可視化機能が仮想インターフェースで利用可能に | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-direct-connect-bgp-visibility/) |
 | Amazon MSK | MSK ExpressがApache Icebergのストリーミングテーブルへのデータ配信に対応 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-msk-streaming-tables-for-apache-iceberg) |
 | Amazon MSK | MSK ExpressがAmazon S3へのKafkaデータ直接配信に対応 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-msk-express-brokers-delivers-to-amazon-s3) |
-| Amazon Bedrock | OpenAI GPT-5.6 TerraとLunaの価格更新 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/07/openai-gpt-terra-luna-pricing-bedrock/) |
+| Amazon Bedrock | OpenAI GPT-5.6 モデルが最大80%の値下げ（Luna は80%、Terra は20%のオンデマンド推論価格引き下げ） | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/07/openai-gpt-terra-luna-pricing-bedrock/) |
 | Amazon Bedrock | Gemma 4モデルがGovCloud (US-West)で利用可能に | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/07/gemma-4-bedrock-govcloud/) |
 | Amazon Bedrock | xAI Grok 4.3がGovCloud (US-West)で利用可能に | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/07/grok-4-3-bedrock-govcloud/) |
 | AWS Transit Gateway | Policy-Based Routing（PBR）機能が一般提供開始 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-transit-gateway-policy-based-routing/) |
