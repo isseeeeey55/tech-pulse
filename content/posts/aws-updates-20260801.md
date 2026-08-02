@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/08/01 のアップデートまとめ"
 date: 2026-08-01T08:02:23+09:00
-draft: true
+draft: false
 tags: ["aws", "lambda", "rds", "aurora", "cloudwatch", "ec2", "codedeploy", "sagemaker", "eks", "ecs", "msk", "opensearch"]
 categories: ["AWS Updates"]
 summary: "2026/08/01 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260801/header.png)
 
 # 直近の AWS アップデート情報まとめ（2026年8月版）
 
@@ -73,7 +75,7 @@ Aurora DSQL はサーバーレスで分散SQLデータベースであり、**ア
 4. **レイテンシ特性の測定**：異なるリージョン組み合わせ（例：スペイン+ムンバイ）での書き込みレイテンシとクロスリージョン読み取りレイテンシを計測
 5. **コスト比較**：シングルリージョンクラスタとマルチリージョンクラスタのコスト試算シートを作成
 
-AWS Free Tier でも利用開始できるため、まずは無料枠内で動作を確認してから本番適用を検討するとよいでしょう。
+告知では AWS Free Tier での利用開始が案内されているため、まずは無料枠内で動作を確認してから本番適用を判断できます。
 
 ---
 
@@ -97,7 +99,7 @@ AWS 公式ドキュメントで R8i / M8i インスタンスの仕様詳細（CP
 
 今回のアップデートは、SRE の日常業務に直結する改善が多く含まれています。
 
-**CloudWatch マネージド Prometheus コレクター** は、Terraform で管理している EKS クラスタや EC2 フリートがあれば、既存の監視スタックを大幅に簡素化できます。従来は OpenTelemetry Collector のデプロイ・スケーリング・バージョン管理を Helm チャートや Terraform モジュールで管理していたケースが多いでしょう。マネージド化により、これらのインフラコードを削除し、スクレイプ設定だけを管理すればよくなります。CloudWatch アラームと組み合わせれば、Prometheus メトリクスに基づいた統一アラート体系を構築でき、PagerDuty や Slack への通知フローも既存の CloudWatch Logs Insights クエリと統合できます。
+**CloudWatch マネージド Prometheus コレクター** は、Terraform で管理している EKS クラスタや EC2 フリートがあれば、既存の監視スタックを大幅に簡素化できます。OpenTelemetry Collector のデプロイ・スケーリング・バージョン管理を Helm チャートや Terraform モジュールで管理している場合、マネージド化により、これらのインフラコードを削除し、スクレイプ設定だけを管理すればよくなります。CloudWatch アラームと組み合わせれば、Prometheus メトリクスに基づいた統一アラート体系を構築でき、PagerDuty や Slack への通知フローも既存の CloudWatch Logs Insights クエリと統合できます。
 
 導入時の判断基準としては、現在 Prometheus + Grafana を自前運用している環境で、運用工数の削減が優先課題であれば積極的に移行を検討すべきです。一方、PromQL の高度な機能や Grafana の豊富なプラグインに依存している場合は、マネージド版の機能セットと照らし合わせて移行範囲を慎重に判断する必要があります。
 
@@ -109,26 +111,26 @@ AWS 公式ドキュメントで R8i / M8i インスタンスの仕様詳細（CP
 
 **CodeDeploy のリージョン拡大** は、アジア太平洋地域やメキシコに展開する CI/CD パイプラインで、ローカルリージョンからの低レイテンシーデプロイを実現します。CodePipeline と組み合わせて、GitHub や GitLab からのコミットトリガーで自動デプロイする構成を構築すれば、グローバル展開でも統一的な DevOps プロセスを維持できます。データレジデンシー要件がある国では、コードやアーティファクトをローカルリージョン内で完結させることでコンプライアンス対応が容易になります。
 
-**SageMaker Unified Studio の Git バージョン管理** は、機械学習チームでの共同開発を改善します。Notebooks に対する Git サポートが初めて実装されたことで、Jupyter Notebook の変更履歴を追跡し、ブランチ戦略を適用できるようになります。CI/CD パイプラインに組み込む際は、GitHub Actions や GitLab CI でノートブックの自動テストやモデルのデプロイを実行する構成を検討するとよいでしょう。
+**SageMaker Unified Studio の Git バージョン管理** は、機械学習チームでの共同開発を改善します。Notebooks に対する Git サポートが初めて実装されたことで、Jupyter Notebook の変更履歴を追跡し、ブランチ戦略を適用できるようになります。CI/CD パイプラインに組み込む際は、GitHub Actions や GitLab CI でノートブックの自動テストやモデルのデプロイを実行する構成が候補になります。
 
 ## 全アップデート一覧
 
 | タイトル | 概要 |
 |---------|------|
 | [AWS Lambda now supports Java 8, 11, and 17 on Amazon Linux 2023](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-lambda-java-amazon-linux/) | Lambda の Java ランタイムが Amazon Linux 2023 ベースに刷新され、Java 8、11、17 をサポート |
-| [Amazon RDS for Oracle now offers Reserved Instances for R8i and M8i instances](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-rds-oracle-r8i-m8i/) | RDS for Oracle で R8i / M8i インスタンスの Reserved Instances が提供開始。最大53%のコスト削減、前世代比15%優れた価格性能比、メモリバンド幅2.5倍 |
+| [Amazon RDS for Oracle now offers Reserved Instances for R8i and M8i instances](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-rds-oracle-r8i-m8i/) | RDS for Oracle で R8i / M8i インスタンスの Reserved Instances が提供開始。On-Demand 比で最大53%のコスト削減。前世代 Intel ベースインスタンス比で最大15%優れた価格性能比、メモリバンド幅2.5倍 |
 | [Amazon Aurora DSQL adds multi-Region cluster support in four more Regions](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-aurora-dsql-adds-multi-region-clusters-four-more-regions/) | Aurora DSQL がストックホルム、スペイン、ムンバイ、シンガポールでマルチリージョンクラスタに対応。アクティブ-アクティブ構成と強い一貫性を提供 |
 | [Amazon CloudWatch announces managed Prometheus collectors](https://aws.amazon.com/about-aws/whats-new/2026/07/cloudwatch-managed-collectors/) | CloudWatch がマネージド Prometheus コレクターをサポート。EKS、EC2、ECS、MSK、OpenSearch から自動収集し、エージェント管理が不要に |
-| [Amazon EC2 C7i instances now available in additional regions](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-ec2-c7i-instances-mxp-yyc-region/) | C7i インスタンス（コンピュート最適化、Intel Xeon 第4世代搭載）がミラノとカルガリーで利用可能に。前世代比15%優れた価格性能比 |
-| [Amazon EC2 C7i-flex instances now available in Europe (Milan) region](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-ec2-c7i-flex-instances-MXP-region/) | C7i-flex インスタンス（コンピュート最適化、柔軟サイズ）がミラノで利用可能に。C6i比19%の価格性能改善 |
+| [Amazon EC2 C7i instances now available in additional regions](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-ec2-c7i-instances-mxp-yyc-region/) | C7i インスタンス（コンピュート最適化、カスタム第4世代 Intel Xeon Scalable 搭載）がミラノとカナダ西部（カルガリー）で利用可能に。C6i 比で最大15%優れた価格性能比 |
+| [Amazon EC2 C7i-flex instances now available in Europe (Milan) region](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-ec2-c7i-flex-instances-MXP-region/) | C7i-flex インスタンス（コンピュート最適化、柔軟サイズ）がミラノで利用可能に。C6i 比で最大19%優れた価格性能比 |
 | [AWS CodeDeploy now available in five additional AWS regions](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-codedeploy-five-additional-regions) | CodeDeploy がニュージーランド、タイ、台北、マレーシア、メキシコ中部で利用開始。34商用リージョンに拡大 |
 | [Amazon SageMaker Unified Studio brings richer Git version control to all project tools](https://aws.amazon.com/about-aws/whats-new/2026/07/amazon-sagemaker-unified-studio-git/) | SageMaker Unified Studio で Notebooks を含む全ツールに Git バージョン管理を統合。ファイル単位での柔軟な管理とブランチ操作が可能に |
 
 ## まとめ
 
-今回のアップデート群は、運用効率の向上とコスト最適化、グローバル展開の容易化という3つのテーマが際立っています。CloudWatch のマネージド Prometheus コレクターは、監視基盤の運用負担を大幅に削減し、SRE チームがインフラ保守からシステム改善にシフトする後押しとなるでしょう。Aurora DSQL のマルチリージョン対応拡大は、ヨーロッパとアジアをまたぐグローバルアプリケーションに強い一貫性とアクティブ-アクティブ構成を提供し、ディザスタリカバリ戦略の選択肢を広げます。RDS for Oracle の Reserved Instances は、長期稼働が見込まれる本番データベースで即座にコスト削減効果を発揮します。
+今回のアップデート群は、運用効率の向上とコスト最適化、グローバル展開の容易化という3つのテーマが際立っています。CloudWatch のマネージド Prometheus コレクターは、エージェントのデプロイと管理を不要にすることで、監視基盤の運用負担を削減します。Aurora DSQL のマルチリージョン対応拡大は、ヨーロッパとアジアをまたぐグローバルアプリケーションに強い一貫性とアクティブ-アクティブ構成を提供し、ディザスタリカバリ戦略の選択肢を広げます。RDS for Oracle の Reserved Instances は、長期稼働が見込まれる本番データベースで即座にコスト削減効果を発揮します。
 
-EC2 インスタンスタイプの拡充や CodeDeploy のリージョン拡大は、地理的な展開とコンプライアンス要件に柔軟に対応するための基盤を整えます。SageMaker Unified Studio の Git 統合は、機械学習プロジェクトにおけるバージョン管理とチーム開発を改善し、MLOps の成熟度を高める一歩となるでしょう。
+EC2 インスタンスタイプの拡充や CodeDeploy のリージョン拡大は、地理的な展開とコンプライアンス要件に柔軟に対応するための基盤を整えます。SageMaker Unified Studio の Git 統合は、これまで Git 非対応だった Notebooks を含む全ツールにファイル単位のバージョン管理をもたらします。
 
 これらのアップデートを活用する際は、公式ドキュメントで詳細仕様を確認し、実環境での検証を通じて具体的な効果を測定することが重要です。特にコスト削減やパフォーマンス改善を謳うアップデートについては、実測値を取得してから本番適用を判断することをお勧めします。
 
