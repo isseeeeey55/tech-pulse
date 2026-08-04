@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/08/04 のアップデートまとめ"
 date: 2026-08-04T08:02:01+09:00
-draft: true
+draft: false
 tags: ["aws", "ec2", "gamelift", "sagemaker", "resilience-hub", "healthomics", "config", "waf", "ecr", "aurora", "fis"]
 categories: ["AWS Updates"]
 summary: "2026/08/04 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260804/header.png)
 
 # 直近の AWS アップデート 9 件まとめ — ストレージ最適化インスタンスの新リージョン展開、レジリエンステスト自動化、ECR レイヤー拡大など
 
@@ -21,29 +23,20 @@ AWS Resilience Hub に新たに追加された**推奨レジリエンステス�
 
 #### なぜこのアップデートが重要なのか
 
-従来、障害復旧計画（DR）の有効性検証やカオスエンジニアリング実践には、各チームが障害シナリオを設計し、手動で障害を注入し、復旧プロセスを観察・評価する必要がありました。これには多大な時間と専門知識が必要で、定期的な実施が困難でした。本機能により、サービスのアーキテクチャ、構成、レジリエンスポリシーに基づいて AWS が事前設定済みのテストシナリオを提供し、AWS Fault Injection Service (FIS) を通じて制御された障害注入を自動実行します。
+告知は本機能を、プラットフォームエンジニアリングチームと SRE チームが「既知の障害シナリオに対してサービスがどう応答し復旧するか」を検証するためのものと位置づけています。障害注入には **AWS Fault Injection Service (FIS)** を使用し、定義した復旧目標の範囲内でサービスが復旧するかを評価します。
 
 #### 機能の仕組みと特徴
 
-推奨レジリエンステストは以下のプロセスで動作します。
+告知が説明しているテストの流れは以下のとおりです。
 
-1. **自動ターゲット選定**: サービスアーキテクチャを解析し、テスト対象のリソース（ECS タスク、Lambda 関数、RDS インスタンスなど）を自動特定します
-2. **障害注入実行**: AWS FIS を活用して、AZ 障害、リージョン障害、依存関係の障害といった現実的なシナリオを制御された形で注入します
-3. **復旧目標評価**: 定義された RTO（Recovery Time Objective）および RPO（Recovery Point Objective）に基づいて、サービスが目標時間内に復旧するかを自動判定します
-4. **詳細レポート生成**: テスト実行の結果、アラーム評価の経過、合否判定、改善推奨事項を含む包括的なレポートを自動生成します
+1. **自動ターゲット選定**: 各テストがサービス内のリソースを自動的にターゲットにします
+2. **障害注入実行**: 必要な障害を注入します。対象シナリオとして挙げられているのは、**アベイラビリティゾーンの障害（Availability Zone impairment）、リージョンの障害（Regional impairment）、依存関係の障害（dependency failure）** です
+3. **合否判定**: **アラーム評価と復旧目標**に基づいて、合格・不合格の結果を出力します
+4. **詳細レポート生成**: テストの詳細レポートを生成します
 
-#### 従来の手法との比較
+サービスの構成変更が頻繁に行われる環境では、変更のたびにレジリエンステストを CI/CD パイプラインに組み込むことで、リグレッションを早期に発見できます。
 
-従来の手動障害テストでは、以下のような課題がありました。
-
-- 障害シナリオの設計に専門知識が必要
-- テストのたびに FIS 実験テンプレートを手動作成
-- 復旧の成否判定基準が曖昧
-- テスト結果のドキュメント化が属人的
-
-推奨レジリエンステスト機能はこれらをすべて自動化し、継続的かつ標準化された形でレジリエンス検証を実施できます。特に、サービスの構成変更が頻繁に行われる環境では、変更のたびにレジリエンステストを CI/CD パイプラインに組み込むことで、リグレッションを早期発見できます。
-
-> **Note:** この機能は 15 以上の AWS リージョンで利用可能です。詳細な設定方法については、[AWS Resilience Hub の公式ドキュメント](https://docs.aws.amazon.com/resilience-hub/)を参照してください。
+> **Note:** 本機能は以下の 15 リージョンで利用可能です — 米国東部（バージニア北部・オハイオ）、米国西部（オレゴン）、カナダ（中部）、欧州（アイルランド・ロンドン・フランクフルト・パリ・ストックホルム）、アジアパシフィック（ムンバイ・シンガポール・シドニー・東京・ソウル）、南米（サンパウロ）。詳細な設定方法は [AWS Resilience Hub の公式ドキュメント](https://docs.aws.amazon.com/resilience-hub/)を参照してください。
 
 ### Amazon ECR のイメージレイヤー上限 200GB への拡大
 
@@ -51,13 +44,9 @@ Amazon ECR（Elastic Container Registry）が Docker push 経由で送信する�
 
 #### 背景と課題
 
-機械学習モデル、特に大言語モデル（LLM）は数十 GB から 100GB 以上のサイズになることが一般的です。また、ゲノミクスデータセット、科学計算用のシミュレーションデータ、ゲームエンジンのアセットなども同様に大容量です。従来の ECR では、単一レイヤーのサイズ制限により、これらを複数のレイヤーに分割するか、外部ストレージ（S3 など）に配置してコンテナ起動時にダウンロードする必要がありました。
+告知がユースケースとして挙げているのは、**大規模言語モデルの埋め込み、ゲノミクスデータセットのバンドル、大容量バイナリ依存関係のパッケージ化**の3つです。いずれも単一のファイルが大きくなりやすく、レイヤーサイズの上限が制約になりやすい領域です。
 
-この方式には以下の問題がありました。
-
-- **複雑性の増加**: 複数レイヤーへの分割ロジックが Dockerfile に必要
-- **デプロイの遅延**: 外部ストレージからの初回ダウンロード時間が起動時間に加算
-- **管理の煩雑さ**: コンテナイメージとデータの整合性管理が必要
+なお、拡大前の上限値は告知に記載されていません。
 
 #### 改善効果
 
@@ -69,7 +58,7 @@ Amazon ECR（Elastic Container Registry）が Docker push 経由で送信する�
 
 #### 実装における注意点
 
-ただし、AWS SDK/CLI の `UploadLayerPart` API 経由での送信には従来通り 50GB の制限が残ります。200GB の上限は Docker push（Docker CLI を利用した標準的なプッシュ操作）でのみ利用可能です。このため、既存の自動化スクリプトで SDK/CLI を直接使用している場合は、Docker push を使う方式に切り替える必要があります。
+告知は「AWS SDK または CLI（`UploadLayerPart` API）を使ってプッシュされたイメージは 50GB の制限のまま」と明記しています。200GB の上限は Docker push 経由のイメージにのみ適用されます。このため、既存の自動化スクリプトで SDK/CLI を直接使用している場合は、Docker push を使う方式に切り替える必要があります。
 
 また、200GB のレイヤーを含むイメージは、ネットワーク帯域幅とプル時間に影響を与えます。高速なネットワーク環境（VPC エンドポイント経由など）を使用するか、頻繁にデプロイされるサービスではイメージのキャッシュ戦略を慎重に設計することが推奨されます。
 
@@ -97,15 +86,17 @@ ECR のレイヤー上限拡大は、機械学習推論基盤を運用する SRE
 
 | サービス | タイトル | 概要 |
 |---------|---------|------|
-| **Amazon EC2** | [I7i インスタンスがタイランド・テルアビブリージョンで利用可能に](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-ec2-i7i-instances-in-additional-regions/) | 第 5 世代 Intel Xeon プロセッサ搭載、前世代 I4i 比で計算性能 23% 向上、価格性能比 10% 改善。ストレージパフォーマンス 50% 向上、I/O レイテンシ 50% 低下。 |
+| **Amazon EC2** | [I7i インスタンスがアジアパシフィック（タイ）・イスラエル（テルアビブ）リージョンで利用可能に](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-ec2-i7i-instances-in-additional-regions/) | 全コアターボ 3.2GHz の第 5 世代 Intel Xeon プロセッサ搭載。前世代 I4i 比で計算性能が**最大 23%** 向上、価格性能比は **10% 以上**改善。リアルタイムストレージ性能が最大 50% 向上、ストレージ I/O レイテンシが最大 50% 低下、同レイテンシの変動が最大 60% 低減。最大 45TB の NVMe ストレージ。 |
 | **Amazon GameLift** | [Streams でストリーム URL 共有をサポート](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-gamelift-streams/) | AWS アカウント不要でブラウザからゲームストリーム再生が可能に。CreateStreamUrl、GetStreamUrl、ListStreamUrls、RevokeStreamUrl API を提供。 |
-| **Amazon SageMaker** | [AI サーバーレスモデルカスタマイズがフルファインチューニングをサポート](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-sagemaker-fft) | 25 以上のオープンソースモデル（GPT-OSS、Gemma、Llama、Nemotron、Qwen など）でフルファインチューニングが可能。LoRA に加えてすべてのパラメータを更新可能に。 |
+| **Amazon SageMaker** | [AI サーバーレスモデルカスタマイズがフルファインチューニングをサポート](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-sagemaker-fft) | 25 を超えるオープンソースモデル（gpt-oss、Gemma、Llama、Nemotron、Qwen の各ファミリー）に対応。重みの一部のみ更新する LoRA 等のパラメータ効率手法に対し、全パラメータを更新してより深く適応させられる。米国東部（バージニア北部）、米国西部（オレゴン）、アジアパシフィック（東京）、欧州（アイルランド）で利用可能。 |
 | **AWS Resilience Hub** | [推奨レジリエンステスト機能を提供](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-resilience-hub/) | サービスアーキテクチャに基づく事前設定済みテスト。AWS FIS を使用した制御された障害注入、自動合否判定、詳細レポート生成。 |
-| **AWS HealthOmics** | [WDL ワークフローでタスクレベルタイムアウトをサポート](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-healthomics-wdl-task-level-timeout/) | WDL タスクの runtime セクションに `omicsTimeout` 属性を追加可能。90s、2h、1d などの標準時間単位をサポート。 |
+| **AWS HealthOmics** | [WDL ワークフローでタスクレベルタイムアウトをサポート](https://docs.aws.amazon.com/omics/latest/dev/workflow-languages-wdl.html)（※） | WDL タスクの `runtime` セクションに `omicsTimeout` 属性を指定してタスクの最大実行時間を設定できる。値は整数（秒）または `s` / `m` / `h` / `d` を組み合わせた文字列（`"40m"`、`"1h30m"` など）。粒度は1分で、60秒未満の値は60秒に切り上げられる。 |
 | **AWS Config** | [15 の新しいリソースタイプをサポート](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-config-new-resource-types) | AppSync、Bedrock、Connect、Glue、OpenSearch Serverless、SageMaker など主要サービスのリソースを追跡可能に。Config rules および aggregators でも利用可能。 |
-| **AWS WAF** | [Miggo Security 管理ルールグループをサポート](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-waf-miggo-managed-rule-groups) | 「High Emerging Application Threats」と「AI/ML Application Protection」の 2 つのルールグループを提供。CISA KEV 登録脆弱性や LLM 固有脅威に対応。 |
-| **AWS Transform** | [Windows モダナイゼーションでオフラインスキーマ変換をサポート](https://aws.amazon.com/about-aws/whats-new/2026/7/aws-transform-windows-sql-schema-aurora) | SQL Server DDL ファイルから Aurora PostgreSQL へのスキーマ変換。.NET アプリケーションの接続文字列、ADO.NET、Entity Framework も自動更新。 |
-| **Amazon ECR** | [イメージレイヤー上限を 200GB に拡大](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-ecr-image-layers/) | Docker push 経由で最大 200GB の単一レイヤーをサポート。LLM、ゲノミクスデータ、大容量バイナリを分割なしでパッケージ化可能。 |
+| **AWS WAF** | [Miggo Security 管理ルールグループをサポート](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-waf-miggo-managed-rule-groups) | 「Miggo Rules for AWS WAF – High Emerging Application Threats」と「Miggo Rules for AWS WAF – AI/ML Application Protection」の 2 つを提供。前者は CISA Known Exploited Vulnerabilities (KEV) カタログ掲載の脆弱性、後者は AI エージェントフレームワーク・LLM ゲートウェイ・モデルサービング基盤といった生成 AI スタックを対象。料金は Miggo が AWS Marketplace で設定。 |
+| **AWS Transform** | [Windows モダナイゼーションでオフラインスキーマ変換をサポート](https://aws.amazon.com/about-aws/whats-new/2026/7/aws-transform-windows-sql-schema-aurora) | SQL Server の DDL ファイルをアップロードし、データベースとストアドプロシージャの複雑度を評価して変換プランを生成。テーブル・スキーマとストアドプロシージャ等のコードオブジェクトを変換し、機能的等価性を検証したうえで Aurora PostgreSQL へデプロイ。.NET アプリケーションの接続文字列、ADO.NET、Entity Framework のデータアクセス呼び出しも更新。米国東部（バージニア北部）で利用可能。 |
+| **Amazon ECR** | [イメージレイヤー上限を 200GB に拡大](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-ecr-image-layers/) | Docker push 経由のイメージで最大 200GB の単一レイヤーをサポート。LLM の埋め込み、ゲノミクスデータセットのバンドル、大容量バイナリ依存関係のパッケージ化が対象。SDK/CLI（`UploadLayerPart` API）経由は 50GB のまま。中東（バーレーン・UAE）を除く全リージョンで利用可能。 |
+
+※ AWS HealthOmics の告知については、RSS フィードが返す What's New の URL が現時点で 404 を返すため、`omicsTimeout` 属性の仕様を記載した公式ドキュメントへリンクしています。
 
 ## まとめ
 
