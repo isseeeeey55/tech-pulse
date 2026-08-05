@@ -1,15 +1,19 @@
 ---
 title: "【AWS】2026/08/05 のアップデートまとめ"
 date: 2026-08-05T08:01:49+09:00
-draft: true
+draft: false
 tags: ["aws", "connect", "emr", "ec2", "bedrock", "elasticloadbalancing", "securityhub", "rds", "organizations", "transform"]
 categories: ["AWS Updates"]
 summary: "2026/08/05 のAWSアップデートまとめ"
 ---
 
-# 今回は、直近で発表された11件のAWSアップデートを紹介します
+![](/images/aws-updates-20260805/header.png)
 
-今回取り上げるアップデートは、コンタクトセンター運用の効率化、データ分析基盤の対話的開発環境、生成AIの検索機能強化、ロードバランサーのセキュリティ強化、高性能インスタンスの地域拡大、そしてアカウント管理の可視化まで、幅広い領域をカバーしています。特に、Amazon Bedrock の Web Search 機能や AWS Transform の継続的モダナイゼーション機能は、セキュアな環境を保ちながら最新情報を活用する新しいアプローチを提示しており、SRE や DevOps チームにとって注目すべき内容です。
+# 直近の AWS アップデート 11 件まとめ — Bedrock Web Search、継続的モダナイゼーション GA、RFC 9151 対応など
+
+## はじめに
+
+今回は、直近で発表された 11 件の AWS アップデートを紹介します。コンタクトセンター運用の効率化、データ分析基盤の対話的開発環境、生成AIの検索機能強化、ロードバランサーのセキュリティ強化、高性能インスタンスの地域拡大、そしてアカウント管理の可視化まで、幅広い領域をカバーしています。特に、Amazon Bedrock の Web Search 機能や AWS Transform の継続的モダナイゼーション機能は、セキュアな環境を保ちながら最新情報を活用する新しいアプローチを提示しており、SRE や DevOps チームにとって注目すべき内容です。
 
 ## 注目アップデート深掘り
 
@@ -21,12 +25,13 @@ Amazon Bedrock が OpenAI の GPT モデル（GPT-5.4、GPT-5.5、GPT-5.6 Sol/Te
 
 これまで生成 AI アプリケーションに最新のウェブ情報を組み込むには、第三者の検索プロバイダーを統合する必要があり、以下のような煩雑さがありました。
 
-- 複数の API キー管理
-- カスタムオーケストレーション構築の工数
-- 各ベンダーのセキュリティ審査プロセス
-- データがサードパーティに流出するリスク
+- 個別の API キーと請求の管理
+- カスタムオーケストレーションの構築
+- 外部ベンダーごとの追加コンプライアンスレビュー
 
-Web Search 機能はこれらの課題を解消し、既存の Bedrock API 呼び出しに1つのパラメータを追加するだけで実装できます。Amazon 独自のウェブインデックス（数十億ドキュメント）と検証済みの知識グラフを活用し、セマンティック抽出により効率的で低遅延の結果を提供します。
+Web Search 機能はこれらの課題を解消し、既存の API 呼び出しに1つのパラメータを追加するだけで、標準化されたツール利用インターフェース経由で組み込めます。Amazon 独自のウェブインデックス（**継続的に更新される数百億ドキュメント**）と、検証済みの事実を提供する組み込みの知識グラフを活用し、セマンティックなスニペット抽出により結果を返します。
+
+本機能は米国東部（バージニア北部・オハイオ）および米国西部（オレゴン）で提供されています。
 
 #### なぜこのアップデートが重要なのか
 
@@ -89,12 +94,12 @@ Infrastructure as Code でアカウント自動化を行う際の事前チェッ
 | Amazon Connect Customer のケース CSV エクスポート機能 | エージェント ワークスペースからケースを CSV でエクスポート可能に。セキュリティプロファイル権限でアクセス制御可能 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-connect-export-cases/) |
 | Amazon EMR on EC2 で Spark Connect 対応 | インタラクティブな Spark セッションの実行が可能に。SageMaker Unified Studio や Jupyter からの対話的開発をサポート | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-emr-ec2-spark-connect/) |
 | Amazon Bedrock が OpenAI GPT モデル向け Web Search 提供 | データが AWS 外に流出せず、最新のウェブ情報に基づいた回答を生成。Amazon 独自のウェブインデックスを活用 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-bedrock-web/) |
-| ALB・NLB が RFC 9151 準拠セキュリティポリシーをサポート | CNSA 1.0 スイート要件を満たす TLS 通信が可能に。政府機関などでの利用に対応 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-application-network/) |
-| EC2 C8g インスタンスが追加リージョンで利用可能 | パリ、ケープタウン、テルアビブ、カルガリーで C8g インスタンス提供開始。Graviton4 搭載で Graviton3 比 30% 性能向上 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-ec2-c8g-instances-additional-regions/) |
+| ALB・NLB が RFC 9151 準拠セキュリティポリシーをサポート | Commercial National Security Algorithm (CNSA) 1.0 スイート要件に対する RFC 9151 の TLS サーバー要件に準拠した新ポリシー。米国 NSA が定める暗号要件を TLS 1.2 / 1.3 で実装。全コマーシャルリージョン、GovCloud (US)、中国リージョンで追加費用なしに利用可能 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-application-network/) |
+| EC2 C8g インスタンスが追加リージョンで利用可能 | 欧州（パリ）、アフリカ（ケープタウン）、イスラエル（テルアビブ）、カナダ西部（カルガリー）で提供開始。AWS Graviton4 搭載で、Graviton3 ベースのインスタンス比**最大 30%** の性能向上。データベースで 40%、Web アプリで 30%、大規模 Java アプリで 45% 高速 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-ec2-c8g-instances-additional-regions/) |
 | Security Hub Extended にサプライチェーン セキュリティ追加 | 10番目のセキュリティカテゴリとして追加。Chainguard と Socket がパートナー。悪意ある依存関係を検出・ブロック | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-security-hub-extended-adds-supply-chain-security) |
 | RDS for SQL Server が追加リージョンで BYOM 対応 | アジア太平洋 7 地域、ヨーロッパ 2 地域、メキシコ 1 地域で BYOM 利用可能。AWS License Manager と統合 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/07/rds-sql-server-supports-byom-in-additional-aws-regions/) |
-| EC2 I8g インスタンスがパリ・ジャカルタで利用可能 | AWS Graviton4 プロセッサ搭載。I4g 比で TB あたりストレージ性能 65% 向上、レイテンシ 50% 低減 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-ec2-i8g-instances-aws-paris-jakarta-regions/) |
-| OpenAI GPT-5.6 が 100万トークン コンテキストウィンドウに対応 | Sol、Terra、Luna の3モデルが対応。プロンプトキャッシングで繰り返しコンテキストは 90% 割引 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/gpt-sol-terra-luna-long-context-bedrock) |
+| EC2 I8g インスタンスがパリ・ジャカルタで利用可能 | AWS Graviton4 と第3世代 AWS Nitro SSD を搭載。I4g 比で TB あたりのリアルタイムストレージ性能が**最大 65%** 向上、ストレージ I/O レイテンシが**最大 50%** 低下、同レイテンシの変動が最大 60% 低減 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-ec2-i8g-instances-aws-paris-jakarta-regions/) |
+| OpenAI GPT-5.6 が 100万トークン コンテキストウィンドウに対応 | Sol、Terra、Luna の3モデルが対応。明示的なキャッシュブレークポイントを使ったプロンプトキャッシングが長コンテキストのリクエストにも適用され、繰り返しコンテキストはキャッシュ割引価格で課金される（割引率は告知に記載なし）。Sol は米国東部（バージニア北部・オハイオ）、Terra と Luna はこれに米国西部（オレゴン）を加えたリージョンで利用可能 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/gpt-sol-terra-luna-long-context-bedrock) |
 | AWS Organizations のアカウントクォータが Service Quotas で可視化 | マネジメントアカウントから現在のアカウント数と上限を確認可能。GetServiceQuota API でプログラマティックアクセス可能 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-organizations/) |
 | AWS Transform 継続的モダナイゼーション機能が正式リリース | GitHub/GitLab/Bitbucket 接続。技術的債務、セキュリティ、AI 対応可能性を分析し、自動修復プルリクエストを生成 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/7/aws-transform-continuous-general-available) |
 
@@ -106,7 +111,7 @@ Infrastructure as Code でアカウント自動化を行う際の事前チェッ
 
 セキュリティ面では、ALB・NLB の RFC 9151 準拠ポリシーや Security Hub Extended のサプライチェーン セキュリティカテゴリ追加により、政府機関や規制産業での要件に対応する体制が整いつつあります。
 
-SRE チームとしては、これらの新機能を段階的に検証し、既存の運用ワークフローに統合することで、セキュアで効率的な運用基盤を構築できます。特に、可視化・自動化・継続的改善の観点から、Service Quotas の拡張や AWS Transform の活用は、長期的な運用品質向上に寄与するでしょう。
+SRE チームとしては、これらの新機能を段階的に検証し、既存の運用ワークフローに統合することで、セキュアで効率的な運用基盤を構築できます。特に可視化・自動化・継続的改善の観点では、Service Quotas の拡張や AWS Transform が長期的な運用品質の底上げにつながります。
 
 ---
 
