@@ -1,21 +1,25 @@
 ---
 title: "【Claude Code】v2.1.222・v2.1.221 リリースノートまとめ"
 date: 2026-08-05T08:02:38+09:00
-draft: true
+draft: false
 tags: ["claude-code", "vscode", "focus-view", "mcp", "sandbox", "worktree", "git", "proxy", "sendmessage", "ultrareview", "vim", "vertex-ai", "stats", "bedrock", "aws-sso", "websearch", "github", "remote-control", "ultraplan"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.222・v2.1.221 のClaude Codeリリースノートまとめ"
 ---
 
+![](/images/claude-code-updates-20260805/header.png)
+
+# Claude Code v2.1.222 / v2.1.221 リリース解説 — ワークツリー隔離の権限修正、サンドボックス認証情報マスキング、VSCode Focus ビュー
+
 ## はじめに
 
-2026年8月5日、Claude Code の v2.1.222 および v2.1.221 がリリースされました。v2.1.221 では VSCode に Focus ビュー機能が追加され、Linux/WSL 環境でのサンドボックス認証情報マスキング機能が導入されました。v2.1.222 では、ワークツリー隔離セッションにおけるセキュリティ強化、MCP サーバーの使用量計測の正確性向上、プロキシ環境での接続安定性改善など、合計 20 件以上の不具合修正が実施されています。両バージョンともセキュリティと信頼性の改善に重点が置かれたメンテナンスリリースです。
+Claude Code の **v2.1.221**（2026年8月4日）と **v2.1.222**（2026年8月5日）がリリースされました。v2.1.221 では VSCode に Focus ビューが追加され、Linux/WSL 環境でのサンドボックス認証情報マスキングが導入されました。v2.1.222 は全21項目のうち16項目が Fix で、ワークツリー隔離セッションのセキュリティ修正、MCP サーバーの使用量計測の正確化、プロキシ環境での接続安定性改善が中心です。両バージョンともセキュリティと信頼性の改善に重点が置かれています。
 
 ## 注目アップデート深掘り
 
 ### VSCode Focus ビュー機能（v2.1.221）
 
-v2.1.221 で VSCode 向けに **Focus ビュー** 機能が追加されました。この機能は、チャットメニューから切り替え可能で、ツールアクティビティを折りたたんで表示し、ターンごとのサマリーとライブ実行中ツールインジケーターだけを表示します。`Ctrl+Alt+F` または "Claude Code: Toggle Focus view" コマンドで切り替えることができます。
+v2.1.221 で VSCode 向けに **Focus ビュー** 機能が追加されました。チャットメニューのトグルで、ツールアクティビティを**展開可能な**ターンごとのサマリーの背後に隠し、実行中ツールのライブインジケーターを表示します。`Ctrl+Alt+F` または "Claude Code: Toggle Focus view" コマンドで切り替えられます。
 
 これにより、ツール呼び出しの詳細が画面を占有せず、対話の流れに集中しやすくなります。特に複数のツールが並行実行される場合や、長時間のセッションでログが増大する場合に有用です。
 
@@ -41,7 +45,7 @@ v2.1.222 では、ワークツリー隔離セッションおよびそのサブ�
 
 v2.1.221 の Focus ビュー機能は、VSCode でツールアクティビティを折りたたみ、対話フローを追いやすくします。長時間のコード生成や複雑なタスクでログが増える場合に有効です。
 
-サンドボックス認証情報マスキングは、Linux/WSL でクラウド API キーや SSH 鍵を安全に扱う際に役立ちます。`mode: "mask"` を設定することで、サンドボックス内部では代替値が読み込まれ、外部への送信時のみ実際の値が使用されます。
+サンドボックス認証情報マスキングは、Linux/WSL でサンドボックス化したコマンドに認証情報ファイルを渡す際に役立ちます。`mode: "mask"` を設定すると、サンドボックス内部ではセンチネルコピーが読み込まれ、送信時にプロキシが実際の値へ置換します。
 
 v2.1.222 のワークツリー隔離セキュリティ強化は、並行セッションや複数ブランチでの作業時に重要です。破壊的 Git コマンドの実行を防ぎ、リポジトリの整合性を保ちます。
 
@@ -74,8 +78,8 @@ MCP サーバーの使用量計測修正は、複数サーバーを組み合わ�
 | Improvement | auto モード安全性向上 | `SendMessage` 経由で他のエージェントセッションに送信されるメッセージが、dispatch 前に permission classifier で評価されるよう改善 |
 | Improvement | `disable-model-invocation` スキルの拒否改善 | Claude がモデル呼び出し無効のスキルを実行しようとする際の拒否を改善。ワークフローを複製するのではなく、ユーザーにスキル実行を依頼するよう指示 |
 | Improvement | `/diff` ビューの git blob 使用 | `/diff` ビュー、Remote Control ワークスペース差分、web セッションのファイル編集差分で、ワークスペース設定の diff ドライバーや textconv を無視し、生の git blob コンテンツを使用するよう改善 |
-| Breaking | Remote Control 自動起動設定変更 | Remote Control 自動起動は、リポジトリローカル設定（`.claude/settings.json` または `.claude/settings.local.json`）では有効化できなくなった（無効化は可能）。ユーザースコープで `/config` を使用して有効化 |
-| Breaking | ultraplan 機能削除 | ultraplan 機能を削除 |
+| Changed | Remote Control 自動起動設定変更 | Remote Control 自動起動は、リポジトリローカル設定（`.claude/settings.json` または `.claude/settings.local.json`）では有効化できなくなった（無効化は可能）。ユーザースコープで `/config` を使用して有効化 |
+| Removed | ultraplan 機能削除 | ultraplan 機能を削除 |
 
 ### v2.1.221
 
@@ -108,18 +112,18 @@ MCP サーバーの使用量計測修正は、複数サーバーを組み合わ�
 | Improvement | Stats パネルのキャッシュトークン表示 | Stats パネルでキャッシュトークンをトークン合計に含め、input、output、cache read、cache write の内訳を表示 |
 | Improvement | `/ultrareview` エラーメッセージ改善 | リポジトリが base と履歴を共有しない場合の `/ultrareview` エラーメッセージを改善。ブランチのないチェックアウトは作成アドバイスとともに事前拒否され、拒否ヒントは完全なクローンに対して `git fetch --unshallow` を提案しなくなった |
 | Improvement | Windows 起動プロセス読み取り | Windows 起動時のプロセス作成時刻を、PowerShell を起動せずネイティブ kernel32 呼び出しで読み取るよう改善。`powershell.exe` をゲートするエンドポイントセキュリティツールがプロンプトを出さなくなった |
-| Breaking | バックグラウンドセッションの挙動変更 | バックグラウンドセッションは、作業を保存するためにコミット・プッシュし、タスクが求める場合のみドラフト PR を開き、CLAUDE.md の git 指示に従い、常に作業の保存場所を報告して終了 |
-| Breaking | `/plugin install` のマーケットプレイスカタログ更新 | `/plugin install` は、プラグインが見つからない報告前に古いマーケットプレイスカタログを更新して再試行 |
-| Breaking | `/plugin` からインストールしたプラグインの即時有効化 | `/plugin` からインストールしたプラグインは、安全な場合に即座に有効化され、常に `/reload-plugins` を要求しなくなった |
-| Breaking | プラグイン `skills` パスでの `"."` 受け入れ | プラグインが `skills` パスとして `"."` を受け入れるようになり、ルートレベルの `SKILL.md` 検証エラーはプラグインルートの使用を提案 |
-| Breaking | `/status` でセッション種別表示 | `/status` がセッション種別を表示: `interactive`、または `attached` / `unattended` のバックグラウンドジョブ |
-| Breaking | 絵文字オートコンプリート別名対応 | 絵文字オートコンプリートが `:thumbsup:`、`:thumbsdown:`、`:love:` などの一般的な別名ショートコードを受け入れ |
-| Breaking | `/fork` セッションのワークツリー | `/fork` でフォークされたセッションは、元のセッションのチェックアウトではなく独自のワークツリーを作成 |
-| Breaking | Claude in Chrome のタブクローズ | Claude in Chrome が、不要になったブラウザタブを閉じるよう変更 |
-| Breaking | fast モードの usage credits 枯渇報告 | fast モードで、セッション中に usage credits が枯渇した場合、無言で失敗せずストリームで報告 |
-| Breaking | Monitor の出力なし終了報告 | Monitor で、出力を何も生成せずに終了した watch が "stream ended" ではなく明示的に報告 |
-| Breaking | Gateway `model` フィールド検証 | Gateway の `model` フィールド検証が変更され、非文字列値は転送されず 400 で拒否 |
-| Breaking | auto モード分類器待ちメッセージ削除 | 承認プロンプトから「Permission mode changed while the auto-mode classifier call was queued」通知の繰り返し表示を削除 |
+| Changed | バックグラウンドセッションの挙動変更 | バックグラウンドセッションは、作業を保存するためにコミット・プッシュし、タスクが求める場合のみドラフト PR を開き、CLAUDE.md の git 指示に従い、常に作業の保存場所を報告して終了 |
+| Changed | `/plugin install` のマーケットプレイスカタログ更新 | `/plugin install` は、プラグインが見つからない報告前に古いマーケットプレイスカタログを更新して再試行 |
+| Changed | `/plugin` からインストールしたプラグインの即時有効化 | `/plugin` からインストールしたプラグインは、安全な場合に即座に有効化され、常に `/reload-plugins` を要求しなくなった |
+| Changed | プラグイン `skills` パスでの `"."` 受け入れ | プラグインが `skills` パスとして `"."` を受け入れるようになり、ルートレベルの `SKILL.md` 検証エラーはプラグインルートの使用を提案 |
+| Changed | `/status` でセッション種別表示 | `/status` がセッション種別を表示: `interactive`、または `attached` / `unattended` のバックグラウンドジョブ |
+| Changed | 絵文字オートコンプリート別名対応 | 絵文字オートコンプリートが `:thumbsup:`、`:thumbsdown:`、`:love:` などの一般的な別名ショートコードを受け入れ |
+| Changed | `/fork` セッションのワークツリー | `/fork` でフォークされたセッションは、元のセッションのチェックアウトではなく独自のワークツリーを作成 |
+| Changed | Claude in Chrome のタブクローズ | Claude in Chrome が、不要になったブラウザタブを閉じるよう変更 |
+| Changed | fast モードの usage credits 枯渇報告 | fast モードで、セッション中に usage credits が枯渇した場合、無言で失敗せずストリームで報告 |
+| Changed | Monitor の出力なし終了報告 | Monitor で、出力を何も生成せずに終了した watch が "stream ended" ではなく明示的に報告 |
+| Changed | Gateway `model` フィールド検証 | Gateway の `model` フィールド検証が変更され、非文字列値は転送されず 400 で拒否 |
+| Removed | auto モード分類器待ちメッセージ削除 | 承認プロンプトから「Permission mode changed while the auto-mode classifier call was queued」通知の繰り返し表示を削除 |
 
 ## まとめ
 
