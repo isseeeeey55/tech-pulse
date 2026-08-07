@@ -1,15 +1,19 @@
 ---
 title: "【New Relic】2026/08/08 のアップデートまとめ"
 date: 2026-08-08T08:00:56+09:00
-draft: true
+draft: false
 tags: ["newrelic", "infrastructure-agent", "security", "oci", "aws", "multicloud", "monitoring"]
 categories: ["New Relic Updates"]
 summary: "2026/08/08 のNew Relicアップデートまとめ"
 ---
 
+![](/images/newrelic-updates-20260808/header.png)
+
+# New Relic 2026年8月8日アップデート情報
+
 ## はじめに
 
-2026年8月8日、New Relic Infrastructure Agent の新バージョン 1.79.0 がリリースされました。今回のアップデートは1件ですが、セキュリティ強化と機能改善を両立した重要なリリースとなっています。主な内容は、パストラバーサル脆弱性の修正、gRPC 1.82.1 への依存関係更新、プラグイン自動スキャン無効化オプションの追加、OCI タグサポート（AWS タグ対応フェーズ1・2）、環境変数の公開化対応など多岐にわたります。特に注目すべきは、RCE につながる脆弱性の修正と、マルチクラウド環境でのタグ管理を改善する OCI タグサポートの導入です。セキュリティ面での対応は早期適用が推奨されるため、SRE チームは計画的なアップグレードを検討すべきでしょう。
+2026年8月7日、New Relic Infrastructure Agent の新バージョン 1.79.0 がリリースされました。取り上げる対象は1リリースですが、リリース本文には 10 件の変更が含まれており、セキュリティ修正と機能追加の両方を含む内容になっています。主な内容は、パストラバーサル起因の RCE 脆弱性の修正、Trivy スキャンで検出された依存関係の CVE 対応、組み込み OHI（nri-docker / nri-flex / nri-prometheus）の CVE 対応バージョン更新、統合ディレクトリの既定スキャンを無効化する `disable_plugin_default_dir_scan` オプションの追加、OCI タグサポート（AWS タグ対応の Phase 1・2）、Agent Control が使用する環境変数の公開などです。特に脆弱性修正は複数の CVE を含むため、アップグレード計画の優先度は高くなります。
 
 ## 注目アップデート深掘り
 
@@ -19,51 +23,66 @@ summary: "2026/08/08 のNew Relicアップデートまとめ"
 
 **セキュリティ面での重要性**
 
-まず最も重要なのが、パストラバーサル脆弱性の修正です。このタイプの脆弱性は、攻撃者が意図しないファイルシステムパスにアクセスし、最悪の場合 RCE（Remote Code Execution）につながる可能性があります。Infrastructure Agent は多くの環境で root 権限または特権コンテナとして動作するため、脆弱性が悪用されると深刻な影響を受けます。合わせて gRPC が 1.82.1 に更新され、Trivy スキャンで指摘された脆弱性も対応されました。これらの修正により、コンプライアンススキャンの結果が改善され、監査対応も容易になります。
+まず最も重要なのが、パストラバーサル脆弱性の修正（PR #2292）です。修正内容は「Unauthenticated TCP Integration Ingest Allows Root Arbitrary File Write via Path Traversal」と説明されており、未認証の TCP 経由の integration ingest から、パストラバーサルによって root 権限で任意のファイルを書き込める状態だった、というものです。任意ファイル書き込みが root 権限で成立する以上、影響は設定ファイルやサービス定義の改変を通じた RCE に至り得ます。エージェントを外部から到達可能なネットワークに置いている環境では、優先的な適用対象です。
 
-**プラグイン管理の効率化**
+依存関係側でも複数の CVE が解消されています。Trivy スキャンで検出された分（PR #2301）として CVE-2026-56852（`golang.org/x/text`）、CVE-2026-46600（`golang.org/x/net`）、および開発ツール配下の CVE-2026-39824（`golang.org/x/sys`）、GHSA-xmrv-pmrh-hhx2（`aws-sdk-go-v2`）が対応されました。加えて組み込み OHI のバージョンが引き上げられ（PR #2302）、nri-docker v2.8.2、nri-flex v1.18.10、nri-prometheus v2.30.2 でそれぞれ同系統の CVE が解消されています。なお gRPC の 1.79.3 → 1.82.1 更新はリリース本文上 `chore(deps)` 分類で、セキュリティに関する記載は付いていません。
 
-新たに導入された `disable_plugin_default_dir_scan` オプションは、プラグインディレクトリの自動スキャンを無効化できます。これにより、使用しないプラグインが自動的にロードされることを防ぎ、エージェントの起動時間短縮とメモリ使用量の削減が期待できます。大規模な AWS 環境で多数の EC2 インスタンスにエージェントをデプロイしている場合、この設定によるリソース最適化の効果は積み重なります。
+**統合ディレクトリのスキャン制御**
 
-**マルチクラウド環境でのタグ管理向上**
+新たに導入された `disable_plugin_default_dir_scan` オプション（環境変数 `NRIA_DISABLE_PLUGIN_DEFAULT_DIR_SCAN`、PR #2290）は、統合（integration）の**既定の配置場所**をスキャン対象から外す設定です。有効化すると、エージェントは明示的に設定された `custom_plugin_installation_dir`（バイナリ / v3 定義）と `plugin_dir`（設定）の 2 箇所からのみ統合をロードします。
 
-OCI（Oracle Cloud Infrastructure）タグのサポートが追加され、AWS タグ対応のフェーズ1・2 も含まれています。これにより、AWS と OCI を併用するハイブリッドクラウド環境において、統一的なタグ戦略でインフラストラクチャを管理できるようになります。タグベースのアラート条件やダッシュボードフィルタリングが、クラウドプロバイダーをまたいで一貫性を持って機能するため、監視運用の複雑さが軽減されます。
+このオプションの目的は、PR の説明にあるとおり、スタンドアロンインストールの残骸や他ユーザーが書き込み可能な場所に残った、古い・競合する統合が読み込まれるのを避けることにあります。既定値は `false` で従来どおりの挙動が維持されるため、後方互換性は保たれます。またリリースには、Agent Control 管理下のエージェントに対してこの設定を既定で有効化する変更（PR #2300）も含まれています。なお PR 上はこのオプションは内部利用向け（internal-only）と位置づけられています。
 
-**環境変数の透明性向上**
+**マルチクラウド環境でのタグ管理**
 
-AC（Agent Control）管理時の環境変数が公開化されたことで、設定の追跡とトラブルシューティングが容易になりました。特に Infrastructure as Code で管理している環境では、エージェントの実際の動作設定を確認しやすくなり、設定ドリフトの検出が迅速化します。
+OCI（Oracle Cloud Infrastructure）タグのサポートが追加されました（PR #2295）。リリース本文の表現は「AWS タグに合わせる形で OCI タグサポートを追加（Phase 1 + Phase 2）」であり、AWS で提供されているタグ取得の挙動を OCI 側にも揃えるものです。AWS と OCI を併用する環境では、両クラウドのリソースを同じタグの枠組みで扱えるようになります。具体的にどの属性がどう付与されるかはリリース本文では詳述されていないため、実際の適用時は取得されるタグ属性を実データで確認してください。
 
-SRE の日常業務では、セキュリティパッチの適用判断、リソース使用量の最適化、マルチクラウド環境の統一的な監視設定が求められます。今回のアップデートはこれら全ての領域にポジティブな影響をもたらすため、計画的なアップグレードを強く推奨します。
+**Agent Control が使用する環境変数の公開**
+
+Agent Control（AC）が使用する環境変数が公開されました（PR #2293）。これは AC のエージェントタイプ定義で参照している環境変数を公開扱いにするもので、New Relic 公式ドキュメント側の更新（docs-website PR #25087）を伴っています。AC 経由でエージェントを管理している環境では、どの環境変数が設定に効いているかをドキュメントで確認できるようになります。
 
 ## SRE視点での活用ポイント
 
-**監視・アラート・ダッシュボードの改善**
+**脆弱性対応の優先度づけ**
 
-OCI タグサポートの導入により、タグベースのアラート条件とダッシュボードが複数クラウド環境で統一的に機能します。例えば `environment:production` や `team:platform` といったタグで絞り込むアラート条件が、AWS EC2、OCI Compute Instance を問わず同じ条件で動作するため、監視ルールの重複管理が不要になります。これは Infrastructure as Code で監視設定を管理している SRE チームにとって、コードの保守性向上に直結します。
+今回のリリースで最も優先度が高いのは PR #2292 の修正です。未認証の TCP integration ingest から root 権限で任意ファイル書き込みが可能という性質上、エージェントの ingest ポートがどこから到達可能かが被害範囲を決めます。まず自環境で当該ポートの到達範囲（セキュリティグループ、ホストファイアウォール、コンテナのネットワーク設定）を棚卸しし、外部から到達可能なホストを優先してアップグレード対象に並べるのが妥当な進め方です。
 
-**AWS環境での運用における影響**
+依存関係側の CVE は `golang.org/x/text` と `golang.org/x/net` が中心で、エージェント本体と組み込み OHI の双方に及びます。CVE スキャンを CI やコンテナレジストリで回している環境では、1.79.0 への更新でこれらの検出が解消されるかを再スキャンで確認しておくと、対応漏れの判断がしやすくなります。
 
-EC2、ECS、Lambda などの AWS 環境で Infrastructure Agent を運用している場合、セキュリティ脆弱性の修正は最優先事項です。特にコンプライアンス要件が厳しい環境では、CVE スキャンで検出される脆弱性への対応は迅速に行う必要があります。プラグイン自動スキャンの無効化オプションは、コンテナ環境（ECS Fargate、EKS）でのエージェント起動時間短縮に寄与し、スケールアウト時のレイテンシ改善が期待できます。
+**統合ディレクトリのスキャン制御を検討する場面**
 
-**すぐに試せる Tips**
-
-ステージング環境で `disable_plugin_default_dir_scan` オプションを有効化し、必要なプラグインのみを明示的にロードする設定に切り替えてみましょう。リソース使用量とエージェント起動時間を Before/After で比較することで、本番適用時の効果を事前に把握できます。
+`disable_plugin_default_dir_scan` は起動時間やリソース使用量の改善を目的とした設定ではなく、ロード対象の統合を明示的に設定した 2 ディレクトリに限定するためのものです。スタンドアロンインストールから Agent Control 管理へ移行した、あるいは複数の手段でエージェントを導入した履歴があるホストでは、意図しない古い統合が残っていないかを確認する価値があります。起動時には統合の管理モードが INFO レベルでログ出力されるため、まずはそのログでどのモードで動いているかを確認するところから始められます。
 
 **アップグレード時の注意点**
 
-セキュリティ修正を含むため早期適用が推奨されますが、nri-flex 関連モジュールの整理が行われているため、flex integration を多用している環境では事前に動作検証を行うべきです。また、環境変数の公開化により設定情報の可視性が向上する反面、機密情報の取り扱いには注意が必要です。Blue/Green デプロイメントやカナリアリリースを活用し、段階的なロールアウトを計画しましょう。
+Agent Control 向けアーティファクトから nri-flex が除外されました（PR #2291）。PR の説明によれば、これは nri-flex を独立してインストールできる OHI として提供する方針への移行によるもので、infrastructure-agent のアーティファクトに同梱する必要がなくなったためです。Agent Control 経由で nri-flex を利用している環境では、アップグレード後に flex の導入経路を別途確保する必要があるかを確認してください。スタンドアロンインストールへの影響についてはリリース本文に記載がないため、実環境での確認が必要です。
+
+同じく Agent Control 管理下のエージェントでは `NRIA_DISABLE_PLUGIN_DEFAULT_DIR_SCAN` が既定で有効になります（PR #2300）。既定ディレクトリに統合を置いている場合は挙動が変わるため、アップグレード前に統合の配置場所を確認しておくと安全です。
 
 ## 全アップデート一覧
 
+Infrastructure Agent 1.79.0（2026年8月7日リリース）に含まれる変更は以下の 10 件です。
+
 | カテゴリ | 対象 | 概要 | リンク |
 |---------|------|------|--------|
-| Infrastructure Agent | Infrastructure Agent 1.79.0 | セキュリティ強化（パストラバーサル脆弱性修正、gRPC 1.82.1、Trivy 脆弱性対応）、プラグイン自動スキャン無効化オプション追加、OCI タグサポート（AWS タグ対応フェーズ1・2）、環境変数公開化対応、nri-flex 関連モジュール整理 | [詳細](https://github.com/newrelic/infrastructure-agent/releases/tag/1.79.0) |
+| security | パストラバーサル | 未認証の TCP integration ingest から root 権限で任意ファイル書き込みが可能だった問題を修正 | [PR #2292](https://github.com/newrelic/infrastructure-agent/pull/2292) |
+| fix | Trivy 検出の依存関係 | CVE-2026-56852（x/text）、CVE-2026-46600（x/net）、CVE-2026-39824（x/sys、開発ツール）、GHSA-xmrv-pmrh-hhx2（aws-sdk-go-v2、開発ツール）を解消 | [PR #2301](https://github.com/newrelic/infrastructure-agent/pull/2301) |
+| chore | 組み込み OHI | nri-docker v2.8.2 / nri-flex v1.18.10 / nri-prometheus v2.30.2 へ更新し CVE を解消 | [PR #2302](https://github.com/newrelic/infrastructure-agent/pull/2302) |
+| chore(deps) | gRPC | `google.golang.org/grpc` を 1.79.3 から 1.82.1 へ更新 | [PR #2296](https://github.com/newrelic/infrastructure-agent/pull/2296) |
+| feat | 統合ディレクトリのスキャン制御 | `disable_plugin_default_dir_scan`（env: `NRIA_DISABLE_PLUGIN_DEFAULT_DIR_SCAN`）で既定の統合配置場所のスキャンを無効化。既定値は `false` | [PR #2290](https://github.com/newrelic/infrastructure-agent/pull/2290) |
+| ci | AC 管理エージェントの既定値 | Agent Control 管理下のエージェントで `NRIA_DISABLE_PLUGIN_DEFAULT_DIR_SCAN` を既定で有効化 | [PR #2300](https://github.com/newrelic/infrastructure-agent/pull/2300) |
+| feat | OCI タグサポート | AWS タグに合わせる形で OCI タグのサポートを追加（Phase 1 + Phase 2） | [PR #2295](https://github.com/newrelic/infrastructure-agent/pull/2295) |
+| feat | AC の環境変数公開 | Agent Control が使用する環境変数を公開扱いに変更（公式ドキュメントも更新） | [PR #2293](https://github.com/newrelic/infrastructure-agent/pull/2293) |
+| feat | nri-flex の分離 | Agent Control 向けアーティファクトから nri-flex を除外（独立した OHI として提供する方針へ） | [PR #2291](https://github.com/newrelic/infrastructure-agent/pull/2291) |
+| security | CI ワークフロー | GitHub Actions ワークフローに permissions を追加 | [PR #2232](https://github.com/newrelic/infrastructure-agent/pull/2232) |
+
+リリース全体: [Infrastructure Agent 1.79.0](https://github.com/newrelic/infrastructure-agent/releases/tag/1.79.0)
 
 ## まとめ
 
-今回の Infrastructure Agent 1.79.0 は、単なるバグフィックスリリースではなく、セキュリティ、パフォーマンス、マルチクラウド対応という3つの軸で重要な改善が施されたアップデートです。特にパストラバーサル脆弱性の修正は、セキュリティインシデントのリスクを低減するため、早期適用が強く推奨されます。同時に、プラグイン管理の最適化や OCI タグサポートといった運用効率向上の機能も含まれており、長期的な監視基盤の改善にも貢献します。
+Infrastructure Agent 1.79.0 は、セキュリティ修正・統合ロードの制御・マルチクラウド対応という3方向の変更を含むリリースです。中心はやはり PR #2292 のパストラバーサル修正で、未認証の TCP integration ingest から root 権限で任意ファイル書き込みが成立していたという内容である以上、適用の優先度は高くなります。加えて、エージェント本体と組み込み OHI の双方で `golang.org/x/text` / `golang.org/x/net` 系の CVE が解消されており、脆弱性スキャンを運用に組み込んでいる環境では検出結果にも反映されます。
 
-AWS を中心としたクラウド環境で New Relic を運用する SRE にとって、今回のアップデートはセキュリティコンプライアンスとリソース最適化の両面でメリットがあります。ステージング環境での検証を経て、計画的に本番環境へのロールアウトを進めることで、安全かつ効率的なインフラストラクチャ監視体制を維持できるでしょう。特にマルチクラウド戦略を採用している組織では、統一的なタグ管理による運用の一貫性向上が期待できます。
+運用面では、`disable_plugin_default_dir_scan` によって統合のロード元を明示した 2 ディレクトリに限定できるようになった点と、Agent Control 管理下でこれが既定有効になる点が、挙動の変わりうる箇所です。あわせて Agent Control 向けアーティファクトからの nri-flex 除外も、flex を使っている環境では導入経路の確認が必要になります。OCI タグサポートについては、AWS タグの挙動に揃える Phase 1・2 が入った段階であり、実際に取得される属性は実環境で確認するのが確実です。
 
 ---
 
