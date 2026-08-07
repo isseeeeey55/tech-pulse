@@ -1,11 +1,15 @@
 ---
 title: "【Claude Code】v2.1.223 リリースノートまとめ"
 date: 2026-08-07T08:01:20+09:00
-draft: true
+draft: false
 tags: ["claude-code", "github", "bash", "unicode", "teleport", "code-review", "modeloverrides", "managed-settings", "subagent"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.223 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260807/header.png)
+
+# Claude Code v2.1.223 リリース解説 — Bash 権限バイパス修正、Organization 単位のマーケットプレイス管理、1M コンテキスト制御の変更
 
 ## はじめに
 
@@ -23,11 +27,11 @@ Claude Code v2.1.223 がリリースされました。本バージョンでは�
 
 細工されたコマンドが権限チェックの一部を隠蔽できる Bash 権限回避の脆弱性が修正されました。また、タブや不可視 Unicode でパディングされたコマンドが承認ダイアログの一部を隠せる問題も同時に修正されています。
 
-これらの脆弱性により、ユーザーが承認ダイアログで確認する内容と実際に実行されるコマンドが異なる可能性がありました。本修正により、権限プロンプトで表示される内容と実行内容が確実に一致するようになり、セキュリティが大幅に向上しています。
+これらの脆弱性により、ユーザーが承認ダイアログで確認する内容と実際に実行されるコマンドが異なる可能性がありました。本修正により、タブや不可視 Unicode でパディングされたコマンドが承認ダイアログからコマンドの一部を隠せなくなっています。
 
 ### ワークフローサンドボックスの動的インポート実行の修正
 
-ワークフロースクリプトが動的 `import()` を使用してワークフローサンドボックス外のコードを実行できる問題が修正されました。この脆弱性により、サンドボックスの隔離が破られ、意図しないコードが実行される可能性がありましたが、本修正によりサンドボックスの完全性が保証されるようになりました。
+ワークフロースクリプトが動的 `import()` を使用してワークフローサンドボックス外のコードを実行できる問題が修正されました。この脆弱性により、サンドボックスの隔離を回避してコードが実行される可能性がありましたが、本修正により動的 `import()` 経由のサンドボックス外実行が塞がれています。
 
 ## 実用的な活用ポイント
 
@@ -58,10 +62,10 @@ Claude Code v2.1.223 がリリースされました。本バージョンでは�
 | Fix | Forked background agent resume stuck | Fork の親プロンプト再構築が失敗した際に forked background agents が「already resuming」で固まる問題を修正 |
 | Fix | Resumed session malformed diagnostics | 履歴に malformed diagnostics attachment が含まれる場合にセッション再開が毎ターン失敗する、または対話アプリが無応答エラー画面に留まる問題を修正 |
 | Fix | `git push` output parsing hang | 異常な `git push` 出力をパースする際の稀なハングを修正 |
-| Improvement | `CLAUDE_CODE_DISABLE_1M_CONTEXT` behavior | 固定リストではなく 1M ネイティブウィンドウを持つすべての Claude モデルを自動圧縮で 200K に保持。200K 保持されていない場合は起動時に警告表示 |
-| Improvement | Auto-compact for unrecognized models | 認識できないモデル ID のセッションを想定コンテキストウィンドウ内に維持。以前の動作に戻すには `CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT=1` を設定 |
-| Improvement | `/review` alias and `/code-review` enhancements | `/review` を `/code-review` のエイリアスに変更。現在の diff または PR をレビュー（`/code-review <level> <pr#>`）。`/code-review ultra` で詳細なクラウドレビューが可能 |
-| Improvement | `/code-review` level reuse | Effort level を省略した場合、前回指定したレベルを再利用。`/code-review high` などで変更可能 |
+| Change | `CLAUDE_CODE_DISABLE_1M_CONTEXT` behavior | 固定リストではなく 1M ネイティブウィンドウを持つすべての Claude モデルを自動圧縮で 200K に保持。200K 保持されていない場合は起動時に警告表示 |
+| Change | Auto-compact for unrecognized models | 認識できないモデル ID のセッションを想定コンテキストウィンドウ内に維持。以前の動作に戻すには `CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT=1` を設定 |
+| Change | `/review` alias and `/code-review` の変更 | `/review` を `/code-review` のエイリアスに変更。現在の diff または PR をレビュー（`/code-review <level> <pr#>`）。`/code-review ultra` で詳細なクラウドレビューが可能 |
+| Change | `/code-review` level reuse | Effort level を省略した場合、前回指定したレベルを再利用。`/code-review high` などで変更可能 |
 
 ## まとめ
 
