@@ -1,15 +1,19 @@
 ---
 title: "【Claude Code】v2.1.226・v2.1.225 リリースノートまとめ"
 date: 2026-08-09T08:01:18+09:00
-draft: true
+draft: false
 tags: ["claude-code", "oauth", "mcp", "remote-control", "sendmessage", "listagents", "vscode", "self-hosted-runner"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.226・v2.1.225 のClaude Codeリリースノートまとめ"
 ---
 
+![](/images/claude-code-updates-20260809/header.png)
+
+# Claude Code v2.1.226・v2.1.225 リリース解説 — ゲートウェイ支出制限通知、OAuth 認証の修正、Remote Control 強化
+
 ## はじめに
 
-2026年8月9日に、Claude Code の v2.1.226 と v2.1.225 がリリースされました。
+2026年8月8日に、Claude Code の v2.1.226 と v2.1.225 がリリースされました。
 
 v2.1.226 はバグ修正と信頼性向上に特化したメンテナンスリリースです。
 
@@ -30,7 +34,7 @@ v2.1.225 では、OAuth 認証周りの重要な不具合が修正されまし�
 - 長期トークン（`CLAUDE_CODE_OAUTH_TOKEN`）が保存されたログインの短期トークンに置き換わり、ヘッドレスセッションが再起動まで壊れる一時的な 401 エラーが修正されました
 - macOS 上の MCP OAuth サーバーが、キーチェーン読み込みのタイムアウト後に、認証済みにもかかわらず 401 エラーが頻発する問題が修正されました
 
-これらの修正により、CI/CD パイプラインや自動化スクリプトなど、無人で長時間実行される環境での認証の安定性が大幅に向上しました。
+これらの修正により、CI/CD パイプラインや自動化スクリプトなど、無人で長時間実行される環境での認証の安定性が向上しました。
 
 > **Note:** MCP (Model Context Protocol) は、Claude Code が外部ツールやデータソースと連携するためのプロトコルです。
 
@@ -63,7 +67,7 @@ v2.1.225 の Remote Control 機能が強化され、SendMessage が他のマシ�
 | Fix | `claude self-hosted-runner` の起動時エラー | `--base-dir` が作成または書き込みできない場合に登録後すべてのセッションが失敗する問題を修正。起動時に明確なエラーを出して終了するように改善 |
 | Fix | Web 上の Claude Code セッションの誤報告 | Web 上のセッションがスタックしていると誤報告され、再接続のたびにイベントバックログが再送信される問題を修正 |
 | Improvement | Remote Control での写真表示 | Claude アプリから添付された写真を、ディスクから読み取る別のツール呼び出しではなく、直接 Claude に表示するように改善 |
-| Improvement | VSCode Focus ビューの折りたたみ | 最新の To-Do リスト、保留中の質問のコンテキスト、解決済み回答が折りたたまれる問題を修正。思考のみの折りたたみには「Thought for Ns」と表示され、ターン完了時に再折りたたみされる |
+| Fix | VSCode Focus ビューの折りたたみ | 最新の To-Do リスト、保留中の質問のコンテキスト、解決済み回答が折りたたまれる問題を修正。思考のみの折りたたみには「Thought for Ns」と表示され、ターン完了時に再折りたたみされる |
 | Feature | SendMessage による名前指定での Remote Control セッション開始 | SendMessage が他のマシン上の Remote Control セッションを名前で指定して会話を開始できるように改善（`ListAgents` で `name [ref]` として表示）。従来は相手からメッセージが来るまで返信のみ可能だった |
 | Improvement | SendMessage の受信者確認の堅牢性 | 既に確認済みの Remote Control 受信者が、自身のリストをチェックできない場合に、同名のローカルセッションに誤って置き換わらないように改善 |
 
