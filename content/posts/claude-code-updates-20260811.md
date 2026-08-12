@@ -1,11 +1,15 @@
 ---
 title: "【Claude Code】v2.1.227 リリースノートまとめ"
 date: 2026-08-11T08:01:04+09:00
-draft: true
+draft: false
 tags: ["claude-code", "claude-code-action", "github-actions", "bash", "tui", "fable"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.227 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260811/header.png)
+
+# Claude Code v2.1.227 リリース情報
 
 ## はじめに
 
@@ -31,7 +35,7 @@ Claude Code v2.1.227 がリリースされました。このバージョンで�
 
 また、期限切れトークンによるセッション開始時の不具合が解消されたことで、Max プランユーザーが不要な使用クレジット有効化プロンプトに遭遇することがなくなります。TUI で会話を巻き戻した後の復元も正しく機能するため、長期にわたる対話セッションの管理が改善されています。
 
-ファイル検索とメンション処理のパフォーマンス最適化により、大規模プロジェクトでの応答性が向上しています。
+パフォーマンス面では、ファイル未検出時の提案処理と、メンション（@）のサイズチェック時に発生していたイベントループの停滞が削減されています。
 
 ## 全変更点一覧
 
