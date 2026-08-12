@@ -1,17 +1,19 @@
 ---
 title: "【AWS】2026/08/12 のアップデートまとめ"
 date: 2026-08-12T08:02:14+09:00
-draft: true
+draft: false
 tags: ["aws", "bedrock", "secrets-manager", "glue", "sagemaker", "rds", "mariadb", "connect", "ec2"]
 categories: ["AWS Updates"]
 summary: "2026/08/12 のAWSアップデートまとめ"
 ---
 
+![](/images/aws-updates-20260812/header.png)
+
 # 直近の AWS アップデート情報（2026年8月版）
 
 ## はじめに
 
-今回は、直近で発表された11件のAWSアップデートを紹介します。Amazon Bedrock のコスト管理機能拡張、AWS Secrets Manager の外部サービス統合、SageMaker JumpStart への大量の新しい基盤モデル追加など、多様なアップデートがリリースされました。特に注目すべきは、生成AI関連のコスト可視化とセキュリティ管理の強化、そして SageMaker JumpStart が新しいモデルのデプロイメントプラットフォームとしての地位を確立しつつある点です。また、データ分析基盤の統合や、Amazon Connect のケース管理機能強化など、エンタープライズ運用を支える実務的な改善も目立ちます。
+今回は、直近で発表された11件のAWSアップデートを紹介します。Amazon Bedrock のコスト管理機能拡張、AWS Secrets Manager の外部サービス統合、SageMaker JumpStart への大量の新しい基盤モデル追加など、多様なアップデートがリリースされました。特に注目すべきは、生成AI関連のコスト可視化とセキュリティ管理の強化、そして SageMaker JumpStart に、今回の 11 件中 5 件・計 12 モデルが追加された点です。また、データ分析基盤の統合や、Amazon Connect のケース管理機能強化など、エンタープライズ運用を支える実務的な改善も目立ちます。
 
 本記事では、これらのアップデートの中から特に運用インパクトの大きいものを深掘りし、SRE の視点での活用ポイントを解説します。
 
@@ -34,15 +36,15 @@ Amazon Bedrock において、IAM プリンシパル（IAM ユーザーやロー
 1. **IAM プリンシパルにタグを付与**  
    IAM ユーザーやロールに対して、`team`、`project`、`cost-center` などのタグを設定します。タグの命名規則は組織の会計ポリシーに合わせて統一しましょう。
 
-2. **AWS Billing and Cost Management コンソールでタグを有効化**  
-   コスト配分タグの管理画面で、使用するタグキーを「アクティブ化」します。この操作により、以降のコストデータにタグ情報が付与されます。
+2. **AWS Billing and Cost Management コンソールで IAM プリンシパルタグをアクティブ化**  
+   告知が示す最初のステップです。コスト配分タグの管理画面で、使用するタグキーを「アクティブ化」します。
 
-3. **AWS Cost Explorer または CUR 2.0 でコスト分析**  
-   Cost Explorer のフィルタ機能を使って、タグごとにコストをグループ化し、レポートを生成します。CUR 2.0（Cost and Usage Report 2.0）では、より詳細な行単位のコストデータを取得し、Athena や Redshift で分析できます。
+3. **AWS Cost Explorer でタグ別に分析、または CUR 2.0 で行単位分析**  
+   Cost Explorer では、タグによるフィルタ・グループ化で `bedrock-mantle` の推論コストを分析できます。より詳細な行単位のデータが必要な場合は、CUR 2.0（Cost and Usage Report 2.0）のデータエクスポートを作成し、**「Include caller identity (IAM principal) allocation data」を選択**します。
 
-#### bedrock-runtime と bedrock-mantle の違い
+#### bedrock-mantle エンドポイントの位置づけ
 
-公式の告知には `bedrock-mantle` の詳細な技術仕様は記載されていませんが、`bedrock-runtime` が一般的なモデル推論リクエストを処理するエンドポイントであるのに対し、`bedrock-mantle` は特定の利用シナリオ（たとえばエージェント機能や特殊なワークフロー）で使用されるエンドポイントであると推測されます。両者を統一的に管理できることで、組織全体の Bedrock 利用コストを漏れなく把握できるようになります。
+公式の告知は `bedrock-mantle` を「モデル推論リクエストを行うエンドポイント」として言及するのみで、技術仕様や `bedrock-runtime` との使い分けについては説明していません。本記事でもそれ以上の推測は行いません。確かなのは、このエンドポイント経由の推論コストが IAM プリンシパル単位で追跡対象になったという点であり、これにより組織全体の Bedrock 利用コストを漏れなく把握できるようになります。
 
 #### チャージバック運用のベストプラクティス
 
@@ -122,11 +124,9 @@ Terraform で Secrets Manager のシークレットとローテーション設�
 
 ### データ分析基盤の統合とアクセス管理
 
-AWS Glue から SageMaker Unified Studio へのワンクリックアクセスは、データエンジニアの作業効率を大幅に向上させます。従来は Glue でカタログを確認した後、IAM ロールを切り替えて SageMaker に移動する必要がありましたが、今回のアップデートでシームレスな移動が可能になります。
+AWS Glue から SageMaker Unified Studio へのワンクリックアクセスは、データエンジニアの作業効率を向上させます。新設されたインラインの権限パネルにより、必要な IAM ポリシーの作成・設定を **IAM コンソールへ移動したりブラウザタブを切り替えたりせずに**、Glue のセットアップワークフロー内で完結できます。Glue コンソールでカタログを見ている状態から、クエリ実行・データ品質チェック・データパイプライン構築へワンクリックで移れる点が今回の要点です。
 
-Lake Formation でデータカタログのアクセス制御を管理している環境では、Glue と SageMaker Unified Studio が同じ IAM ロールを使用するため、一貫したセキュリティポリシーを適用できます。CloudWatch Logs と組み合わせて、誰がどのカタログにアクセスし、どの分析ツールを使用したかを監査ログとして記録することも可能です。
-
-導入時のリスクとしては、初回セットアップ時の IAM ポリシー設定が不適切だと、不要な権限が付与される可能性があります。最小権限の原則に基づいて、必要なリソースへのアクセスのみを許可するポリシー設計を心がけましょう。
+導入時のリスクとしては、初回セットアップ時の IAM ポリシー設定が不適切だと、不要な権限が付与される可能性があります。権限をその場でカスタマイズできる分、最小権限の原則に基づいて、必要なリソースへのアクセスのみを許可するポリシー設計を心がけましょう。
 
 ---
 
@@ -140,8 +140,8 @@ Lake Formation でデータカタログのアクセス制御を管理してい�
 | **データベース** | [Amazon RDS for MariaDB が MariaDB 12.3 に対応](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-rds-mariadb-1232-available/) | Oracle 互換性強化、IS JSON 述語追加、クエリオプティマイザー改善を含む MariaDB 12.3.2 をサポート |
 | **機械学習** | [NVIDIA Nemotron 3.5 Lightning が SageMaker JumpStart で利用可能](https://aws.amazon.com/about-aws/whats-new/2026/01/nvidia-nemotron-3.5-lightning-on-sagemaker-jumpstart/) | エージェント型ワークロード最適化モデル。毎秒約 410 トークン処理、最大 100 万トークンコンテキスト対応 |
 | **機械学習** | [LocateAnything-3B、Qwen-AgentWorld-35B-A3B、Qwen3.5-122B-A10B が SageMaker JumpStart で利用可能](https://aws.amazon.com/about-aws/whats-new/2026/01/locateAnything-3B-qwen-agentworld-35B-A3B-qwen3.5-122B-A10B-on-sagemaker-jumpstart/) | 画像内物体検出、エージェント環境シミュレーション、大規模マルチモーダル推論に特化した 3 つの基盤モデルを追加 |
-| **カスタマーサービス** | [Amazon Connect Cases がパフォーマンスダッシュボードを提供開始](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-connect-cases-dashboard/) | ケース件数、解決時間、SLA 達成率をリアルタイム監視。テンプレート、担当者、キュー別の詳細分析が可能 |
-| **機械学習** | [GLM-5.2 FP8、NVIDIA-Nemotron-Nano-12B-v2、GLM-OCR が SageMaker JumpStart で利用可能](https://aws.amazon.com/about-aws/whats-new/2026/01/glm-5.2-fp8-nemotron-nano-12b-v2-glm-ocr-on-sagemaker-jumpstart/) | 長期エージェントタスク（1M トークン）、ハイブリッド推論（6 倍スループット）、高度文書理解に特化した 3 モデルを追加 |
+| **カスタマーサービス** | [Amazon Connect Cases がパフォーマンスダッシュボードを提供開始](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-connect-cases-dashboard/) | ケース作成数、平均解決時間、初回解決率、SLA 達成率を可視化。ケーステンプレート、担当ユーザー、担当キュー別の分析が可能 |
+| **機械学習** | [GLM-5.2 FP8、NVIDIA-Nemotron-Nano-12B-v2、GLM-OCR が SageMaker JumpStart で利用可能](https://aws.amazon.com/about-aws/whats-new/2026/01/glm-5.2-fp8-nemotron-nano-12b-v2-glm-ocr-on-sagemaker-jumpstart/) | GLM-5.2 FP8 は実用的な 1M トークンコンテキスト、NVIDIA-Nemotron-Nano-12B-v2 は最大 6 倍の推論スループット、GLM-OCR は高度文書理解に特化 |
 | **機械学習** | [langcache-embed-v3-small、Mellum2-12B-A2.5B-Thinking、LightOnOCR-2-1B が SageMaker JumpStart で利用可能](https://aws.amazon.com/about-aws/whats-new/2026/01/langcache-embed-v3-small-mellum2-12B-A2.5B-thinking-lightOnOCR-2-1B-on-sagemaker-jumpstart/) | セマンティックキャッシング、コード生成・推論、文書 OCR に特化した 3 つの基盤モデルを追加 |
 | **機械学習** | [FLUX.2-small-decoder と gemma-4-12B-it が SageMaker JumpStart で利用可能](https://aws.amazon.com/about-aws/whats-new/2026/01/flux.2-small-decoder-gemma-4-12B-it-on-sagemaker-jumpstart/) | 高速画像デコーディング（1.4 倍高速、VRAM 1.4 倍削減）とマルチモーダル統合理解に特化した 2 モデルを追加 |
 | **コンピューティング** | [Amazon EC2 U7in-24TB インスタンスが南米（サンパウロ）リージョンで利用可能](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-ec2-high-memory-u7i-south-america) | 24TiB DDR5 メモリ、896vCPU、最大 100Gbps EBS 帯域幅を備えた高メモリインスタンスが南米で利用可能に |
@@ -152,11 +152,11 @@ Lake Formation でデータカタログのアクセス制御を管理してい�
 
 今回紹介したアップデートは、生成 AI のコスト管理、セキュリティ強化、データ分析基盤の統合という、エンタープライズ運用の 3 つの重要な柱に焦点を当てています。
 
-特に Bedrock のコスト配分機能拡張と Secrets Manager の外部サービス対応は、組織的な AI 活用とセキュリティガバナンスを両立させるための基盤となります。また、SageMaker JumpStart への大量のモデル追加は、AWS が基盤モデルのデプロイメントプラットフォームとしての地位を強化していることを示しています。
+特に Bedrock のコスト配分機能拡張と Secrets Manager の外部サービス対応は、組織的な AI 活用とセキュリティガバナンスを両立させるための基盤となります。また、SageMaker JumpStart には今回だけで 12 モデルが追加され、セマンティックキャッシング、コード生成、文書 OCR、マルチモーダル推論と用途の幅も広がっています。
 
 データ分析領域では、Glue と SageMaker Unified Studio の統合により、データエンジニアとデータサイエンティストの協業がよりスムーズになります。Amazon Connect Cases のダッシュボード機能は、カスタマーサポート運用の可視化を促進します。
 
-これらのアップデートを活用することで、運用効率とセキュリティを同時に向上させることができるでしょう。
+これらのアップデートを活用することで、運用効率とセキュリティを同時に向上させることができます。
 
 ---
 
