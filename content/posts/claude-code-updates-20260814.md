@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.231 リリースノートまとめ"
 date: 2026-08-14T08:00:57+09:00
-draft: true
+draft: false
 tags: ["claude-code", "mcp", "oauth", "slack"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.231 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260814/header.png)
 
 ## はじめに
 
@@ -45,7 +47,7 @@ MCP は Claude Code が外部ツールやデータソースと連携するため
 
 ## まとめ
 
-v2.1.231 は、MCP サーバーとの OAuth 認証における特定の不具合を修正した focused なリリースです。事前登録済み OAuth クライアントを使用する外部サービスとの連携が正常に動作するようになり、Claude Code の外部ツール統合の信頼性が向上しました。
+v2.1.231 は、MCP サーバーとの OAuth 認証における特定の不具合の修正に絞ったリリースです。事前登録済み OAuth クライアントを使用する外部サービスとの連携が正常に動作するようになり、Claude Code の外部ツール統合の信頼性が向上しました。
 
 ---
 
