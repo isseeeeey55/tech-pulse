@@ -1,15 +1,17 @@
 ---
 title: "【AWS】2026/08/14 のアップデートまとめ"
 date: 2026-08-14T08:02:21+09:00
-draft: true
-tags: ["aws", "client-vpn", "bedrock", "ec2", "s3", "iam", "lambda", "eventbridge", "purview"]
+draft: false
+tags: ["aws", "client-vpn", "bedrock", "ec2", "s3", "iam", "lambda", "eventbridge", "purview", "acm"]
 categories: ["AWS Updates"]
 summary: "2026/08/14 のAWSアップデートまとめ"
 ---
 
-# 今回は、直近で発表された10件のAWSアップデートを紹介します
+![](/images/aws-updates-20260814/header.png)
 
-AWS は継続的にサービスの改善と新機能の追加を行っており、今回取り上げるアップデートもその一環です。今回紹介する 10 件のアップデートは、**クライアント VPN の CLI 対応と管理機能強化**、**IAM の自動ロール生成機能**、**S3 のエラーメッセージ改善**、**Spot インスタンスの配置最適化**、**Bedrock での新モデル対応**、**Amazon Quick のエンタープライズ機能拡充**、そして **AWS Global View のマップビュー対応**など、幅広い領域にわたります。
+# 今回は、直近で発表された13件のAWSアップデートを紹介します
+
+AWS は継続的にサービスの改善と新機能の追加を行っており、今回取り上げるアップデートもその一環です。今回紹介する 13 件のアップデートは、**クライアント VPN の CLI 対応と管理機能強化**、**IAM の自動ロール生成機能**、**S3 のエラーメッセージ改善**、**Spot インスタンスの配置最適化**、**Bedrock での新モデル対応**、**Amazon Quick のエンタープライズ機能拡充**、**ACM のドメイン検証方式の切り替え対応**、そして **AWS Global View のマップビュー対応**など、幅広い領域にわたります。
 
 特に注目すべきは、運用自動化とセキュリティガバナンスの強化に関するアップデートです。AWS Client VPN の CLI 対応により VPN 接続がコード化可能になり、IAM role manager によって IAM ロール作成の手間が大幅に削減されます。また、S3 のエラーメッセージ改善は日々のトラブルシューティング時間を短縮し、Amazon Quick の DLP 統合と権限管理強化は、AI 活用環境でのコンプライアンス対応を容易にします。
 
@@ -29,19 +31,19 @@ AWS Client VPN が v6.0.x で大幅にアップデートされ、**CLI（コマ�
 
 #### 主要な改善ポイント
 
-**CLI 対応の実現**: リリースノートによると、`aws-client-vpn connect` などの基本的なコマンドが提供されており、VPN 接続をスクリプトから制御できます。これにより、テスト環境へのアクセス自動化や、デバイス管理プラットフォーム（MDM）との連携による一括デバイス制御が実現します。
+**CLI 対応の実現**: v6.0 系のクライアントがコマンドラインインターフェースを備え、VPN 接続をスクリプトから制御できるようになりました。これにより、テスト環境へのアクセス自動化や、デバイス管理プラットフォーム（MDM）との連携による一括デバイス制御が実現します。具体的なコマンド体系は公式ドキュメントで確認してください。
 
 **エンタープライズ管理機能**: VPN プロファイルを特定ユーザーにスコープしたり、組織全体にグローバルプロファイルを配布する機能が追加されました。これにより、承認済み設定を一元的に強制でき、非準拠デバイスの排除が容易になります。例えば、リモートワーク従業員が使用するデバイスへの標準 VPN 設定の自動配布が可能です。
 
-**接続確立時間の短縮**: OpenVPN3 への再構築により、接続確立時間が大幅に短縮されています。具体的な数値は公開されていませんが、リリースノートでは「大幅な短縮」と明記されています。
+**接続確立時間の短縮**: クライアントが OpenVPN3 で再構築され、サポートされるすべてのオペレーティングシステムで接続確立が高速化されました。告知に短縮幅の具体的な数値は示されていません。
 
 #### 既存環境への影響
 
-重要なポイントとして、GUI と CLI は同時実行でき、既存の AWS Client VPN エンドポイントとの完全な後方互換性が保たれているため、エンドポイント側の変更は不要です。これにより、段階的な移行が可能で、既存の運用を継続しながら新機能を試すことができます。
+重要なポイントとして、GUI と CLI は同時に動作し、VPN 接続はそれぞれ独立して維持されます。また、v6.0 以降のクライアントは既存の AWS Client VPN エンドポイントとの完全な後方互換性を保っているため、エンドポイント側の変更は不要です。これにより、段階的な移行が可能で、既存の運用を継続しながら新機能を試すことができます。
 
 #### 活用シナリオ
 
-マルチデバイス環境での VPN 接続の自動化、CI/CD パイプラインへの VPN 接続統合、大規模組織での VPN ポリシー統一など、幅広い用途が想定されます。特に、インフラストラクチャ・アズ・コードで VPN 接続設定をコード化し、バージョン管理することで、設定の一貫性と変更履歴の追跡が可能になります。
+マルチデバイス環境での VPN 接続の自動化、CI/CD パイプラインへの VPN 接続統合、大規模組織での VPN ポリシー統一など、幅広い用途に応用できます。特に、インフラストラクチャ・アズ・コードで VPN 接続設定をコード化し、バージョン管理することで、設定の一貫性と変更履歴の追跡が可能になります。
 
 詳細なコマンド体系や設定オプションについては、[AWS Client VPN の公式ドキュメント](https://docs.aws.amazon.com/vpn/latest/clientvpn-user/) を参照してください。
 
@@ -133,15 +135,18 @@ S3 でアクセス拒否エラーが発生した場合、従来はポリシー�
 | # | タイトル | 概要 |
 |---|---------|------|
 | 1 | [AWS Client VPN now supports CLI, administration controls, and faster connections](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-client-vpn-cli/) | VPN 接続の CLI 対応、エンタープライズ管理機能の追加、OpenVPN3 による接続時間短縮を実現 |
-| 2 | [Claude Opus 5 is now available in AWS GovCloud (US)](https://aws.amazon.com/about-aws/whats-new/2026/07/claude-opus-5-aws-govcloud/) | OpenAI の最新高性能モデル Claude Opus 5 が GovCloud で利用可能に。ゼロデータリテンション（ZDR）対応 |
-| 3 | [Amazon Quick Microsoft 365 extensions are now generally available](https://aws.amazon.com/amazon-quick-microsoft-365-extensions-generally-available) | Excel、PowerPoint、Word、Outlook 向けの AI 拡張機能が正式提供開始 |
+| 2 | [Claude Opus 5 is now available in AWS GovCloud (US)](https://aws.amazon.com/about-aws/whats-new/2026/07/claude-opus-5-aws-govcloud/) | Anthropic の Claude Opus 5 が GovCloud (US) の Bedrock で利用可能に。ゼロデータリテンション（ZDR）がデフォルトで有効 |
+| 3 | [Amazon Quick Microsoft 365 extensions are now generally available](https://aws.amazon.com/quick) | Excel、PowerPoint、Word、Outlook 向けの AI 拡張機能が正式提供開始 |
 | 4 | [Spot Placement Score now includes Local Zones](https://aws.amazon.com/about-aws/whats-new/2026/08/spot-placement-score-local-zones/) | Spot Placement Score が Local Zone をサポートし、エッジロケーションでの Spot キャパシティ評価が可能に |
 | 5 | [Amazon S3 adds additional policy details to access denied error messages](https://aws.amazon.com/about-aws/whats-new/2026/08/s3-additional-policy-details-access-denied-error-messages/) | S3 の 403 エラーメッセージに拒否の原因となったポリシーの ARN が表示されるように改善 |
 | 6 | [Daybreak Red and Daybreak Blue from OpenAI are now available to eligible customers on Amazon Bedrock](https://aws.amazon.com/about-aws/whats-new/2026/08/openai-daybreak-red-and-blue-on-amazon-bedrock/) | OpenAI のサイバーセキュリティ特化モデル Daybreak Red/Blue が Bedrock で利用可能に。ゼロオペレータアクセス（ZOA）対応 |
 | 7 | [AWS IAM now provides role manager to set up IAM roles automatically](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-iam-role-manager) | AWS サービスセットアップ時に IAM ロールを自動生成する role manager が正式利用可能に |
-| 8 | [Amazon Quick now supports data loss prevention with Microsoft Purview](https://aws.amazon.com/whats-new/2026/08/amazon-quick-dlp-purview/) | Microsoft Purview と統合し、Quick 全体で DLP ポリシーを実施可能に |
-| 9 | [Amazon Quick adds deny by default for custom permissions](https://aws.amazon.com/whats-new/2026/08/amazon-quick-deny-by-default-permissions/) | 新しい AI 機能をデフォルトで拒否し、管理者が承認後に段階的に提供できる権限管理機能を追加 |
-| 10 | [AWS Global View now offers an interactive map view for AWS Regions and AWS Local Zones](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-global-view-map-view/) | AWS Management Console に AWS Regions と Local Zones を地図上で確認できるインタラクティブマップビューを追加 |
+| 8 | [Amazon Quick now supports data loss prevention with Microsoft Purview](https://docs.aws.amazon.com/quick/latest/userguide/data-loss-prevention.html) | Microsoft Purview の秘密度ラベルを利用し、チャット・スペース・ナレッジベースでのファイル取り扱いを block / warn / allow で制御可能に |
+| 9 | [Amazon Quick adds deny by default for custom permissions](https://docs.aws.amazon.com/quick/latest/userguide/custom-permissions-governance.html) | カスタム権限プロファイルで AI 機能カテゴリを制限すると、新規リリースされる AI 機能を既定で拒否し、管理者が個別に許可できるように |
+| 10 | [AWS Global View now offers an interactive map view for AWS Regions and AWS Local Zones](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-global-view-map-view/) | AWS Management Console の Regions and Zones ページで、Regions と Local Zones を地図上に表示するマップビューとリストビューを切り替え可能に |
+| 11 | [AWS Certificate Manager supports switching from e-mail to DNS validation](https://aws.amazon.com/about-aws/whats-new/2026/08/AWS-Certificate-Manager-Email-DNS-Switch) | 発行済みパブリック TLS 証明書のドメイン検証方式を、再発行や ARN 変更なしにメールから DNS へ切り替え可能に |
+| 12 | [Amazon Quick now supports approval policies for sharing](https://docs.aws.amazon.com/quick/latest/userguide/approval-policies.html) | ナレッジベース・スペース・カスタムチャットエージェントの共有リクエストを承認者レビュー必須にでき、イベントは CloudTrail に記録 |
+| 13 | [Amazon Quick now supports per-user resource limits](https://docs.aws.amazon.com/quick/latest/userguide/limits-management.html) | インデックスストレージとエージェント時間にユーザー単位の上限プロファイルを設定し、サブスクリプションの超過課金を抑制 |
 
 ## まとめ
 
@@ -153,7 +158,7 @@ S3 でアクセス拒否エラーが発生した場合、従来はポリシー�
 
 トラブルシューティング効率化の領域では、S3 のエラーメッセージ改善と AWS Global View のマップビュー対応が、日々の運用業務を改善します。特に S3 のエラーメッセージ改善は、すべての AWS ユーザーに恩恵があり、即座に活用できる実用的な改善です。
 
-また、Spot Placement Score の Local Zone 対応は、エッジコンピューティングとコスト最適化の両立を目指すワークロードにとって重要な選択肢を提供します。
+また、Spot Placement Score の Local Zone 対応は、エッジコンピューティングとコスト最適化の両立を目指すワークロードにとって重要な選択肢を提供します。加えて、AWS Certificate Manager がメール検証から DNS 検証への切り替えに対応した点も見逃せません。CA/B Forum によるメール検証の廃止（2028 年 3 月 15 日発効）を受けて ACM は 2027 年中にメール検証を段階的に終了するため、証明書の ARN を変えずに DNS 検証へ移行できる今回の機能は、更新の完全自動化に向けた計画的な移行手段になります。
 
 これらのアップデートを組み合わせることで、運用の自動化、セキュリティの強化、コストの最適化を同時に推進できます。各組織の運用状況に応じて、優先度の高いアップデートから段階的に導入していくことをお勧めします。
 
