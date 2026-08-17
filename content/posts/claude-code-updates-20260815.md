@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.233・v2.1.232 リリースノートまとめ"
 date: 2026-08-15T08:02:58+09:00
-draft: true
+draft: false
 tags: ["claude-code", "gitlab", "sendmessage", "subagent", "mcp", "remote-control", "bash", "powershell", "windows", "linux", "git", "oauth", "fable", "vertex", "bedrock", "aws", "notification", "desktop", "vs-code", "slack", "cygwin"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.233・v2.1.232 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260815/header.png)
 
 ## はじめに
 
@@ -35,7 +37,7 @@ v2.1.233 では、WebFetch セッション URL キャッシュ TTL を設定す�
 | Feature | v2.1.232 | セッション間メッセージング | プロンプトで `@` 入力により他の Claude セッションを名前で参照、`SendMessage` による直接到達 |
 | Feature | v2.1.232 | セッション名の一意性保証 | 同一マシン上の対話型セッションが一意の名前を維持、重複時は `name-word-word` 変種を付与 |
 | Feature | v2.1.232 | `/config` 設定行追加 | "Dialog expiry" と "Messages from your other sessions"（クロスセッションのインバウンド受け入れ/保留/拒否）設定 |
-| Feature | v2.1.232 | GitLab トークン秘密編集 | `glrt-`、`gloas-`、`glptt-`、`glagent-`、`glimt-`、`glsoat-`、`glcbt-`、`glft-`、`glffct-` トークンファミリーの秘密編集と、ルーティング可能な `glpat-`/`gldt-` トークンの完全編集を実装 |
+| Feature | v2.1.232 | GitLab トークン秘密編集 | `glrt-`、`gloas-`、`glptt-`、`glagent-`、`glimt-`、`glsoat-`、`glcbt-`、`glft-`、`glffct-` トークンファミリーの秘密編集と、ルーティング可能な `glpat-`/`gldt-` トークンの完全編集を実装。`glab` CLI の設定ストアが `gh` と同じサンドボックス保護と認証情報パス保護を取得 |
 | Feature | v2.1.232 | GitLab プラグインマーケットプレイス対応 | `gitlab.com` リポジトリ URL（ネストされたサブグループを含む）が `github.com` URL と同様にクローン可能 |
 | Feature | v2.1.232 | 設定エイリアス追加 | `additionalMarketplaces` と `allowedMarketplaces` が `extraKnownMarketplaces` と `strictKnownMarketplaces` のエイリアスとして受け入れ |
 | Feature | v2.1.232 | Fable 5 アドバイザー復活 | Fable アクセス権を持つ組織で `/advisor` に Fable 5 が再度提供、`/model fable` で利用クレジット同意を設定 |
