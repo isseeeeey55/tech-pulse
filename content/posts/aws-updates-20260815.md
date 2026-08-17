@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/08/15 のアップデートまとめ"
 date: 2026-08-15T08:01:45+09:00
-draft: true
+draft: false
 tags: ["aws", "rds", "oracle", "ses", "redshift", "billing", "cost-management"]
 categories: ["AWS Updates"]
 summary: "2026/08/15 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260815/header.png)
 
 # 今回は、直近で発表された4件のAWSアップデートを紹介します
 
@@ -20,58 +22,59 @@ Amazon SESのクリック追跡機能に、モバイルアプリのディープ�
 今回の機能強化により、新しい `ses:custom-path` HTML属性を `<a>` タグに追加することで、この課題が解決されます。具体的には、以下のような形で実装できます：
 
 ```html
-<a href="https://your-tracking-domain.com/products/12345" 
+<a href="https://example.com/products/12345" 
    ses:custom-path="/products/12345">
    商品を見る
 </a>
 ```
 
-この属性を指定すると、SESはクリック追跡用のリダイレクトURLを生成する際に、パスセグメント（`/products/12345`）を保持します。これにより、iOSやAndroidのOSは、リダイレクト先URLのドメインとパスを認識し、適切なアプリに遷移させることができます。
+この属性を指定すると、SESはクリック追跡用の追跡URLを生成する際に、指定したパスセグメント（`/products/12345`）をそのまま引き継ぎます。これにより、モバイルOSは追跡URLをアプリの Universal Links（iOS）／App Links（Android）の設定と突き合わせられるようになります。
 
-この機能を利用するには、カスタムリダイレクトドメインに以下のいずれかを配置する必要があります：
+この機能を利用するには、クリック追跡用のカスタムリダイレクトドメインを用意したうえで、そのドメインに以下のいずれかの検証ファイルを配置する必要があります：
 
-- **iOS向け**: Apple App Site Association (AASA) ファイルを `https://your-tracking-domain.com/.well-known/apple-app-site-association` に配置
-- **Android向け**: Digital Asset Links JSONファイルを `https://your-tracking-domain.com/.well-known/assetlinks.json` に配置
+- **iOS向け**: Apple App Site Association (AASA) ファイル
+- **Android向け**: Digital Asset Links 検証ファイル
 
 これらのファイルは、特定のドメインとアプリの関連性をOSに証明するための検証ファイルです。カスタムリダイレクトドメインにこれらを配置することで、SESの追跡用URLからでもアプリへの直接遷移が可能になります。
 
 従来の方法では、ディープリンクを実現するためにはクリック追跡を無効にする必要がありました。これにより、どのリンクがクリックされたか、どのキャンペーンが効果的だったかというデータが取得できず、マーケティング施策の改善サイクルが回せませんでした。新機能により、Eコマースアプリであれば「メールから商品ページへの直接遷移」と「どの商品へのリンクがクリックされたか」の両方を同時に把握できるようになります。ニュースアプリやSNSアプリでも、記事やチャネルへの直接遷移とエンゲージメント分析を両立できるため、ユーザー体験を損なわずにデータドリブンなマーケティングが実現できます。
 
-> **Note:** カスタムパスにはURLエンコーディングが必要な文字が含まれる場合があります。また、パスの長さにも実用上の制限があるため、過度に長いパスは避けることが推奨されます。
+なお、本機能は Amazon SES が提供されているすべての AWS リージョンで利用できます。設定手順の詳細は、Amazon SES デベロッパーガイドの「Configuring custom domains to handle open and click tracking」を参照してください。
 
 ### AWS Billing and Cost Management Managed Dashboards で即座にコスト可視化
 
 AWS Billing and Cost Management（BCM）に追加されたManaged Dashboardsは、FinOps実践におけるコスト可視化の初期ハードルを大きく下げる機能です。従来、AWSのコストを体系的に分析するには、Cost Explorer APIやCURデータを使ってカスタムダッシュボードを構築するか、QuickSightなどのBIツールで可視化環境を整える必要がありました。これらは柔軟性が高い反面、初期構築に時間とコストがかかり、「とりあえずコスト状況を把握したい」というニーズに対しては過剰でした。
 
-Managed Dashboardsは、AWSが事前に設計した5つのダッシュボードを提供します。これらはセットアップ不要で、アカウントデータが自動的に入力されるため、BCMコンソールにアクセスした瞬間から利用できます。提供されるダッシュボードには以下が含まれます：
+Managed Dashboardsは、AWSが事前に構成した5つのダッシュボードを提供します。これらはセットアップ不要で、アカウントデータが自動的に入力された状態でダッシュボード一覧に並ぶため、BCMコンソールにアクセスした瞬間から利用できます。提供されるダッシュボードは以下の5つです：
 
-- **コスト概要・トレンド**: 12ヶ月間のコスト推移、月別・サービス別の内訳、予測
-- **Compute・Database**: EC2、RDS、Lambdaなどのコンピューティングリソースの詳細コスト分析
-- **Reservations**: Reserved Instancesの利用状況、カバレッジ、未活用状況
-- **Savings Plans**: Savings Plansのコミットメント消化率、コスト削減効果
+- **Cost Overview & Trends**: サービス・アカウント・リージョン横断の支出パターンを12ヶ月分追跡し、将来予測も表示
+- **Compute**: コンピューティング系サービスカテゴリ内の支出パターンを、コスト内訳とコミットメントのカバレッジ・使用率メトリクスを1つのビューで対比
+- **Database**: データベース系サービスカテゴリについて、Compute ダッシュボードと同様の内訳・カバレッジ・使用率を表示
+- **Reservations**: 購入済みリザーブドインスタンスのパフォーマンスを対象サービス横断で表示し、ギャップと未活用分を金額換算
+- **Savings Plans**: 購入済み Savings Plans のパフォーマンスを同様に金額換算で可視化
 
-これらのダッシュボードは読み取り専用ですが、複製してカスタマイズすることができます。例えば、特定のタグでフィルタリングしたり、独自のウィジェットを追加したり、レイアウトを変更したりすることが可能です。また、PDFやCSV形式でエクスポートできるため、定期的な経営報告や部門別コストレビューにそのまま活用できます。
+これらのダッシュボードは読み取り専用ですが、任意のダッシュボードを複製して完全に編集可能なカスタムコピーを作成できます。また、個々のウィジェットを既存のダッシュボードに追加することや、PDF・CSV形式でエクスポートすることもできるため、定期的な経営報告や部門別コストレビューにそのまま活用できます。
 
 FinOps導入の初期段階では、「現状のコストがどうなっているか」を迅速に把握することが最優先です。Managed Dashboardsを使えば、構築期間ゼロでコスト分析を開始でき、Reserved InstancesやSavings Plansの購入効果測定、未利用リソースの検出といった実務的な分析がすぐに行えます。複数アカウント・複数リージョンで運用している組織では、一元的なコスト監視基盤として標準化することで、全社的なコスト最適化文化の醸成にも寄与します。
 
-すべてのダッシュボードはAWSによって管理・更新されるため、新しいAWSサービスや料金体系の変更にも自動的に対応します。これにより、ダッシュボードのメンテナンスコストが削減され、運用チームは分析とアクションに集中できます。
+すべてのダッシュボードはAWSによって保守されるため、自前で構築した場合に発生するメンテナンス負荷がかかりません。Managed Dashboardsは、すべての商用AWSリージョンで追加料金なしに利用できます。
 
 > **Note:** Managed Dashboardsは読み取り専用ですが、複製することで自由にカスタマイズできます。組織の分析ニーズに応じて、ベースラインとして活用しながら独自の分析軸を追加していくことが推奨されます。
 
 ## SRE視点での活用ポイント
 
-Amazon SESの新しいディープリンキング機能は、モバイルアプリを運用するSREチームにとって、ユーザー体験の向上とエンゲージメントデータの取得という二つの目標を同時に達成できる手段となります。例えば、障害復旧の通知やメンテナンス案内をメールで送信する際、アプリのステータスページに直接遷移させながら、どれだけのユーザーが通知を確認したかを追跡できます。CloudWatch アラームと連携して、障害検知時に自動的に通知メールを送信し、そのエンゲージメント率をメトリクスとして収集することで、通知の到達性や有効性を継続的に改善できます。導入時には、カスタムリダイレクトドメインのDNS設定とSSL証明書の管理、AASAファイルやDigital Asset Linksファイルの配置とバージョン管理を、Infrastructure as Code（Terraform等）で管理することが望ましいでしょう。また、リダイレクトドメインの可用性監視も忘れずに実施する必要があります。
+Amazon SESの新しいディープリンキング機能は、モバイルアプリを運用するSREチームにとって、ユーザー体験の向上とエンゲージメントデータの取得という二つの目標を同時に達成できる手段となります。例えば、障害復旧の通知やメンテナンス案内をメールで送信する際、アプリのステータスページに直接遷移させながら、どれだけのユーザーが通知を確認したかを追跡できます。CloudWatch アラームと連携して、障害検知時に自動的に通知メールを送信し、そのエンゲージメント率をメトリクスとして収集することで、通知の到達性や有効性を継続的に改善できます。導入時には、カスタムリダイレクトドメインのDNS設定とSSL証明書の管理、AASAファイルやDigital Asset Linksファイルの配置とバージョン管理を、Infrastructure as Code（Terraform等）で管理することをおすすめします。また、リダイレクトドメインの可用性監視も忘れずに実施する必要があります。
 
-AWS Billing and Cost Management Managed Dashboardsは、SREが担うコスト最適化の責任を果たすための即効性のあるツールです。Terraformで管理しているインフラがあれば、定期的にManaged Dashboardsでコストトレンドを確認し、予期しないコスト増加を早期に検出できます。例えば、Compute・DatabaseダッシュボードでEC2やRDSのコストが急増していることを検知したら、CloudWatch Logsやメトリクスと突き合わせて原因を特定し、オートスケーリング設定の見直しやインスタンスサイズの最適化を検討するというフローが構築できます。Reserved Instancesダッシュボードでカバレッジが低い場合は、長期的なキャパシティプランニングを見直し、Savings Plansの購入を検討する判断材料になります。導入リスクは非常に低く、既存のコスト管理プロセスに追加するだけで済みます。ただし、ダッシュボードはあくまで可視化ツールであり、コスト削減施策の実行は別途必要です。定期的なレビュー会議でダッシュボードを共有し、アクションアイテムを明確化するプロセスを整備することが重要です。
+AWS Billing and Cost Management Managed Dashboardsは、SREが担うコスト最適化の責任を果たすための即効性のあるツールです。Terraformで管理しているインフラがあれば、定期的にManaged Dashboardsでコストトレンドを確認し、予期しないコスト増加を早期に検出できます。例えば、Compute ダッシュボードや Database ダッシュボードでコストが急増していることを検知したら、CloudWatch Logsやメトリクスと突き合わせて原因を特定し、オートスケーリング設定の見直しやインスタンスサイズの最適化を検討するというフローが構築できます。Reservations ダッシュボードでカバレッジが低い場合は、長期的なキャパシティプランニングを見直し、Savings Plansの購入を検討する判断材料になります。導入リスクは非常に低く、既存のコスト管理プロセスに追加するだけで済みます。ただし、ダッシュボードはあくまで可視化ツールであり、コスト削減施策の実行は別途必要です。定期的なレビュー会議でダッシュボードを共有し、アクションアイテムを明確化するプロセスを整備することが重要です。
 
 ## 全アップデート一覧
 
 | タイトル | 概要 |
 |---------|------|
-| [Amazon RDS for Oracle が Oracle APEX 26.1 に対応](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-rds-oracle-apex-26-1/) | RDS for Oracle で低コード開発プラットフォーム APEX 26.1 が利用可能に。モダンUIを備えたエンタープライズアプリケーションを迅速に構築できます。全リージョンで提供開始。 |
+| [Amazon RDS for Oracle が Oracle APEX 26.1 に対応](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-rds-oracle-apex-26-1/) | RDS for Oracle で低コード開発プラットフォーム APEX 26.1 が利用可能に。スケーラブルでセキュアな、モダンUIを備えたエンタープライズアプリケーションを構築できます。RDS for Oracle が提供されている全 AWS リージョンで利用可能。 |
 | [Amazon SES クリック追跡がカスタムURLパスに対応](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-ses-supports-customurl-deeplinking/) | `ses:custom-path` 属性により、モバイルアプリのディープリンキングとクリック追跡を両立。iOS Universal Links と Android App Links に対応しながらエンゲージメント測定が可能に。 |
-| [Amazon Redshift が GovCloud リージョンで rg.large/rg.12xlarge を提供開始](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-redshift-adds-rg-large-12xlarge-aws-govcloud-regions/) | AWS GovCloud (US) で RG インスタンスの新サイズを提供。RA3 比で最大2.4倍高速、vCPUあたりコスト30%削減。ベクトル化クエリエンジンで Iceberg/Parquet を直接処理。 |
-| [AWS Billing and Cost Management に Managed Dashboards 追加](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-billing-and-cost-management-managed-dashboards/) | セットアップ不要の読み取り専用ダッシュボードを5種類提供。コスト概要、Compute・Database、Reservations、Savings Plans などを12ヶ月分自動可視化。複製してカスタマイズ可能。 |
+| [Amazon Redshift が GovCloud リージョンで rg.large/rg.12xlarge を提供開始](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-redshift-adds-rg-large-12xlarge-aws-govcloud-regions/) | AWS GovCloud (US) で RG インスタンスの新サイズを提供。前世代 RA3 比で最大2.4倍高速、vCPUあたり価格30%削減。ベクトル化データレイククエリエンジンで Apache Iceberg / Parquet をクラスタノード上で処理。 |
+| [AWS Billing and Cost Management に Managed Dashboards 追加](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-billing-and-cost-management-managed-dashboards/) | セットアップ不要の読み取り専用ダッシュボードを5種類提供（Cost Overview & Trends / Compute / Database / Reservations / Savings Plans）。Cost Overview & Trends は12ヶ月分の支出パターンと予測を表示。複製して編集可能なコピーを作成でき、全商用リージョンで追加料金なし。 |
 
 ## まとめ
 
