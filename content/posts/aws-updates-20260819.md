@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/08/19 のアップデートまとめ"
 date: 2026-08-19T08:01:55+09:00
-draft: true
+draft: false
 tags: ["aws", "ec2", "rds", "postgresql", "sagemaker", "bedrock", "iam", "mwaa", "msk", "ecr"]
 categories: ["AWS Updates"]
 summary: "2026/08/19 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260819/header.png)
 
 # 直近の AWS アップデート情報まとめ（2026年8月）
 
@@ -107,15 +109,15 @@ PostgreSQL のメジャーバージョンアップグレードは、互換性確
 
 **その他のアップデートの運用への適用**
 
-Amazon MWAA Serverless の PythonOperator / BashOperator 対応は、データパイプラインの運用を簡素化します。従来は Airflow 実行環境（EC2 やコンテナ）を別途管理する必要がありましたが、サーバーレスランタイム内で直接実行できるため、インフラ管理の負担が軽減されます。ただし、実行時間が長い処理や大量のリソースを消費する処理については、従来のワーカーベースの実行との性能比較が必要です。
+Amazon MWAA Serverless の PythonOperator / BashOperator 対応は、データパイプラインの運用を簡素化します。公式告知では、データ変換・フォーマット変換・データ品質チェックといった日常的なコードパターンを、追加のインフラをプロビジョニングせずに実行できる点が挙げられています。Python モジュールやシェルスクリプトを S3 にアップロードし、ワークフロー作成時に参照する形で利用します。ただし、実行時間が長い処理や大量のリソースを消費する処理については、従来のワーカーベースの実行との性能比較が必要です。
 
-Amazon MSK のカスタムドメイン名対応は、災害復旧や Blue/Green デプロイメントのシナリオで有用です。DNS レコードの切り替えだけでクラスターを切り替えられるため、クライアントアプリケーションの再構成が不要になります。ただし、DNS キャッシュの TTL 設定に注意し、切り替え時間を適切に見積もる必要があります。
+Amazon MSK のカスタムドメイン名対応は、公式告知でもクラスター移行・災害復旧フェイルオーバー・スケーリング操作のシナリオが挙げられています。クライアントアプリケーションが同じ接続エンドポイントを維持できるため、これらの操作時に再構成が不要になります。運用上は、DNS キャッシュの TTL 設定に注意し、切り替え時間を適切に見積もる必要があります。
 
 ## 全アップデート一覧
 
 | サービス | タイトル | 概要 |
 |---------|---------|------|
-| Amazon EC2 | [R8i instances available in Israel (Tel Aviv)](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-ec2-r8i-israel-tel-aviv/) | メモリ最適化インスタンス R8i がテルアビブリージョンで利用可能に。Intel Xeon 6 搭載で R7i 比 20% 高性能、PostgreSQL で 30%、NGINX で 60%、AI 推奨モデルで 40% の性能向上 |
+| Amazon EC2 | [R8i instances available in Israel (Tel Aviv)](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-ec2-r8i-israel-tel-aviv/) | メモリ最適化インスタンス R8i がテルアビブリージョンで利用可能に。Intel Xeon 6 搭載で R7i 比 20% 高性能。PostgreSQL で最大 30%、NGINX で最大 60%、AI ディープラーニング推薦モデルで最大 40% 高速 |
 | Amazon RDS | [PostgreSQL 19 Beta 3 in Preview Environment](https://aws.amazon.com/about-aws/whats-new/2026/08/postgresql-19-beta-3-amazon-rds-database-preview-environment/) | PostgreSQL 19 Beta 3 がプレビュー環境で利用可能。autovacuum の可視化・並列化、クエリプランの安定化、集計クエリの最適化などを提供 |
 | Amazon SageMaker | [Unified Studio supports data profiling and anomaly detection](https://aws.amazon.com/about-aws/whats-new/2026/05/smus-data-profiling) | データプロファイリングと異常検知機能を追加。AWS Glue Data Quality により、統計プロファイル生成と時系列変化追跡が可能 |
 | Amazon Bedrock | [AgentCore payments generally available](https://aws.amazon.com/about-aws/whats-new/2026/08/bedrock-agentcore-payments-ga/) | AI エージェントが有料 API やコンテンツに自動アクセスし、決済を実行。Coinbase・Stripe Privy 統合、支払い制限、エンドツーエンド可観測性を提供 |
