@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.235 リリースノートまとめ"
 date: 2026-08-19T08:01:15+09:00
-draft: true
+draft: false
 tags: ["claude-code", "spellcheck", "aspell", "hunspell", "ispell", "ultrareview", "autofix-pr", "sendmessage", "vscode", "vim", "grep", "subagent_type"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.235 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260819/header.png)
 
 # Claude Code v2.1.235 リリース情報
 
