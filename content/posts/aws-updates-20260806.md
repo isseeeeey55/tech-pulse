@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/08/06 のアップデートまとめ"
 date: 2026-08-06T08:02:12+09:00
-draft: true
+draft: false
 tags: ["aws", "lambda", "keyspaces", "iam-identity-center", "aurora", "dynamodb", "marketplace", "network-firewall", "bedrock", "eks", "ecs", "s3", "cloudwatch"]
 categories: ["AWS Updates"]
 summary: "2026/08/06 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260806/header.png)
 
 # 直近のAWSアップデート解説 - Lambda高速ネットワーク、DynamoDBベクトル検索ほか全7件
 
@@ -29,13 +31,15 @@ Lambda 関数は従来、VPC 外で実行される場合でも固定の 625 Mbps
 
 #### 新しいスケーリングモデル
 
-今回のアップデートにより、メモリ 2GB 以上で構成された Lambda 関数は、メモリサイズに応じて帯域幅が段階的にスケールします。具体的には、2GB で 625 Mbps から開始し、10GB で最大 3,000 Mbps に到達します。これは従来の最大 4.8 倍の帯域幅向上を意味し、同じデータ量の転送にかかる時間を大幅に短縮できます。
+今回のアップデートにより、メモリ 2GB 以上で構成された Lambda 関数は、メモリサイズに応じて帯域幅が段階的にスケールします。具体的には、2GB で 625 Mbps から開始し、10GB で最大 3,000 Mbps に到達します。告知が示しているのはこの 625 Mbps〜3,000 Mbps という範囲までで、倍率や短縮率は示されていません。
 
 重要な点として、この機能は VPC 外の関数のみが対象で、VPC 内の関数は従来通り 625 Mbps で固定のままです。また、この機能を利用するには AWS Service Quotas から「Network bandwidth per execution environment」の申請を行い、有効化する必要があります。追加料金は発生せず、全ての商用 AWS リージョンで利用可能です。
 
 #### データ転送速度向上による実行時間とコスト削減
 
-ネットワーク帯域幅の向上は、データ転送時間の短縮だけでなく、Lambda の実行時間短縮による直接的なコスト削減効果をもたらします。例えば、外部 API から 10GB のデータを取得する処理において、従来の 625 Mbps では約 128 秒かかっていたものが、3,000 Mbps では約 27 秒に短縮されます。Lambda の課金は実行時間に比例するため、この短縮はそのままコスト削減に直結します。
+告知では、この機能が「関数の実行時間と呼び出しあたりのコストを削減する」のに役立つとされています。Lambda の課金は実行時間に比例するため、転送時間の短縮はそのままコスト削減に直結します。
+
+なお、帯域幅の値から単純計算すれば 10GB の転送は 625 Mbps で約 128 秒、3,000 Mbps で約 27 秒となりますが、これはあくまで理論値です。実効スループットは対向サービスの応答性能やプロトコルのオーバーヘッドに左右されるため、告知にも所要時間の記載はありません。実際の効果は自環境で計測してください。
 
 #### ユースケースと適用シナリオ
 
@@ -103,7 +107,7 @@ IAM Identity Center のアカウントアクセス管理オプション化は、
 | **Aurora Serverless の高速スケーリング強化** | 1秒以内に最大 12 ACU までスケールアップ可能に。その後 256 ACU まで拡張可能。エージェンティック AI などバースト型ワークロードに最適。プラットフォームバージョン 3・4 でデフォルト有効。 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/aurora-serverless-instant-12-acu-scaling) |
 | **DynamoDB のリアルタイムベクトル検索対応** | DynamoDB がネイティブでベクトル検索をサポート。単一桁ミリ秒の遅延で 99% 以上のリコールを実現。数兆規模のベクトルまでスケール可能。Amazon Bedrock と連携可能。 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-dynamodb-vector-search) |
 | **AWS Marketplace に AI Insights 機能追加** | 購入前に製品の料金体系を AI が平易な言葉で説明。複数の価格設定ディメンションの組み合わせ、使用量に応じた請求の変化などを自動解説。出典を明示して信頼性を確保。 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-marketplace-ai-insights/) |
-| **AWS Network Firewall のフォワードプロキシ機能統合 (プレビュー)** | フォワードプロキシ機能を Network Firewall に再統合。no-source-preservation デプロイメントモードで既存ポリシーをそのまま使用可能。マネージドルールグループ、Geo-IP フィルタリング、EKS・ECS 用属性ベースルールなど全機能が利用可能。 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-network-firewall-forward-proxy-preview/) |
+| **AWS Network Firewall のフォワードプロキシ機能統合 (プレビュー)** | フォワードプロキシ（明示的プロキシ）機能を Network Firewall に再統合。no-source-preservation デプロイメントモードで既存ポリシーをそのまま使用可能。マネージドルールグループ、Geo-IP フィルタリング、EKS・ECS 用属性ベースルールなど既存機能が利用可能。パブリックプレビュー中は無料で、米国東部（オハイオ）リージョンで試用できる。 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-network-firewall-forward-proxy-preview/) |
 
 ## まとめ
 
