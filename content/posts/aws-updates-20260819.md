@@ -2,7 +2,7 @@
 title: "【AWS】2026/08/19 のアップデートまとめ"
 date: 2026-08-19T08:01:55+09:00
 draft: false
-tags: ["aws", "ec2", "rds", "postgresql", "sagemaker", "bedrock", "iam", "mwaa", "msk", "ecr"]
+tags: ["aws", "ec2", "rds", "postgresql", "sagemaker", "bedrock", "iam", "mwaa", "msk", "ecr", "corretto", "workspaces"]
 categories: ["AWS Updates"]
 summary: "2026/08/19 のAWSアップデートまとめ"
 ---
@@ -13,7 +13,7 @@ summary: "2026/08/19 のAWSアップデートまとめ"
 
 ## はじめに
 
-今回は、直近で発表された8件の AWS アップデートを紹介します。EC2 の新インスタンスタイプの地域拡大、PostgreSQL 19 Beta のプレビュー提供、IAM Policy Autopilot の Terraform 対応、Amazon Bedrock AgentCore の決済機能 GA など、コンピューティング、データベース、セキュリティ、AI/ML の各領域で注目すべき機能強化が行われています。特に、運用効率とセキュリティを高める Infrastructure as Code 関連の改善や、サーバーレス環境の機能拡充が目立ちます。本記事では、これらのアップデートの中から特に実務に影響の大きいものを深掘りし、SRE の視点での活用ポイントを交えて解説します。
+今回は、直近で発表された10件の AWS アップデートを紹介します。EC2 の新インスタンスタイプの地域拡大、PostgreSQL 19 Beta のプレビュー提供、IAM Policy Autopilot の Terraform 対応、Amazon Bedrock AgentCore の決済機能 GA など、コンピューティング、データベース、セキュリティ、AI/ML の各領域で注目すべき機能強化が行われています。特に、運用効率とセキュリティを高める Infrastructure as Code 関連の改善や、サーバーレス環境の機能拡充が目立ちます。本記事では、これらのアップデートの中から特に実務に影響の大きいものを深掘りし、SRE の視点での活用ポイントを交えて解説します。
 
 ## 注目アップデート深掘り
 
@@ -111,6 +111,10 @@ PostgreSQL のメジャーバージョンアップグレードは、互換性確
 
 Amazon MWAA Serverless の PythonOperator / BashOperator 対応は、データパイプラインの運用を簡素化します。公式告知では、データ変換・フォーマット変換・データ品質チェックといった日常的なコードパターンを、追加のインフラをプロビジョニングせずに実行できる点が挙げられています。Python モジュールやシェルスクリプトを S3 にアップロードし、ワークフロー作成時に参照する形で利用します。ただし、実行時間が長い処理や大量のリソースを消費する処理については、従来のワーカーベースの実行との性能比較が必要です。
 
+Amazon Corretto の8月度クリティカルセキュリティパッチ（CSPU）は、Java ランタイムを運用しているチームにとって計画的な適用が必要な更新です。対象は Corretto 26・25・21・17・11・8 の各系統で、Linux では Apt / Yum / Apk リポジトリを構成しておくと自動更新の対象にできます。告知では個別の CVE 番号までは示されていないため、詳細が必要な場合は Corretto のリリースページを確認してください。
+
+Amazon WorkSpaces の Nested Virtualization 対応は、仮想デスクトップ上で Docker Desktop や WSL2、KVM ベースのワークロードを直接動かせるようになる点で、開発者向け VDI の適用範囲を広げます。導入時は前提条件に注意が必要で、DCV プロトコルが必須、Power（4 vCPU）以上が推奨、GPU バンドル・PCoIP・Windows Server 2016・Windows 10 は非対応です。また、中国（寧夏）とイスラエル（テルアビブ）の両リージョンは対象外とされています。
+
 Amazon MSK のカスタムドメイン名対応は、公式告知でもクラスター移行・災害復旧フェイルオーバー・スケーリング操作のシナリオが挙げられています。クライアントアプリケーションが同じ接続エンドポイントを維持できるため、これらの操作時に再構成が不要になります。運用上は、DNS キャッシュの TTL 設定に注意し、切り替え時間を適切に見積もる必要があります。
 
 ## 全アップデート一覧
@@ -125,6 +129,8 @@ Amazon MSK のカスタムドメイン名対応は、公式告知でもクラス
 | Amazon MWAA | [MWAA Serverless supports PythonOperator and BashOperator](https://aws.amazon.com/about-aws/whats-new/2026/08/mwaa-serverless-pythonoperator-bashoperator/) | サーバーレスランタイム内で Python 関数やシェルスクリプトを直接実行可能に。追加インフラ不要でデータ変換・品質チェックを実行 |
 | Amazon MSK | [MSK supports custom domain names](https://aws.amazon.com/about-aws/whats-new/2026/17/amazon-msk-custom-domain-names/) | MSK Provisioned クラスターでカスタムドメイン名を設定可能に。ZooKeeper と KRaft 両対応で、クラスター移行時の再構成が不要 |
 | Amazon ECR | [ECR supports 25 replication rules per registry](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-ecr-increased-replication-rules-limit) | レプリケーションルール上限が 10 から 25 に増加。マルチリージョン・マルチアカウント環境でより柔軟な配信戦略が可能 |
+| Amazon Corretto | [August 2026 Critical Security Patch Updates](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-corretto-august-2026-security-updates) | Corretto 26.0.2.11.1・25.0.4.8.1・21.0.12.9.1・17.0.20.10.1・11.0.32.10.1・8u504 に CSPU を提供。Linux は Apt / Yum / Apk リポジトリ経由で更新可能 |
+| Amazon WorkSpaces | [WorkSpaces supports Nested Virtualization](https://aws.amazon.com/about-aws/whats-new/2026/08/nested-virtualization-workspaces/) | Windows で Docker Desktop・WSL2 など、Linux で KVM ワークロード・Android エミュレータを実行可能に。DCV プロトコルが必須で、GPU バンドル・PCoIP は非対応 |
 
 ## まとめ
 
