@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.238・v2.1.237 リリースノートまとめ"
 date: 2026-08-21T08:01:38+09:00
-draft: true
+draft: false
 tags: ["claude-code", "keybindings", "plugin", "marketplace", "self-hosted-runner", "mcp", "remote-control", "output-style", "concise"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.238・v2.1.237 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260821/header.png)
 
 ## はじめに
 
@@ -72,10 +74,10 @@ LLM ゲートウェイやカスタムベース URL を使用する環境では�
 | Improvement | Remote Control 接続回復性 | ネットワークエッジ・VPN・プロキシによる HTTP 403 拒否を最大 3 分間許容、継続ブロック時に拒否元を表示 |
 | Improvement | 起動時応答性向上 | 自動更新チェックを起動約 10 秒後に実行し、起動時 CPU 競合を回避 |
 | Improvement | `claude-api` スキル更新 | Managed Agents 8/19 リリース対応: Web 検索/取得ドメイン設定、セルフホストサンドボックスでのメモリストア |
-| Breaking | Ctrl+L / Cmd+K の動作変更 | フルスクリーンで常に再描画のみ、ダブルプレス `/clear` ショートカット削除、1 行 nvim 端末での自動 `/clear` ループを廃止 |
-| Breaking | `claude mcp list` / `get` の無効サーバー表示 | ヘルスチェック接続の代わりに `⊘ Disabled` と表示 |
-| Breaking | MCP `headersHelper` 信頼ダイアログ要求 | プロジェクト `.mcp.json` の `headersHelper`、インライン MCP サーバーが当該フォルダの信頼ダイアログ承認を要求 |
-| Breaking | MCP `headersHelper` 環境変数継承無効化 | プロジェクト `.mcp.json`、プラグイン、エージェントファイルの `headersHelper` が認証情報環境変数を継承しない。ユーザー・マネージド・claude.ai スコープヘルパーは Claude 設定ディレクトリから実行 |
+| Change | Ctrl+L / Cmd+K の動作変更 | フルスクリーンで常に再描画のみ、ダブルプレス `/clear` ショートカット削除、1 行 nvim 端末での自動 `/clear` ループを廃止 |
+| Change | `claude mcp list` / `get` の無効サーバー表示 | ヘルスチェック接続の代わりに `⊘ Disabled` と表示 |
+| Change | MCP `headersHelper` 信頼ダイアログ要求 | プロジェクト `.mcp.json` の `headersHelper`、インライン MCP サーバーが当該フォルダの信頼ダイアログ承認を要求 |
+| Change | MCP `headersHelper` 環境変数継承無効化 | プロジェクト `.mcp.json`、プラグイン、エージェントファイルの `headersHelper` が認証情報環境変数を継承しない。ユーザー・マネージド・claude.ai スコープヘルパーは Claude 設定ディレクトリから実行 |
 
 ### v2.1.237
 
