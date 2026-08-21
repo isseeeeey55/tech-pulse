@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.236 リリースノートまとめ"
 date: 2026-08-20T08:01:44+09:00
-draft: true
+draft: false
 tags: ["claude-code", "anthropic-default-model", "notify-when-idle", "sendmessage", "mcp", "monitor", "bedrock", "vertex-ai", "foundry", "remote-control", "vscode"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.236 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260820/header.png)
 
 ## はじめに
 
@@ -37,7 +39,7 @@ macOS サンドボックスのワイルドカード拒否ルール（例: `**/.e
 
 | カテゴリ | 内容 | 概要 |
 |---------|------|------|
-| Feature | `ANTHROPIC_DEFAULT_MODEL` 環境変数の追加 | 新規セッション開始時のモデルを設定。`/model` による選択は上書きし、再起動後も保持される（`ANTHROPIC_MODEL` とは動作が異なる） |
+| Feature | `ANTHROPIC_DEFAULT_MODEL` 環境変数の追加 | 新規セッション開始時のモデルを設定。`/model` での選択があればそちらが優先され、再起動後も保持される（`ANTHROPIC_MODEL` とは動作が異なる） |
 | Feature | `notify_when_idle` の追加 | cross-session `SendMessage` で、同一マシン上の別セッションにアイドル時の一度限りの通知を依頼可能（macOS / Linux、オプトイン、ポーリング無し） |
 | Improvement | macOS サンドボックスのワイルドカード拒否ルール強化 | `**/.env` などのワイルドカード読み取り拒否ルールが許可領域内で優先され、マッチしたディレクトリの内容をカバーし、ファイル名変更による回避が不可能に |
 | Fix | ディレクトリ削除後の機能障害を修正 | セッションが切り替えたディレクトリが削除された後、クリップボードコピー、バックグラウンド処理、バックグラウンドセッション、ローカル MCP ログが機能しなくなる問題を修正（2.1.229 以降） |
