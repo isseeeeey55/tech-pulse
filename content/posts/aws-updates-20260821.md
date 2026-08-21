@@ -2,7 +2,7 @@
 title: "【AWS】2026/08/21 のアップデートまとめ"
 date: 2026-08-21T08:02:33+09:00
 draft: false
-tags: ["aws", "partner-central", "cloudfront", "s3", "eks", "direct-connect", "sagemaker", "marketplace", "cloudwatch", "bedrock"]
+tags: ["aws", "partner-central", "cloudfront", "s3", "eks", "direct-connect", "sagemaker", "marketplace", "cloudwatch", "bedrock", "redshift", "arc", "rds"]
 categories: ["AWS Updates"]
 summary: "2026/08/21 のAWSアップデートまとめ"
 ---
@@ -13,7 +13,7 @@ summary: "2026/08/21 のAWSアップデートまとめ"
 
 ## はじめに
 
-今回は、直近で発表された10件のAWSアップデートを紹介します。注目すべきは、CloudFrontのS3 Multi-Region Access Points対応、EKSのCA自動ローテーション機能、そしてAmazon Bedrockの外部Web検索機能拡張など、エンタープライズ運用とセキュリティを強化する実用的な機能が多数含まれている点です。特にマルチリージョン・マルチアカウント環境での運用効率化、コンプライアンス要件への対応、そしてAIエージェントのセキュアな情報取得といった、現場のエンジニアが直面する課題を解決する内容が揃っています。
+今回は、直近で発表された12件のAWSアップデートを紹介します。注目すべきは、CloudFrontのS3 Multi-Region Access Points対応、EKSのCA自動ローテーション機能、そしてAmazon Bedrockの外部Web検索機能拡張など、エンタープライズ運用とセキュリティを強化する実用的な機能が多数含まれている点です。特にマルチリージョン・マルチアカウント環境での運用効率化、コンプライアンス要件への対応、そしてAIエージェントのセキュアな情報取得といった、現場のエンジニアが直面する課題を解決する内容が揃っています。
 
 ## 注目アップデート深掘り
 
@@ -141,6 +141,8 @@ SageMaker AI StudioのGenerative AI Inference Recommendationsは、MLインフ�
 | Amazon Bedrock | AgentCoreのWeb Searchにドメイン/公開日フィルタリング追加。アイルランドと東京リージョンに拡大 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/web-search-amazon-bedrock/) |
 | Amazon CloudWatch | ログ Centralization がタグ伝播をサポート。集約ルールが作成する集約先ロググループに、ソースロググループのタグをコピーして同期 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-cloudwatch-centralization-tag-propogation/) |
 | Amazon Bedrock | Web SearchにExternal Web Accessパラメータ追加。公開Web検索とAWS内部インデックス検索を切り替え可能に | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-bedrock-web-access-web-search/) |
+| Amazon Redshift | システムテーブルのデータを Amazon S3 Tables 連携で長期保持。従来の7日制限を超えて設定でき、Apache Iceberg 形式での書き出しとパーティショニング・コンパクション・保持を AWS が管理 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/redshift-long-term-system-table-retention/) |
+| ARC Region switch | Amazon RDS Switchover Read Replica 実行ブロックを追加。Oracle Data Guard 構成のマルチリージョン RDS で、計画フェイルオーバー時のロール入れ替え（データ損失なし）と計画外時のリードレプリカ昇格を自動化。クロスアカウント対応 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/region-switch-rds-switchover-execution-block/) |
 
 ## まとめ
 
