@@ -1,11 +1,13 @@
 ---
 title: "【AWS】2026/08/21 のアップデートまとめ"
 date: 2026-08-21T08:02:33+09:00
-draft: true
+draft: false
 tags: ["aws", "partner-central", "cloudfront", "s3", "eks", "direct-connect", "sagemaker", "marketplace", "cloudwatch", "bedrock"]
 categories: ["AWS Updates"]
 summary: "2026/08/21 のAWSアップデートまとめ"
 ---
+
+![](/images/aws-updates-20260821/header.png)
 
 # 直近の AWS アップデート情報まとめ — 2026年8月
 
@@ -40,9 +42,9 @@ Amazon CloudFrontがS3 Multi-Region Access Points（MRAP）に対応したOrigin
 
 S3 MRAPは複数リージョンのS3バケットを単一のグローバルエンドポイントとして扱い、リクエストを最適なリージョンに自動ルーティングします。CloudFrontのOAC対応により、エンドユーザーに最も近いエッジロケーションからキャッシュ提供され、キャッシュミス時は最寄りのS3リージョンから取得されるため、グローバルでのパフォーマンスと耐障害性が大幅に向上します。
 
-マルチリージョン構成での運用では、リージョン障害時の自動フェイルオーバーも実現されます。あるリージョンのS3バケットが利用不可能になっても、MRAPが自動的に別リージョンへルーティングするため、手動でのオリジン切り替え作業が不要です。
+MRAP はキャッシュミス時に、リージョンをまたいで最も近い利用可能なレプリカバケットへ自動的にルーティングします。そのため、特定リージョンのバケットが応答しない場合でも、手動でのオリジン切り替えなしに配信を継続できます。
 
-> **Note:** 中国リージョンではOAC機能が制限されているため、代替としてOrigin Access Identity（OAI）の使用を検討する必要があります。
+> **Note:** S3 MRAP オリジンに対する OAC サポートは、CloudFront 中国リージョンを除く全世界で利用可能です。この機能自体に追加料金は発生しません。
 
 ### Amazon EKS の証明書認証局ローテーション機能による長期運用の安定化
 
@@ -56,20 +58,20 @@ Amazon EKSがクラスタの証明書認証局（CA）ローテーション機�
 
 **自動ライフサイクル管理の仕組み**
 
-新機能では、AWSが管理コンポーネント（コントロールプレーン、kube-proxy、CoreDNS、AWS VPC CNIなど）の自動更新を担当します。ユーザー側では、ワーカーノードと外部クライアント（CI/CDツール、モニタリングシステム、kubectl設定など）の更新が必要です。
+新機能では、EKS がローテーションのライフサイクルを管理し、AWS マネージドのコンポーネントが後継CAを信頼するよう自動的に更新します。一方、ワーカーノードの置き換えと、外部クライアント（CI/CDツール、モニタリングシステム、kubectl設定など）を後継CAに対応させる作業は利用者の責任範囲です。
 
 自動セーフガード機能により、以下のライフサイクルが提供されます：
 
-- **有効期限前通知**: CA有効期限が近づくと、EventBridge経由で自動通知
-- **後継CAの自動追加**: 新しいCAが既存クラスタに自動追加され、新旧両方のCAが一時的に共存
-- **自動アクティベーション**: 指定したスケジュールで新CAへの切り替えが実行
-- **ロールバック機能**: 問題発生時に旧CAへ戻すことが可能
+- **有効期限前の事前通知**: CA の有効期限が切れる前に通知が行われる
+- **後継CAの自動追加**: 利用者が後継CAを作成しなかった場合、EKS が自動的に後継CAを追加する
+- **自動アクティベーション**: 利用者が自身のスケジュールでアクティベートしなかった場合、EKS が自動的に切り替えを実行する
+- **ロールバック機能**: 以前のCAへ戻すことが可能
 
 **ワーカーノード更新の責任分界**
 
 EKS Auto ModeおよびAWS Fargateで実行されているノードは、AWSが自動的に更新します。一方、自己管理型ノードグループやマネージド型ノードグループでEC2インスタンスを使用している場合、ユーザーが新しいCA証明書を含むノードイメージへの更新作業を実施する必要があります。
 
-具体的には、新しいCA証明書を信頼するようにkubelet設定を更新し、ノードを段階的にローリングアップデートします。この際、Podの再スケジューリングが発生しますが、適切なPodDisruptionBudget設定により、サービスへの影響を最小限に抑えることができます。
+ノードの置き換えでは Pod の再スケジューリングが発生するため、適切な PodDisruptionBudget を設定したうえで段階的にローリング置換を進めると、サービスへの影響を抑えられます。
 
 **外部クライアント更新の重要性**
 
@@ -86,14 +88,14 @@ EKS Auto ModeおよびAWS Fargateで実行されているノードは、AWSが�
 
 推奨される実施手順は以下の通りです：
 
-1. 既存クラスタのCA有効期限を確認（AWS CLI、EKS API、Consoleで確認可能）
+1. 既存クラスタのCA有効期限を確認（AWS CLI、EKS API、CloudFormation、AWS Console から操作可能）
 2. 非本番環境（開発・ステージング）で先行してローテーションをテスト実施
 3. ワーカーノード更新手順を検証し、Podの再スケジューリング挙動を確認
 4. 外部クライアントリストを作成し、各クライアントでの接続テストを実施
 5. 本番環境で段階的にローテーション実行（まず管理コンポーネント、次にノード、最後に外部クライアント）
-6. CloudTrailでCA関連イベントを監視し、問題発生時の早期検知体制を構築
+6. ローテーション前後で各クライアントの接続を検証し、問題発生時に早期検知できる体制を整える
 
-ロールバック手順も事前に確認しておくべきです。新CA適用後に予期しない問題が発生した場合、旧CAへ戻す操作が可能ですが、ロールバックウィンドウには制限があるため、迅速な意思決定が求められます。
+ロールバック手順も事前に確認しておくべきです。新CA適用後に問題が発生した場合は、以前のCAへ戻す操作が用意されています。
 
 > **Note:** この機能は追加コスト無しで、全商用AWSリージョンで利用可能です。AWS CLI、EKS APIs、CloudFormation、AWS Consoleから設定できます。
 
@@ -103,9 +105,9 @@ EKS Auto ModeおよびAWS Fargateで実行されているノードは、AWSが�
 
 今回のアップデート群は、SREが日常的に直面する「セキュリティと運用効率のバランス」という課題に対する実践的な解を提供しています。
 
-CloudFrontのS3 MRAP対応は、グローバルCDN運用でのセキュリティポリシー実装を大幅に簡素化します。Lambda@Edgeのカスタムコードを削除できることで、コードレビュー、脆弱性スキャン、定期的な依存関係更新といったセキュリティ維持コストが削減されます。Terraform管理しているインフラであれば、`aws_cloudfront_distribution`リソースの`origin_access_control`設定を追加するだけで移行でき、既存のIaCパイプラインに容易に統合できます。
+CloudFrontのS3 MRAP対応は、グローバルCDN運用でのセキュリティポリシー実装を大幅に簡素化します。Lambda@Edgeのカスタムコードを削除できることで、コードレビュー、脆弱性スキャン、定期的な依存関係更新といったセキュリティ維持コストが削減されます。設定は CloudFront コンソール、SDK、CLI、CloudFormation から行えます。IaC で管理している場合も、Lambda@Edge 関数とその関連付けを取り除き、OAC の設定に置き換える形で移行できます。
 
-EKSのCA自動ローテーション機能は、証明書管理という見落とされがちだが致命的な運用リスクへの対応です。有効期限切れによるクラスタ全停止は、障害対応のランブックに「事前予防」として組み込むべき項目です。CloudWatchアラームやEventBridgeルールと組み合わせることで、CA有効期限の6ヶ月前・3ヶ月前・1ヶ月前といった段階的な通知を設定し、計画的なローテーション実施を促す仕組みを構築できます。
+EKSのCA自動ローテーション機能は、証明書管理という見落とされがちだが致命的な運用リスクへの対応です。有効期限切れによるクラスタ全停止は、障害対応のランブックに「事前予防」として組み込むべき項目です。EKS 側から有効期限前の事前通知が提供されるため、これを既存の通知フローに取り込み、計画的なローテーション実施を促す仕組みを整えておくことが有効です。
 
 Direct Connectのプリフィックス制限緩和は、大規模なハイブリッドクラウド環境での運用ボトルネック解消に直結します。100プリフィックス制限により、複数VIFの管理や複雑なルート集約に苦労していたネットワークチームにとって、1,000プリフィックスへの拡大は運用を大きく簡素化します。既存のネットワーク監視（NetFlow、VPCフローログ）と組み合わせて、プリフィックス使用状況をダッシュボード化することで、キャパシティプランニングの精度も向上します。
 
@@ -119,11 +121,11 @@ CloudWatch Centralizationのタグ伝播機能は、マルチアカウント環�
 
 ### AI/ML機能の安全な運用統制
 
-Amazon BedrockのWeb Search機能拡張（external_web_accessパラメータ、ドメインフィルタリング）は、生成AIアプリケーションの運用リスク管理を大きく前進させます。金融や医療などの規制業界では、AIが参照する情報源の統制が必須要件です。ドメインホワイトリストとexternal_web_access制御により、「社内承認済みのドメインのみから情報取得する」といったガバナンス要件を技術的に実装できます。
+Bedrock の Web Search 周辺では、今回2つの告知が出ています。1つは Bedrock 組み込みの Web Search における `external_web_access` パラメータで、`false` に設定すると取得元が Amazon の AWS 内 Web インデックスとナレッジグラフのみになり、リクエストデータが AWS 境界の外に出なくなります（既定値の `true` のまま使うには、リクエスト元のアイデンティティに `bedrock-websearch:ExternalWebAccess` IAM 権限を付与します）。もう1つは Bedrock AgentCore の Web Search Tool で、信頼できるソースへの絞り込みや不要なドメインのブロックといったドメインフィルタリングと、公開日による期間指定が可能になりました。機微データを扱うワークロードでは前者、参照先の品質を統制したい場合は後者、という使い分けになります。
 
 SageMaker AI StudioのGenerative AI Inference Recommendationsは、MLインフラの運用コスト最適化を自動化します。従来は数週間かけて手動でベンチマークを実施し、インスタンスタイプとコンテナ設定の最適な組み合わせを探っていましたが、これが数時間に短縮されます。コスト削減目標が明確なプロジェクトでは、この機能で推奨された構成を採用することで、予算承認プロセスも加速します。
 
-導入判断では、ワークロードの特性を見極めることが重要です。リアルタイム推論とバッチ推論では最適な構成が異なるため、ユースケースプロファイル（Interact、Generate、Summarize）を正しく選択する必要があります。また、推奨結果は現時点のインスタンス価格と可用性に基づいているため、定期的な再評価も検討すべきです。
+導入時は、ユースケースプロファイル（Interact、Generate、Summarize、Custom）から自社のワークロードに合うものを選択します。推奨の生成自体に追加費用はかかりませんが、ベンチマーク中にプロビジョニングされる最適化ジョブとエンドポイントには通常のコンピューティング料金が発生する点に注意が必要です。
 
 ## 全アップデート一覧
 
@@ -134,10 +136,10 @@ SageMaker AI StudioのGenerative AI Inference Recommendationsは、MLインフ�
 | Amazon EKS | クラスタの証明書認証局（CA）ローテーション機能を追加。自動ライフサイクル管理とセーフガード機能を提供 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-eks-certificate-authority-ca-rotation-automated-lifecycle-management) |
 | AWS Direct Connect | インバウンドプリフィックスコントロール機能を追加。VIFあたり最大1,000プリフィックス（IPv4/IPv6各）に拡大 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-direct-connect-new-prefix-controls) |
 | Amazon SageMaker | AI StudioにGenerative AI Inference Recommendationsを追加。ノーコードで最適なインスタンス/コンテナ/最適化戦略を推奨 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/generative-ai-inference-recommendation-for-amazon-sagemaker-now-available-in-the-sagemaker-ai-studio) |
-| AWS Marketplace | カテゴリベース通知とマルチチャネル配信をサポート。パートナーが通知を部門別に振り分け可能に（メール、Slack、Teams対応） | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-marketplace/) |
+| AWS Marketplace | AWS User Notifications 経由でカテゴリベース通知とマルチチャネル配信をサポート。カテゴリごとに受信者と配信方法を選択可能（メール、Console Mobile App、Amazon Q Developer 経由の Slack / Microsoft Teams） | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-marketplace/) |
 | Amazon CloudWatch | pipelines に3つの新プロセッサ追加：RDS（Auroraログ構造化）、XML（JSON変換）、GeoIP（地理情報付加） | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/cloudwatch-geoip-rds-xml/) |
 | Amazon Bedrock | AgentCoreのWeb Searchにドメイン/公開日フィルタリング追加。アイルランドと東京リージョンに拡大 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/web-search-amazon-bedrock/) |
-| Amazon CloudWatch | Centralizationがタグ伝播機能をサポート。集約先ログループにソースアカウントのタグを自動コピー | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-cloudwatch-centralization-tag-propogation/) |
+| Amazon CloudWatch | ログ Centralization がタグ伝播をサポート。集約ルールが作成する集約先ロググループに、ソースロググループのタグをコピーして同期 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-cloudwatch-centralization-tag-propogation/) |
 | Amazon Bedrock | Web SearchにExternal Web Accessパラメータ追加。公開Web検索とAWS内部インデックス検索を切り替え可能に | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-bedrock-web-access-web-search/) |
 
 ## まとめ
@@ -148,7 +150,7 @@ SageMaker AI StudioのGenerative AI Inference Recommendationsは、MLインフ�
 
 AI/ML機能では、セキュリティとガバナンスを重視した機能拡張が目立ちます。Bedrockのドメインフィルタリングや外部Web検索制御は、規制業界での生成AI活用を現実的にする重要な進化です。SageMakerのInference Recommendationsは、コスト最適化の自動化により、ML運用の敷居を下げています。
 
-これらのアップデートは、いずれも追加コストなしまたは従量課金の範囲内で利用でき、既存環境への段階的な導入が可能です。SREチームとしては、まず非本番環境での検証を行い、運用への影響を評価したうえで、計画的に本番環境へ適用していくアプローチが推奨されます。
+今回取り上げたもののうち、EKS の CA ローテーション、Direct Connect のインバウンドプリフィックスコントロール、CloudWatch pipelines の新プロセッサ、CloudFront の S3 MRAP 向け OAC は、いずれも機能自体に追加料金が発生しません（ログの取り込み・保存料金など、通常の従量課金は別途適用されます）。SREチームとしては、まず非本番環境での検証を行い、運用への影響を評価したうえで、計画的に本番環境へ適用していくアプローチが推奨されます。
 
 ---
 
