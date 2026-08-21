@@ -1,17 +1,19 @@
 ---
 title: "【AWS】2026/08/20 のアップデートまとめ"
 date: 2026-08-20T08:02:35+09:00
-draft: true
+draft: false
 tags: ["aws", "ec2", "sagemaker", "athena", "redshift", "emr", "lake-formation", "iam-identity-center", "cloudtrail", "bedrock", "cost-anomaly-detection", "cost-explorer", "workspaces", "opensearch", "quick", "corretto", "cloudwatch", "european-sovereign-cloud"]
 categories: ["AWS Updates"]
 summary: "2026/08/20 のAWSアップデートまとめ"
 ---
 
+![](/images/aws-updates-20260820/header.png)
+
 # 直近の AWS アップデート情報まとめ（2026年8月）
 
 ## はじめに
 
-今回は、直近で発表された11件のAWSアップデートを紹介します。ロンドンリージョンへの新しいアベイラビリティゾーン追加、Amazon SageMaker NotebooksのTrusted Identity Propagation対応、Amazon BedrockでのGrok 4.6やOpenAIモデルのサポート拡大など、幅広い領域でのアップデートが発表されました。特にセキュリティとガバナンス強化、生成AIワークロードの拡充、インフラ容量の拡大が際立っています。
+今回は、直近で発表された10件のAWSアップデートを紹介します。ロンドンリージョンへの新しいアベイラビリティゾーン追加、Amazon SageMaker NotebooksのTrusted Identity Propagation対応、Amazon BedrockでのGrok 4.6やOpenAIモデルのサポート拡大など、幅広い領域でのアップデートが発表されました。特にセキュリティとガバナンス強化、生成AIワークロードの拡充、インフラ容量の拡大が際立っています。
 
 本記事では、特に運用面でのインパクトが大きいアップデートを深掘りし、SRE視点での活用ポイントを整理していきます。
 
@@ -62,7 +64,7 @@ TIP による最大のメリットは、**ユーザーごとのデータ境界�
 
 TIP を利用するには、SageMaker Unified Studio の TIP 対応 Project にノートブックを接続する必要があります。セットアップ後は、追加のログイン管理やトークン管理は不要です。Lake Formation で事前に権限を設定しておけば、ユーザーがノートブックで Athena、Redshift、EMR Serverless にアクセスする際、自動的にユーザー Identity に基づいた権限が適用されます。
 
-対応サービスは現時点で Athena、Redshift、EMR Serverless の3つです。それぞれ微妙に挙動が異なる可能性があるため、利用するサービスごとに動作検証を行うことをおすすめします。
+対応するエンジンは Athena、Redshift、EMR Serverless の3つです。本機能は、Amazon SageMaker Unified Studio が利用可能な全 AWS リージョンで提供されます。
 
 ### AWS Cost Anomaly Detection の Amazon Bedrock 対応
 
@@ -81,25 +83,22 @@ AWS Cost Anomaly Detection が Amazon Bedrock 上の第三者製基盤モデル�
 
 #### Cost Anomaly Detection の仕組み
 
-Cost Anomaly Detection は、機械学習を使用して過去のコスト傾向を学習し、通常の変動と異常な変動を区別します。今回の対応により、Bedrock 上の第三者製モデル利用コストについても、以下の粒度で異常を検出できます：
+Cost Anomaly Detection は、機械学習を使用して過去のコスト傾向を学習し、通常の変動と異常な変動を区別します。今回の対応により、Bedrock 上の第三者製モデルの利用コストも監視対象に加わりました。異常を検出した際の根本原因は、以下の軸で分解されます：
 
-- AWS サービス別（Bedrock）
-- アカウント別（複数アカウントを運用している場合）
-- リージョン別（東京、バージニアなど）
-- 使用タイプ別（モデルごとの課金）
+- AWS サービス
+- アカウント（複数アカウントを運用している場合）
+- リージョン
+- 使用タイプ
 
 **セットアップ不要**で、AWS マネージドサービスモニターを通じて自動的に Bedrock モデルの利用コストが監視対象に含まれます。
 
 #### 異常検出時の詳細情報
 
-異常を検出した際、Cost Anomaly Detection は以下の情報を提供します：
+モデルの支出が予期せず変動すると、アラートとあわせて、ドル影響額の大きい順にランク付けされた根本原因の内訳が提供されます。
 
-- 異常発生の日時
-- コスト増加額（ドル単位）
-- どのサービス、アカウント、リージョン、使用タイプで発生したか
-- 過去の傾向と比較してどの程度異常か
+これにより、例えば「特定の開発アカウントで Claude モデルの呼び出しが急増している」といった具体的な状況を、他の AWS 支出と同じ速度で把握し、対処できます。
 
-これにより、例えば「特定の開発アカウントで Claude モデルの呼び出しが急増している」といった具体的な状況を迅速に把握できます。
+なお本機能は、AWS GovCloud と中国リージョンを除く、全ての AWS 商用リージョンで利用可能です。
 
 #### 他のコスト管理ツールとの使い分け
 
@@ -113,49 +112,30 @@ Bedrock ワークロードでは、まず Cost Anomaly Detection で異常を早
 
 ### Amazon Bedrock の Grok 4.6 サポート
 
-Amazon Bedrock が SpaceX AI の最新フラグシップモデル「Grok 4.6」をサポート開始しました。Grok 4.6 は 500K のコンテキストウィンドウを備え、長時間実行されるエージェントや複雑なビジュアルワークに最適化されています。
+Amazon Bedrock が SpaceXAI の Grok 4.6 をサポートし、US Geo と Global の2つのクロスリージョン推論プロファイルが利用できるようになりました。Grok 4.6 は、コーディング、エージェント的なタスク、ナレッジワーク向けに構築されたフロンティアモデルです。
 
-#### Grok 4.6 の特徴
+#### クロスリージョン推論という提供形態
 
-Grok 4.6 は以下の特徴を持つ大規模言語モデルです：
+今回のサポートで特徴的なのは、モデル単体ではなくクロスリージョン推論とセットで提供される点です。クロスリージョン推論は、推論リクエストを複数の AWS リージョンにまたがって自動的にルーティングする仕組みで、リージョンごとのキャパシティ管理を利用者が行うことなくスループットを高められます。
 
-- **500K コンテキストウィンドウ**: 約50万トークン（日本語で約20〜30万文字相当）の長文を一度に処理可能
-- **推論努力レベル調整**: 低、中、高、超高の4段階で推論の深さを制御
-- **マルチステップタスク最適化**: 調査、分析、コード生成など複数ステップを要するタスクに強み
-- **ビジュアルワーク対応**: 画像やビジュアルコンテンツを含む複雑なタスクに対応
+用意されたプロファイルは2種類です。
 
-#### 推論努力レベルの意味
+- **US Geo（`us.xai.grok-4.6`）**: リクエストを米国の地理的範囲内のみでルーティングします。データが米国内で処理される状態を保ちながらスケールできるため、データレジデンシー要件がある場合に選択します
+- **Global（`global.xai.grok-4.6`）**: モデルが利用可能な任意の商用 AWS リージョンからリクエストを処理します。Bedrock のキャパシティに最も広くアクセスでき、需要のスパイク時に最も高いスループットが得られるうえ、トークンあたりの単価も低くなります
 
-推論努力レベルは、モデルがタスクに対してどれだけ「考える時間」を使うかを制御します：
+どちらを選ぶかは、データレジデンシー要件の有無と、スループット・単価のどちらを優先するかで決まります。規制上の制約がなければ Global、米国内での処理が要件なら US Geo という整理になります。
 
-- **低**: 簡単な質問応答や定型的なタスク向け。レスポンスが高速でコストも低い
-- **中**: 標準的な複雑さのタスク。バランス型
-- **高**: 複雑な分析や推論を要するタスク。時間をかけてより正確な回答を生成
-- **超高**: 最も複雑なタスク向け。複数の視点から検討し、最適解を導出
+#### 既存の運用統制がそのまま効く
 
-#### エージェント開発への応用
+Grok 4.6 は `bedrock-runtime` エンドポイント上で動作し、Responses、Chat Completions、Converse の各 API に対応します。アカウントレベルの統制についても、他の Bedrock モデルで使っているものがそのまま適用されます。
 
-Grok 4.6 は長時間実行されるエージェント開発に特に適しています。エージェントとは、複数のツールを組み合わせて自律的にタスクを実行する AI システムです。例えば：
+- モデル呼び出しのロギング（Amazon S3 または Amazon CloudWatch Logs へ配信可能）
+- Amazon CloudWatch メトリクス
+- AWS Cost Explorer および AWS Cost and Usage Report でのコスト内訳
 
-1. ユーザーからの要求を受け取る
-2. 必要な情報を外部 API から取得
-3. 取得した情報を分析
-4. 複数の候補案を生成
-5. 最適案を選択して提示
+監査ログの集約先やコスト配分の仕組みを新たに作り直す必要はなく、既存の Bedrock ワークロードに対して行っている監視・コスト管理の運用にそのまま組み込めます。
 
-このような複数ステップのワークフローを、500K の長いコンテキストウィンドウ内で一貫して処理できます。
-
-#### Bedrock を通じた利用のメリット
-
-Bedrock を通じて Grok 4.6 を利用することで、以下のエンタープライズ機能が標準で利用できます：
-
-- **セキュリティ**: VPC エンドポイント、データ暗号化、IAM によるアクセス制御
-- **プライバシー**: 学習データとして利用されない保証
-- **モニタリング**: CloudWatch によるメトリクス監視、API 呼び出しログ
-- **スケーリング**: 複数 AWS リージョン間での自動スケーリング
-- **コスト管理**: AWS Cost Explorer での一元的なコスト追跡
-
-これらの機能により、PoC から本番環境まで一貫したインフラで運用できます。
+Grok 4.6 のクロスリージョン推論は、Amazon Bedrock が提供されている全 AWS リージョンで利用可能です。
 
 ## SRE視点での活用ポイント
 
@@ -163,11 +143,11 @@ Bedrock を通じて Grok 4.6 を利用することで、以下のエンター�
 
 ロンドンリージョンへの4番目のAZ追加は、SREにとって高可用性アーキテクチャを再設計する好機です。特に以下の点を検討する価値があります：
 
-**フェイルオーバー戦略の最適化**: 3AZ構成では「2AZダウンで全停止」というリスクがありましたが、4AZ構成では「3AZダウンまで耐える」「2AZダウン時も性能劣化を最小化」といった、より堅牢な戦略が実装できます。Amazon RDS や Aurora のマルチAZデプロイメントを4AZに拡張することで、RPO/RTOをさらに短縮できる可能性があります。
+**フェイルオーバー戦略の見直し**: アプリケーションを4つの AZ に分散配置できるようになり、フォールトトレランスと高可用性構成の選択肢が広がります。ステートレス層を4AZに分散すれば、1AZ 障害時に残り3AZで負荷を吸収することになるため、AZ あたりに確保しておく余剰キャパシティを3AZ構成より小さく抑えられます。なお、Amazon RDS や Aurora のマルチAZ構成が使用する AZ 数はサービス側の仕様で決まります。リージョンの AZ が4つに増えたからといって、DB 層の冗長度が自動的に上がるわけではない点には注意が必要です。
 
 **AI/MLワークロードの可用性向上**: Trn3、P6 といった最新アクセラレーテッドインスタンスが新AZで利用可能になることで、学習ジョブをAZ障害から保護できます。例えば、Kubernetes（EKS）のノードグループを4AZ間に分散配置し、特定AZでハードウェア障害が発生しても学習を継続できる構成が現実的になりました。
 
-**コスト面の注意点**: 4AZ構成では AZ 間データ転送コストが増える可能性があります。アプリケーションのトラフィックパターンを CloudWatch Logs Insights で分析し、不要な AZ 間通信を最小化する設計が重要です。
+**コスト面の注意点**: AZ をまたぐ通信が増えれば、AZ 間データ転送コストも増えます。VPC フローログを CloudWatch Logs Insights や Athena で分析し、不要な AZ 間通信を最小化する設計が重要です。なお、新 AZ には Europe (London) リージョンの標準料金が適用されます。
 
 ### データガバナンスの強化と監査自動化
 
@@ -199,7 +179,7 @@ Cost Anomaly Detection の Bedrock 対応により、生成 AI ワークロー�
 | モニタリング | [Amazon WorkSpaces Applications now offers in-console monitoring capabilities](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-workspaces-applications-console-monitoring) | WorkSpaces Applications にネイティブモニタリング機能を搭載。セッション・インスタンスレベルのメトリクスをリアルタイム表示 |
 | データ統合 | [Amazon OpenSearch Ingestion is now available in GovCloud Regions](https://aws.amazon.com/about-aws/whats-new/2026/08/opensearch-ingestion-available-govcloud-regions) | OpenSearch Ingestion が GovCloud (US-East/West) で利用可能に。ノーコードでデータ変換・削除・ルーティング |
 | セキュリティ | [Amazon Quick adds deny by default for custom permissions](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-quick-deny-by-default/) | Amazon Quick のカスタム権限に「デフォルト拒否」機能を追加。新 AI 機能を事前制限可能に |
-| AI/ML | [Amazon Bedrock now supports SpaceXAI Grok 4.6](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-bedrock-grok-4-6/) | Bedrock が Grok 4.6 をサポート。500K コンテキストウィンドウと推論努力レベル調整が可能 |
+| AI/ML | [Amazon Bedrock now supports SpaceXAI Grok 4.6](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-bedrock-grok-4-6/) | Bedrock が Grok 4.6 をサポート。US Geo（`us.xai.grok-4.6`）と Global（`global.xai.grok-4.6`）のクロスリージョン推論プロファイルを提供 |
 | セキュリティ | [AWS IAM identity federation to external services is now available in AWS European Sovereign Cloud Region](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-iam-european-sovereign-cloud/) | AWS European Sovereign Cloud で IAM outbound identity federation が利用可能に。短寿命 JWT で外部サービスに認証 |
 | AI/ML | [Amazon Bedrock now supports OpenAI models in India](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-bedrock-openai-india-v1/) | Bedrock がインドで OpenAI GPT-5.6 モデル（Terra/Luna）をサポート。クロスリージョン推論でデータレジデンシー要件に対応 |
 | セキュリティ | [Amazon Corretto August 2026 Critical Security Patch Updates](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-corretto-august-2026-security-updates) | Corretto の複数バージョン（8/11/17/21/25/26）に重大なセキュリティパッチを公開 |
@@ -214,7 +194,7 @@ Cost Anomaly Detection の Bedrock 対応により、生成 AI ワークロー�
 
 **3. グローバルインフラの拡充**: ロンドンリージョンの新 AZ、GovCloud での OpenSearch Ingestion、European Sovereign Cloud での IAM 機能拡張など、地理的・規制的な要件に応じた選択肢が増えています。データレジデンシー要件が厳しい組織でも、AWS 上で完結したアーキテクチャを構築しやすくなりました。
 
-SRE の観点では、これらのアップデートを「導入するかしないか」ではなく、「どのように既存の運用フローに組み込むか」を考えることが重要です。特にセキュリティとコスト管理の機能は、導入初期の設定コストを上回る長期的な運用改善効果が期待できます。
+SRE の観点では、これらのアップデートを「導入するかしないか」ではなく、「どのように既存の運用フローに組み込むか」を考えることが重要です。特にセキュリティとコスト管理の機能は、導入初期に設定コストがかかる一方で、その後の運用負荷を継続的に下げる方向に効きます。
 
 ---
 
