@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.239 リリースノートまとめ"
 date: 2026-08-22T08:01:56+09:00
-draft: true
+draft: false
 tags: ["claude-code", "bedrock", "vertex", "foundry", "anthropic", "mcp", "alpine", "musl", "python", "chrome", "windows", "vscode", "remote-control"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.239 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260822/header.png)
 
 # Claude Code v2.1.239 リリースノート
 
@@ -35,7 +37,7 @@ Bedrock ストリーミング使用時に、レスポンスの Content-Type ヘ�
 
 クラウドセッションでは、claude.ai から同期されたプラグインが `name@synced` として表示され、`claude plugin enable/disable <name>@synced` で管理できるようになり、同名のローカルインストールプラグインを上書きしなくなりました。
 
-Alpine/musl ビルド環境では、ネイティブの画像ペースト、クリップボード、オーディオキャプチャのアドオンが読み込まれるようになり、軽量コンテナ環境での完全な機能利用が可能になりました。
+Alpine/musl ビルド環境では、ネイティブの画像ペースト、クリップボード、オーディオキャプチャのアドオンが読み込まれるようになりました。従来はランタイムが拒否する glibc ビルドのバイナリが使われていたためで、musl ビルドのバイナリに差し替えられています。
 
 ## 全変更点一覧
 
@@ -93,7 +95,7 @@ Alpine/musl ビルド環境では、ネイティブの画像ペースト、ク�
 | Improvement | `ListAgents` の自己名表示 | セッションが他のピアから使用される名前を返すように |
 | Improvement | `ListAgents` のチームメイト表示 | ライブチームメイトもリストに含めるように |
 | Improvement | `keybindingFlavor: "readline"` の拡張 | Alt+F、Ctrl/Option+→、Alt+D などが Bash の単語キーと一致 |
-| Improvement | 持続的リトライモードのエラー処理 | 組織支出上限やクレジット不足エラーで即座に失敗 |
+| Improvement | 持続的リトライモードのエラー処理 | `CLAUDE_CODE_RETRY_WATCHDOG` が組織支出上限やクレジット不足エラーで即座に失敗するように |
 | Improvement | Claude in Chrome の `/clear` | セッションの Chrome タブグループを閉じるように |
 | Improvement | リモートセッションの画像アップロード | モバイルからアップロードされた画像に保存ファイルパスを含める |
 | Improvement | Claude Code on the web のプロキシ対応 | Bash 等からの非 API anthropic.com ホストへのリクエストがプロキシを経由 |
