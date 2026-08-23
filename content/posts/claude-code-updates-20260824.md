@@ -1,13 +1,13 @@
 ---
 title: "【Claude Code】v2.1.241 リリースノートまとめ"
 date: 2026-08-24T08:00:49+09:00
-draft: true
+draft: false
 tags: ["claude-code"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.241 のClaude Codeリリースノートまとめ"
 ---
 
-# Claude Code v2.1.241 リリースノート
+![](/images/claude-code-updates-20260824/header.png)
 
 ## はじめに
 
@@ -17,7 +17,7 @@ summary: "v2.1.241 のClaude Codeリリースノートまとめ"
 
 | カテゴリ | 内容 | 概要 |
 |---------|------|------|
-| Improvement | Bug fixes and reliability improvements | バグ修正と信頼性向上のための改善が実施された |
+| Fix / Improvement | Bug fixes and reliability improvements | バグ修正と信頼性向上のための改善が実施された |
 
 ## まとめ
 
