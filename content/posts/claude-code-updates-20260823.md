@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.240 リリースノートまとめ"
 date: 2026-08-23T08:00:48+09:00
-draft: true
+draft: false
 tags: ["claude-code"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.240 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260823/header.png)
 
 ## はじめに
 
