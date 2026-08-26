@@ -1,17 +1,18 @@
 ---
 title: "【Claude Code】v2.1.246・v2.1.245・v2.1.243 リリースノートまとめ"
 date: 2026-08-26T08:03:31+09:00
-draft: true
+draft: false
 tags: ["claude-code"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.246・v2.1.245・v2.1.243 のClaude Codeリリースノートまとめ"
 ---
 
+![](/images/claude-code-updates-20260826/header.png)
 # Claude Code v2.1.246/v2.1.245/v2.1.243 リリース情報
 
 ## はじめに
 
-2026年8月26日、Claude Code の v2.1.246、v2.1.245、v2.1.243 がリリースされました。v2.1.246 では Bash wildcard allow ルールに対する起動時警告や、バックグラウンドセッション起動失敗の複数修正、長い単一行を含む diff のレンダリング高速化など、50件以上の修正・改善が含まれています。v2.1.245 は glibc 2.44 を搭載する Linux ディストリビューション（Arch Linux、CachyOS、Fedora Rawhide など）での起動時クラッシュを修正したホットフィックスです。v2.1.243 では Loops 統計の表示、`modelPicker` 設定によるモデル選択のカスタマイズ、`promptCacheTtl` 設定の追加、組織の契約レートを反映する `modelPricing` マネージド設定、API キー不要のコンソールサインインなどが追加されました。
+2026年8月25日から26日にかけて、Claude Code の v2.1.243、v2.1.245、v2.1.246 がリリースされました。v2.1.246 では Bash wildcard allow ルールに対する起動時警告や、バックグラウンドセッション起動失敗の複数修正、長い単一行を含む diff のレンダリング高速化など、61件の修正・改善が含まれています。v2.1.245 は glibc 2.44 を搭載する Linux ディストリビューション（Arch Linux、CachyOS、Fedora Rawhide など）での起動時クラッシュを修正したホットフィックスです。v2.1.243 では Loops 統計の表示、`modelPicker` 設定によるモデル選択のカスタマイズ、`promptCacheTtl` 設定の追加、組織の契約レートを反映する `modelPricing` マネージド設定、API キー不要のコンソールサインインなどが追加されました。
 
 ## 注目アップデート深掘り
 
@@ -105,10 +106,10 @@ v2.1.245 により、最新の Linux ディストリビューション（glibc 2
 | Improvement | サブエージェント結果 | `maxTurns` 制限で停止したサブエージェントが完了として表示される代わりに、`SendMessage` による継続ヒント付きで部分結果としてマークされるように改善 |
 | Improvement | 非対話セッションの継続 | 非対話セッション（`-p`、SDK、クラウドセッション）でサーバーエラー、接続切断、ストールによりレスポンスが中断された際、エラー終了ではなく自動継続するように改善 |
 | Improvement | 使用量テレメトリの組織帰属 | workload identity federation セッション、起動時 `apiKeyHelper` 実行中のイベント送信、アイドル中のログイントークン有効期限切れ後の使用量テレメトリを組織に正しく帰属させるよう改善 |
-| Feature | `/code-review` の利用範囲拡大 | Claude が Bedrock、Vertex AI、Foundry、Claude アプリゲートウェイ経由、テレメトリまたは非必須トラフィック無効時でも `/code-review` を自ら開始できるように変更 |
-| Feature | `/goal` チェックイン制限 | アイドルセッションで長時間実行バックグラウンド作業に対し、ゴールあたり最大 3 回のチェックインを開始。次のメッセージで追加 3 回許可 |
-| Feature | マネージド設定同意の延期 | `claude install` と `claude update` で保留中のマネージド設定同意プロンプトを次の対話セッションまで延期するように変更 |
-| Feature | OpenTelemetry plugin イベント | claude.ai から同期されたプラグインの OpenTelemetry plugin イベントで、`plugin_id_hash` が実際のマーケットプレースを反映し、admin インストールプラグインの `enabled_via` が `admin-install` になるよう変更 |
+| Change | `/code-review` の利用範囲拡大 | Claude が Bedrock、Vertex AI、Foundry、Claude アプリゲートウェイ経由、テレメトリまたは非必須トラフィック無効時でも `/code-review` を自ら開始できるように変更 |
+| Change | `/goal` チェックイン制限 | アイドルセッションで長時間実行バックグラウンド作業に対し、ゴールあたり最大 3 回のチェックインを開始。次のメッセージで追加 3 回許可 |
+| Change | マネージド設定同意の延期 | `claude install` と `claude update` で保留中のマネージド設定同意プロンプトを次の対話セッションまで延期するように変更 |
+| Change | OpenTelemetry plugin イベント | claude.ai から同期されたプラグインの OpenTelemetry plugin イベントで、`plugin_id_hash` が実際のマーケットプレースを反映し、admin インストールプラグインの `enabled_via` が `admin-install` になるよう変更 |
 | Fix | コマンドサンドボックス設定 | コマンドサンドボックスのファイルシステム設定が `--setting-sources` を尊重しない問題を修正 |
 
 ### v2.1.245
@@ -151,7 +152,36 @@ v2.1.245 により、最新の Linux ディストリビューション（glibc 2
 | Fix | `/reload-plugins` LSP ツール | 最後の LSP プラグインが無効化された後も `/reload-plugins` が LSP ツールを保持する問題を修正。会話再読み込みを伴う LSP プラグイン変更前に警告を表示 |
 | Fix | `--agents` JSON エラー | `--agents` が無効な JSON または無効なエージェント定義を無視する問題を修正。`--mcp-config` 同様、明確なエラーで exit |
 | Fix | `/status` MCP エラー | `~/.claude.json` に無効な MCP サーバーエントリがある場合に `/status` が "Found invalid entries in: ." とファイル名なしで表示する問題を修正 |
-| Fix | `/clear` セッション名 | `/clear` が新セッションの名前を保持しているにもかかわらず、プロンプ
+| Fix | `/clear` セッション名 | 新セッションでも名前は保持されているのに、`/clear` が `/rename` で付けたセッション名をプロンプトバーから消す問題を修正 |
+| Fix | 履歴の破損エントリ | `~/.claude/history.jsonl` に不正なエントリが含まれる場合に Ctrl+R 履歴検索と上矢印履歴が壊れる問題を修正 |
+| Fix | Ctrl+[ と vim モード | 修飾キーをエンコードするターミナル（modifyOtherKeys / kitty protocol）で Ctrl+[ が vim の INSERT モードを抜けない問題を修正 |
+| Fix | `NO_PROXY` の大文字小文字 | `localhost` が `NO_PROXY` に記載され小文字の `no_proxy` に無い場合、ローカル IDE 接続が `HTTPS_PROXY` 経由にルーティングされる（時に失敗する）問題を修正。両方の表記を尊重 |
+| Fix | サンドボックス違反の詳細欠落 | ブロックされたコマンドが exit 0 で終了した場合（例: `curl` がプロキシの 403 ページを出力）に、サンドボックスのネットワーク違反詳細が Bash ツール結果から欠落する問題を修正 |
+| Fix | レート制限のリセット後表示 | セッションがアイドル中にレート制限ウィンドウがリセットされた後も、ステータスラインの `rate_limits` フィールドと `/usage` がリセット前の使用率を表示する問題を修正 |
+| Fix | `--teleport` の未コミット変更 | `claude --teleport <session>` が未コミット変更で終了する問題を修正。セッションピッカーと同様に stash して続行するか尋ねる |
+| Fix | `/web-setup` の再ログイン要求 | `gh auth token` を持たない古い GitHub CLI が既に認証済みの場合に `/web-setup` が繰り返しログインを求める問題を修正 |
+| Fix | Claude in Chrome の接続断 | 自動更新がセットアップ時のバージョンを削除した後に Claude in Chrome が Claude Code への接続を失う問題を修正。ネイティブホストは安定版の `claude` ランチャー経由で起動 |
+| Fix | [VSCode] 権限モード | フィーチャーフラグ取得前に開始したセッション（例: インストール直後）が auto mode や設定済みのデフォルトモードではなくデフォルト権限モードで開く問題を修正 |
+| Fix | [VSCode] Focus ビュー | 展開した Focus ビューのセクションが、サブエージェントのツール実行中に自動で折りたたまれる問題を修正 |
+| Improvement | 起動時間 | サンドボックスと MCP の起動が最初のフレームをブロックしなくなり、素の起動はサブコマンド登録をスキップ。ワークフロー探索・設定・トラストストア処理も軽量化 |
+| Improvement | ダウンロードサイズ | ネイティブインストールと自動更新のバイナリを zstd 圧縮に変更（Linux x64 で約 340 MB → 約 75 MB） |
+| Improvement | テレメトリの組織帰属 | `ANTHROPIC_AUTH_TOKEN` で Anthropic API に直接認証するセッションの使用量テレメトリを組織に正しく帰属させ、その組織のデータ取り扱い設定が適用されるよう改善 |
+| Improvement | バイナリサイズ | 同梱スキルとプロンプトテキストをよりコンパクトに格納し、ネイティブバイナリを約 2 MB 削減 |
+| Improvement | ネイティブビルドのメモリ | バンドル全体を常駐させず必要に応じてコードを読み込むよう変更（セッションあたり約 40〜70 MB のメモリ削減） |
+| Improvement | 長時間セッションのピークメモリ | ヒープ増加に応じてランタイムがより早くガベージコレクトするよう改善 |
+| Improvement | SSH 経由の `/login` | サインイン URL が即座に表示され、`c` 押下時は常に成功と主張する代わりにコピー方法を報告。フルスクリーンでのテキスト選択方法のヒントも表示 |
+| Improvement | effort のエラーメッセージ | thinking 無効時に effort `xhigh`/`max` を使った際のエラーを改善。該当レベル名、thinking を無効化している設定、対処法としての `/effort high` を明示 |
+| Improvement | `/loop` の出力 | Claude に処理すべきことがない連続した wake-up を、1件ずつ出力せずターミナル上の1行にまとめるよう改善 |
+| Change | サンドボックス Bash のプロンプト | サンドボックス化された Bash ツールのプロンプトが許可済みネットワークホストを列挙しないよう変更。列挙外のホストをブロック済みと決めつけず、Claude がリクエストを試行し新しいホストを承認できる |
+| Change | Sonnet 5 の価格表示 | `/model` ピッカーと同梱の `claude-api` スキルで、Sonnet 5 の $2/$10 per Mtok を期間限定プロモではなく標準リスト価格として表示するよう更新 |
+| Change | macOS の computer use | macOS の computer use で、デスクトップ・Dock・Finder ウィンドウのクリックに、他アプリと同様アクセスダイアログでの Finder 許可を必要とするよう変更 |
+| Change | `/model`・`/fast`・`/effort` の即時実行 | Bedrock・Vertex・Foundry 上およびテレメトリ無効時にも、ターン終了までキューイングせず即座に実行するよう変更 |
+| Fix | `claude remote-control` の終了 | サーバーがセッション途中で環境を落とした際に `claude remote-control` が終了し、接続中の Remote Control セッションが取り残される問題を修正。復帰するように変更 |
+| Fix | Remote Control の停止・再起動 | admin/owner ロールを持たない Team・Enterprise メンバーで、`claude remote-control` が提供する Remote Control セッションが停止・再起動後に固まることがある問題を修正 |
+| Change | クロスセッション受信ソケット | クロスセッションメッセージングの受信ソケットが、30 秒以内に完全な1行を送らない接続を閉じるよう変更。投稿するスクリプトはデータが揃ってから接続すること |
+| Improvement | Remote Control の通知文 | Remote Control が別ターミナルに保持されている会話を再開した際の通知を改善。他マシン上のセッションはこちらから見えず、到達もできない旨を明示 |
+| Improvement | [VSCode] 履歴の切り詰め | 長時間セッションで古いツール実行行から先に削除し、ユーザーのメッセージと Claude の返信が残るよう改善 |
+| Improvement | [VSCode] 拡張のテレメトリ帰属 | Claude アカウントでサインインしている場合に、拡張自身の使用量テレメトリを組織に正しく帰属させ、そのデータ取り扱い設定が適用されるよう改善 |
 
 ---
 
