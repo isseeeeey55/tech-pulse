@@ -2,7 +2,7 @@
 title: "【AWS】2026/08/26 のアップデートまとめ"
 date: 2026-08-26T08:01:55+09:00
 draft: false
-tags: ["aws", "iot-core", "lambda", "iam", "batch", "secrets-manager", "rds", "connect", "ecs", "ec2"]
+tags: ["aws", "iot-core", "lambda", "iam", "batch", "secrets-manager", "rds", "connect", "ecs"]
 categories: ["AWS Updates"]
 summary: "2026/08/26 のAWSアップデートまとめ"
 ---
@@ -12,7 +12,7 @@ summary: "2026/08/26 のAWSアップデートまとめ"
 
 ## はじめに
 
-今回は、直近で発表された13件のAWSアップデートを紹介します。なかでも実運用への影響が大きいのは、AWS Lambda のフル IAM リソースベースポリシー対応と、AWS IoT Core の InfluxDB 直接ルーティング機能です。Lambda のアクセス制御でポリシーを一本化できるようになり、マルチアカウント環境での権限管理エントリが集約されます。一方、IoT Core の新機能では、カスタムコードや中間のクラウドサービスなしで時系列データを InfluxDB へ直接書き込めるようになります。その他にも、ECS のエージェント接続自動修復、RDS の最新セキュリティパッチ対応、IAM Roles Anywhere の Java プラグインなど、運用効率とセキュリティを向上させるアップデートが揃いました。
+今回は、直近で発表された10件のAWSアップデートを紹介します。なかでも実運用への影響が大きいのは、AWS Lambda のフル IAM リソースベースポリシー対応と、AWS IoT Core の InfluxDB 直接ルーティング機能です。Lambda のアクセス制御でポリシーを一本化できるようになり、マルチアカウント環境での権限管理エントリが集約されます。一方、IoT Core の新機能では、カスタムコードや中間のクラウドサービスなしで時系列データを InfluxDB へ直接書き込めるようになります。その他にも、ECS のエージェント接続自動修復、RDS の最新セキュリティパッチ対応、IAM Roles Anywhere の Java プラグインなど、運用効率とセキュリティを向上させるアップデートが揃いました。
 
 ## 注目アップデート深掘り
 
@@ -131,9 +131,6 @@ IoT デバイス → AWS IoT Core（ルールエンジン） → InfluxDB
 | Amazon Connect Cases | [ケース作成後の顧客プロフィール更新が可能に](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-connect-cases-flexible-profiles/) | ケースをオープンした後にプロフィール変更・追加可能。誤認識や後から特定する場合に対応 |
 | AWS Lambda | [フル IAM リソースベースポリシーをサポート](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-lambda-full-iam-resource-based-policies/) | 複数プリンシパル・複数アクションを 1 つのポリシーで管理。IAM 全条件キーに対応 |
 | Amazon ECS | [エージェント接続の自動検出と修復](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-ecs-agent-connectivity-health) | コンテナインスタンスの接続問題を自動検出し、Fargate/マネージドインスタンスで自動修復 |
-| AWS Lambda MicroVMs | [AWS PrivateLink をサポート](https://aws.amazon.com/about-aws/whats-new/2026/08/lambda-microvms-supports-privatelink) | VPC から MicroVM API と各 MicroVM の HTTP エンドポイントへ、パブリックインターネットを経由せず接続可能。Lambda MicroVMs 提供の全リージョンで利用可 |
-| Amazon EC2 | [Capacity Reservation Resource Groups が Capacity Blocks と中断可能予約に対応](https://aws.amazon.com/about-aws/whats-new/2026/08/capacity-reservation-resource-groups-ec2) | 従来のオンデマンドキャパシティ予約に加え、ML 向け Capacity Blocks と中断可能な予約を 1 つのリソースグループに集約。EC2 Fleet / Auto Scaling で予約種別ごとの優先順位とオンデマンドへの自動フォールバックを設定可能。追加料金なし（GovCloud・中国リージョンを除く） |
-| Amazon RDS for SQL Server | [最新の累積更新（CU）に対応](https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-rds-supports-latest-cu-microsoft-sql-server/) | Microsoft SQL Server 2025 CU6 KB5093421（RDS バージョン 17.00.4055.5.v1）をサポート |
 
 ## まとめ
 
