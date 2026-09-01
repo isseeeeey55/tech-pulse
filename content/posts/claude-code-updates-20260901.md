@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.252 リリースノートまとめ"
 date: 2026-09-01T08:01:01+09:00
-draft: true
+draft: false
 tags: ["claude-code", "bash", "remote-control", "claude-desktop", "vs-code"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.252 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260901/header.png)
 
 ## はじめに
 
