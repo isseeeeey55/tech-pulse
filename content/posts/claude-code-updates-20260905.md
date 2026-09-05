@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.261・v2.1.260 リリースノートまとめ"
 date: 2026-09-05T08:03:28+09:00
-draft: true
+draft: false
 tags: ["claude-code"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.261・v2.1.260 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260905/header.png)
 
 ## はじめに
 
@@ -79,11 +81,11 @@ v2.1.260 の差分パネルは、コード編集の変更内容を即座に確�
 | Improvement | ストリーミング性能 | レイアウト更新時に既レンダリングブロックを再チェックしないよう改善 |
 | Improvement | `rm` 安全プロンプト | 位置パラメータや二重引用符内 `sh -c` スクリプトの `rm -rf` も検出 |
 | Improvement | API 無応答時のリトライ | `API_TIMEOUT_MS`（デフォルト10分）まで待機し、メッセージで変更箇所を提示 |
-| Breaking | gateway 403 メッセージ | マネージド設定ロード失敗時に Claude Code が組織で有効化されていない可能性を示唆 |
-| Breaking | `forceLoginMethod: "gateway"` の挙動 | 旧 API キーや claude.ai ログインを無視し `/login` を要求 |
-| Breaking | 自動モードのリンク処理 | 公開図表レンダラー URL へのコンテンツ埋め込みリンクをアップロードとみなし自動承認を制限 |
-| Breaking | プロンプトの単語編集キー | Bash 互換に変更（Ctrl+W は空白まで削除、Alt+F と Alt+D は単語末で停止）、`keybindingFlavor` は無効化 |
-| Breaking | `/context` トークンカウント | カウント API 不可時にローカル推定を使用し、小モデルリクエストを削減 |
+| Change | gateway 403 メッセージ | マネージド設定ロード失敗時に Claude Code が組織で有効化されていない可能性を示唆 |
+| Change | `forceLoginMethod: "gateway"` の挙動 | 旧 API キーや claude.ai ログインを無視し `/login` を要求 |
+| Change | 自動モードのリンク処理 | 公開図表レンダラー URL へのコンテンツ埋め込みリンクをアップロードとみなし自動承認を制限 |
+| Change | プロンプトの単語編集キー | Bash 互換に変更（Ctrl+W は空白まで削除、Alt+F と Alt+D は単語末で停止）、`keybindingFlavor` は無効化 |
+| Change | `/context` トークンカウント | カウント API 不可時にローカル推定を使用し、小モデルリクエストを削減 |
 | Feature | [VSCode] カスタムスタイルのウォークスルー | Output styles メニューに「Build a custom style」ウォークスルーを追加 |
 | Feature | [VSCode] MCP サーバー管理フォーム | ダイアログで MCP サーバーの追加・削除が可能に |
 | Feature | [VSCode] セッションリストのリング表示 | 別ターミナル・ウィンドウ・Desktop で開いているセッションを中空リングで表示 |
@@ -109,7 +111,7 @@ v2.1.260 の差分パネルは、コード編集の変更内容を即座に確�
 | Fix | [VSCode] タブバッジの未読表示 | 実行中ターン中やセッションリストから開いたタブで未読表示が不正確な問題を修正 |
 | Fix | [VSCode] Remote Control の全セッション有効化 | トグル切り替えが他ウィンドウのセッションに即座に適用されない問題を修正 |
 | Fix | [VSCode] セッションリストの Open フィルタ | claude.ai から続行されたセッションのフィルタが機能しない問題を修正 |
-| Breaking | [VSCode] モデルピッカーのフラットリスト | 全モデルを1つのフラットリストに統合、古いモデル表記は末尾に配置 |
+| Change | [VSCode] モデルピッカーのフラットリスト | 全モデルを1つのフラットリストに統合、古いモデル表記は末尾に配置 |
 
 ### v2.1.260
 
@@ -154,7 +156,7 @@ v2.1.260 の差分パネルは、コード編集の変更内容を即座に確�
 | Fix | GitLab ネストサブグループの検出 | `gitlab.com/group/subgroup/project` 形式のリポジトリ検出を修正 |
 | Fix | GitLab イシューリンク | GitLab リポジトリ作業中に `owner/repo#123` 参照が github.com にリンクする問題を修正 |
 | Fix | Glob/Grep の権限チェック順序 | 検索パスが権限チェック前にディスクで確認される問題を修正 |
-| Breaking | `Read()` 拒否ルールの適用範囲変更を元に戻す | v2.1.259 で追加された Bash 引数への `Read()` 拒否ルール適用を撤回 |
+| Change | `Read()` 拒否ルールの適用範囲変更を元に戻す | v2.1.259 で追加された Bash 引数への `Read()` 拒否ルール適用を撤回 |
 | Improvement | 構造化出力の検証 | Workflow `agent({schema})` で満たせない JSON Schema を事前拒否、再試行上限エラーに最終検証失敗を含めるよう改善 |
 | Improvement | バックグラウンドセッション削除メッセージ | 未プッシュコミットがあるワークツリー削除時にブランチ名とコミット数を表示 |
 | Improvement | Claude apps gateway のリフレッシュ失敗ログ | 失敗ステップを明記 |
@@ -165,14 +167,22 @@ v2.1.260 の差分パネルは、コード編集の変更内容を即座に確�
 | Improvement | `/ultrareview` のタイムアウト | 長時間実行クラウドレビューの待機時間を 30 分から 45 分に延長 |
 | Improvement | Fable 5.1 の `/effort` 変更 | セッション途中の effort 変更でプロンプトキャッシュが無効化されないよう改善 |
 | Improvement | `claude-api` スキルの更新 | Go、Java、C# サンプルで現世代モデル ID を使用し、ワーカーやサブエージェントモデルも現世代を推奨 |
-| Breaking | フルスクリーンでの Ctrl+L / Cmd+K | トランスクリプトビューをクリア（ターミナルの `clear` 相当）に変更、上スクロールで過去メッセージ閲覧 |
-| Breaking | 権限ルールの末尾テキスト検出 | 閉じ括弧後のテキスト（例: `Bash(ls) x`）を無効設定としてエラー報告 |
-| Breaking | サーバーマネージド CLAUDE.md | マネージド `claudeMd` がセキュリティ承認ダイアログをトリガーしないよう変更（フック、シェルコマンド、サンドボックス、危険な `env` は承認が必要） |
-| Breaking | Claude in Chrome の管理設定 | 組織の管理設定に従い、管理者がオフにした場合は `--chrome`、`/chrome`、ブラウザツールが利用不可に |
-| Breaking | `orgPluginSettings` のリスト形式 | Claude Desktop 1.15200.0 以降が読めるリスト形式で送信（旧バージョンは無視） |
-| Breaking | `desktop` ポリシーのフィールド名チェック | `managedMcpServers` や `orgPluginSettings` 内のネストオブジェクトでフィールド名を誤記すると起動を拒否 |
-| Breaking | `!` bash モードプロンプトのサンドボックス | bash モードプロンプトで入力したコマンドは strict サンドボックスモード（`sandbox.allowUnsandboxedCommands: false`）でもサンドボックス外で実行 |
-| Breaking | セルフホストランナーのセッション解放 | `--kill-session-after-min` がユーザー待機中（
+| Change | フルスクリーンでの Ctrl+L / Cmd+K | トランスクリプトビューをクリア（ターミナルの `clear` 相当）に変更、上スクロールで過去メッセージ閲覧 |
+| Change | 権限ルールの末尾テキスト検出 | 閉じ括弧後のテキスト（例: `Bash(ls) x`）を無効設定としてエラー報告 |
+| Change | サーバーマネージド CLAUDE.md | マネージド `claudeMd` がセキュリティ承認ダイアログをトリガーしないよう変更（フック、シェルコマンド、サンドボックス、危険な `env` は承認が必要） |
+| Change | Claude in Chrome の管理設定 | 組織の管理設定に従い、管理者がオフにした場合は `--chrome`、`/chrome`、ブラウザツールが利用不可に |
+| Change | `orgPluginSettings` のリスト形式 | Claude Desktop 1.15200.0 以降が読めるリスト形式で送信（旧バージョンは無視） |
+| Change | `desktop` ポリシーのフィールド名チェック | `managedMcpServers` や `orgPluginSettings` 内のネストオブジェクトでフィールド名を誤記すると起動を拒否 |
+| Change | `!` bash モードプロンプトのサンドボックス | bash モードプロンプトで入力したコマンドは strict サンドボックスモード（`sandbox.allowUnsandboxedCommands: false`）でもサンドボックス外で実行 |
+| Change | セルフホストランナーのセッション解放 | `--kill-session-after-min` が、ユーザー入力待ちで一時停止中（次のメッセージで再開可能）のセッションを、強制終了して失敗報告する代わりに解放するよう変更 |
+| Change | サブエージェントのバックグラウンドコマンド時間制限撤廃 | サブエージェントが起動したバックグラウンドコマンドの1時間制限を撤廃、メインセッションと同様に終了か停止まで実行継続 |
+| Feature | [VSCode] フッターのeffortレベル表示 | モデルピルにeffortレベルを追加表示、モデル切り替え後の古いeffort表示を修正、フッターピルを従来のコンパクトサイズに戻す |
+| Feature | [VSCode] セッションリストのステータスフィルタ | フィルタメニューに「Open」「Closed」を追加 |
+| Fix | [VSCode] Remote Control自動有効時のウェルカム画面 | 新規セッションでRemote Controlが自動オンになった際にウェルカム画面が消える問題を修正 |
+| Fix | [VSCode] セッション履歴ピッカーの二重読み込み | 既に別タブで開いているセッションを再度読み込んでしまう問題を修正（該当タブに切り替えるよう変更） |
+| Fix | [VSCode] セッションタブのRenameコマンド無反応 | タブのビュー再読み込み中にRenameコマンドが無反応になる問題を修正（常に適用されるよう変更） |
+| Fix | [VSCode] リトライ後の表示残留 | 応答が破棄されリトライされた後に、未完成メッセージや空のツールカード、余分な「Thought for」表示が残る問題を修正 |
+| Fix | [VSCode] 全セッションRemote Control有効化のタイミング | トグル切り替え時にまだ起動中だったセッションタブに適用されない問題を修正 |
 
 ---
 
