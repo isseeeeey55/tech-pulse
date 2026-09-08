@@ -1,7 +1,7 @@
 ---
 title: "【AWS】2026/09/06 のアップデートまとめ"
 date: 2026-09-06T08:01:43+09:00
-draft: true
+draft: false
 tags: ["aws", "bedrock", "s3", "lambda", "eventbridge", "cloudwatch"]
 categories: ["AWS Updates"]
 summary: "2026/09/06 のAWSアップデートまとめ"
@@ -9,9 +9,11 @@ summary: "2026/09/06 のAWSアップデートまとめ"
 
 # 直近の AWS アップデート情報まとめ（2026年9月）
 
+![](/images/aws-updates-20260906/header.png)
+
 ## はじめに
 
-今回は、直近で発表された Amazon Bedrock Managed Knowledge Base に関する 3 件の AWS アップデートを紹介します。いずれも生成 AI とナレッジベースの連携を強化する内容で、特に企業内データソースとの統合に焦点を当てたものです。ServiceNow や SharePoint、Confluence といったエンタープライズ向けツールとのネイティブ統合、データソースの自動同期スケジューリング、そしてユーザー管理設定による導入障壁の低減など、AI エージェントの運用を効率化する機能が追加されました。RAG（Retrieval-Augmented Generation）アーキテクチャを採用したアプリケーションの運用において、データの鮮度維持と統合の簡便性は常に課題となる領域です。今回のアップデートはこれらの課題に対する AWS の回答と言えるでしょう。
+今回は、直近で発表された Amazon Bedrock Managed Knowledge Base に関する 3 件の AWS アップデートを紹介します。いずれも生成 AI とナレッジベースの連携を強化する内容で、特に企業内データソースとの統合に焦点を当てたものです。ServiceNow や SharePoint、Confluence といったエンタープライズ向けツールとのネイティブ統合、データソースの自動同期スケジューリング、そしてユーザー管理設定による導入障壁の低減など、AI エージェントの運用を効率化する機能が追加されました。RAG（Retrieval-Augmented Generation）アーキテクチャを採用したアプリケーションの運用において、データの鮮度維持と統合の簡便性は常に課題となる領域です。今回のアップデートは、これらの課題に対する AWS の回答です。
 
 ## 注目アップデート深掘り
 
@@ -68,7 +70,7 @@ ServiceNow は多くの企業で IT サービスマネジメント（ITSM）の�
 
 **実装と検証のポイント**
 
-実際に ServiceNow コネクタを評価する際は、以下の手順で検証すると良いでしょう：
+実際に ServiceNow コネクタを評価する際は、以下の手順で検証します：
 
 1. **接続設定の実装**: ServiceNow インスタンスの URL と認証情報を Bedrock Managed Knowledge Base に設定し、初回同期を実行します。データクローリングにかかる時間と、取り込まれたドキュメント数を記録します。
 
