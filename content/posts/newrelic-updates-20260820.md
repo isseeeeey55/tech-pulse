@@ -1,13 +1,15 @@
 ---
 title: "【New Relic】2026/08/20 のアップデートまとめ"
 date: 2026-08-20T08:01:11+09:00
-draft: true
+draft: false
 tags: ["newrelic", "infrastructure-agent", "security", "azure", "secrets-management", "cve"]
 categories: ["New Relic Updates"]
 summary: "2026/08/20 のNew Relicアップデートまとめ"
 ---
 
 # New Relic Infrastructure Agent 1.80.0 — セキュリティ強化とマルチクラウド対応の重要アップデート
+
+![](/images/newrelic-updates-20260820/header.png)
 
 ## はじめに
 
@@ -59,7 +61,7 @@ New Relic UIのInfrastructure > Hosts画面で、該当ホストのAgent Version
 **SREの日常業務への影響：**  
 これまでAzure環境では、環境変数やファイルベースでの認証情報管理が必要でしたが、Azure Key Vaultとの統合により、AWS環境と同様の運用フローを適用できるようになります。例えば、New RelicのLicense KeyやカスタムIntegrationで利用するAPIキーをKey Vaultに格納し、Infrastructure Agentがそれを動的に取得する構成が可能になります。これにより、Terraform/Ansible等のIaCツールでエージェント設定を管理する際に、シークレットを分離して管理できるため、GitOpsのベストプラクティスに沿った運用が実現します。
 
-具体的な設定方法の詳細はリリースノートに記載されていませんが、既存のAWS Secrets Manager連携と同様の構成が期待されます。シークレット参照形式でKey Vault URIを指定する形式が想定され、Agentが起動時またはリロード時にAzure認証を通じてシークレットを取得する仕組みになっているものと考えられます。
+具体的な設定方法の詳細はリリースノートに記載されていません。既存のAWS Secrets Manager連携と同様、シークレット参照形式でKey Vault URIを指定し、Agentが起動時またはリロード時にAzure認証を通じてシークレットを取得する構成になる可能性があります。詳細は公式ドキュメントで確認してください。
 
 ## SRE視点での活用ポイント
 
@@ -89,7 +91,7 @@ Infrastructure Agentのアップグレードは通常、ダウンタイムなし
 
 今回のInfrastructure Agent 1.80.0は、新機能の追加よりも**セキュリティとマルチクラウド対応の強化**に重点を置いたリリースとなっています。特権昇格脆弱性の修正は、本番環境での早期適用が強く推奨される内容であり、SREチームとしては計画的なアップグレード作業を優先すべきです。
 
-また、Azure Key Vaultへの対応により、AWS環境と同様のシークレット管理フローをAzure環境でも適用できるようになったことは、マルチクラウド戦略を推進する組織にとって大きなメリットです。セキュリティ、コンプライアンス、運用効率の観点から、今回のアップデートは積極的に取り入れていくべき内容と言えるでしょう。
+また、Azure Key Vaultへの対応により、AWS環境と同様のシークレット管理フローをAzure環境でも適用できるようになったことは、マルチクラウド戦略を推進する組織にとって大きなメリットです。セキュリティ、コンプライアンス、運用効率の観点から、今回のアップデートは積極的に取り入れていくべき内容です。
 
 埋め込みOHIの脆弱性修正も含め、インフラ監視基盤全体のリスク低減に貢献する内容となっているため、ステージング環境での検証を経て、速やかに本番環境へ展開することを推奨します。
 
