@@ -1,13 +1,15 @@
 ---
 title: "【Claude Code】v2.1.251・v2.1.250 リリースノートまとめ"
 date: 2026-08-29T08:03:00+09:00
-draft: true
+draft: false
 tags: ["claude-code", "hooks", "remote-control", "mcp", "subagent", "bash", "opus", "bedrock", "vertex", "foundry", "github", "gitlab", "vscode"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.251・v2.1.250 のClaude Codeリリースノートまとめ"
 ---
 
 # Claude Code v2.1.251 & v2.1.250 リリース情報
+
+![](/images/claude-code-updates-20260829/header.png)
 
 ## はじめに
 
