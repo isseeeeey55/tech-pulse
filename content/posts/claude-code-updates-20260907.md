@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.263 リリースノートまとめ"
 date: 2026-09-07T08:00:48+09:00
-draft: true
+draft: false
 tags: ["claude-code"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.263 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260907/header.png)
 
 ## はじめに
 
