@@ -1,13 +1,15 @@
 ---
 title: "【AWS】2026/09/02 のアップデートまとめ"
 date: 2026-09-02T08:05:00+09:00
-draft: true
+draft: false
 tags: ["aws", "aws-backup", "s3", "amazon-quick", "cloudwatch", "postgresql", "rds", "aurora", "bedrock", "connect", "mwaa", "apache-airflow", "mediatailor", "documentdb", "agent-registry", "partner-central"]
 categories: ["AWS Updates"]
 summary: "2026/09/02 のAWSアップデートまとめ"
 ---
 
 # 直近発表のAWSアップデート11件をまとめて紹介
+
+![](/images/aws-updates-20260902/header.png)
 
 ## はじめに
 
@@ -81,7 +83,7 @@ Apache Airflow 3.3 では Task and Asset State Store が導入され、タスク
 
 Language Task SDK（実験的機能）により、Java や Go でタスクロジックを記述しながら、オーケストレーション全体は Python で管理できるようになりました。これは、Python と Java/Go の混在チームで特に有効です。例えば、データエンジニアリングチームは Python で DAG を定義し、バックエンドチームは Java でビジネスロジックを実装する、といった役割分担が自然に実現できます。
 
-各言語の得意分野を活かしたワークフロー設計が可能になることで、チーム全体の生産性向上が期待できます。ただし、この機能は実験的であるため、本番環境での採用前に十分な検証が必要です。
+各言語の得意分野を活かしたワークフロー設計が可能になることで、チーム全体の生産性向上につながります。ただし、この機能は実験的であるため、本番環境での採用前に十分な検証が必要です。
 
 #### アップグレードの実施
 
