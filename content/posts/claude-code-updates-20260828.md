@@ -1,13 +1,15 @@
 ---
 title: "【Claude Code】v2.1.248・v2.1.247 リリースノートまとめ"
 date: 2026-08-28T08:03:14+09:00
-draft: true
+draft: false
 tags: ["claude-code", "restricted", "mcp", "bedrock", "vertex", "foundry", "oauth", "ultrareview", "remote-control", "admin-api", "github", "bash", "zed", "vscode", "workflow"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.248・v2.1.247 のClaude Codeリリースノートまとめ"
 ---
 
 # Claude Code v2.1.248 & v2.1.247 リリース情報
+
+![](/images/claude-code-updates-20260828/header.png)
 
 ## はじめに
 
