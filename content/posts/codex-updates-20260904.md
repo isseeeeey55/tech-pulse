@@ -1,11 +1,13 @@
 ---
 title: "【Codex CLI】rust-v0.153.1・rust-v0.153.0 リリースノートまとめ"
 date: 2026-09-04T08:02:25+09:00
-draft: true
+draft: false
 tags: ["codex", "vim", "undo", "redo", "tui", "plugin", "marketplace", "guardian", "mcp", "approval-mode", "recap", "reconnect", "full-access", "user-approval", "gpt-6-astra", "context-management", "app-server", "oauth", "rollout", "compression", "diagnostics", "telemetry", "analytics"]
 categories: ["Codex CLI Updates"]
 summary: "rust-v0.153.1・rust-v0.153.0 のCodex CLIリリースノートまとめ"
 ---
+
+![](/images/codex-updates-20260904/header.png)
 
 ## はじめに
 
@@ -66,7 +68,7 @@ v0.153.0 では、**プラグイン CLI がリモートマーケットプレイ�
 従来、プラグインのインストールは手動での設定ファイル編集や Git クローンが必要でしたが、リモートマーケットプレイス対応により、チーム全体で統一されたプラグインセットを簡単に配布・管理できるようになります。特に SRE やインフラチームでは、AWS/GCP/Azure 向けの専用プラグインや社内ツール連携プラグインを標準化したい場合に有効です。
 
 **具体的な使い方:**  
-リリースノートに明示されているのは「list, install, and remove plugins from remote marketplaces」という機能のみですが、以下のような CLI 操作が想定されます。
+リリースノートに明示されているのは「list, install, and remove plugins from remote marketplaces」という機能のみで、具体的なコマンド構文は明記されていません。想定される例は以下の通りです。
 
 ```bash
 # リモートマーケットプレイスからプラグインをリスト表示
@@ -165,7 +167,7 @@ Guardian レビューの改善や MCP ツール承認のアカウントスコー
 
 実験的コンテキスト管理モード（`features.context_management.experimental_mode`）の追加により、将来的なコンテキスト管理の強化も予感させます。今後のアップデートでこの機能がどのように発展していくか、引き続き注目していきたいところです。
 
-リモートマーケットプレイス対応により、組織全体でのプラグイン標準化やプライベートマーケットプレイスの構築が現実的になったことも大きなポイントです。チーム内での Codex CLI 活用を進める上で、プラグイン管理基盤の整備が重要な課題となるでしょう。
+リモートマーケットプレイス対応により、組織全体でのプラグイン標準化やプライベートマーケットプレイスの構築が現実的になったことも大きなポイントです。チーム内での Codex CLI 活用を進める上で、プラグイン管理基盤の整備が重要な課題となります。
 
 ---
 
