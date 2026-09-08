@@ -1,13 +1,15 @@
 ---
 title: "【AWS】2026/09/04 のアップデートまとめ"
 date: 2026-09-04T08:02:38+09:00
-draft: true
+draft: false
 tags: ["aws", "gateway-load-balancer", "aurora", "mysql", "redshift", "workspaces", "cloudfront", "mwaa", "cloudwatch", "quick", "amazon-linux", "fsx", "netapp", "transform"]
 categories: ["AWS Updates"]
 summary: "2026/09/04 のAWSアップデートまとめ"
 ---
 
 # 直近の AWS アップデート情報まとめ - 2026年9月版
+
+![](/images/aws-updates-20260904/header.png)
 
 ## はじめに
 
@@ -116,7 +118,7 @@ rg インスタンスには Redshift 独自のベクトル化データレイク�
 - **アドホックなビジネス分析** - データを Redshift にロードせずに、データレイク上で直接分析
 - **コスト最適化** - 頻繁にアクセスしないデータは S3 に置き、必要時のみクエリ
 
-この機能は RA3 インスタンスにも搭載されていますが、rg インスタンスでは Graviton プロセッサの性能を活かし、より高速なクエリ実行が期待できます。
+この機能は RA3 インスタンスにも搭載されていますが、rg インスタンスでは Graviton プロセッサの性能を活かし、より高速なクエリ実行が可能です。
 
 #### シングルノードからマルチノードへの移行パス
 
