@@ -1,13 +1,15 @@
 ---
 title: "【Claude Code】v2.1.257 リリースノートまとめ"
 date: 2026-09-02T08:03:08+09:00
-draft: true
+draft: false
 tags: ["claude-code", "claude-fable-5-1", "mcp", "remote-control", "bedrock", "vertex", "foundry", "mantle", "vscode", "oauth", "bash", "powershell", "gitlab"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.257 のClaude Codeリリースノートまとめ"
 ---
 
 # Claude Code v2.1.257 リリース情報
+
+![](/images/claude-code-updates-20260902/header.png)
 
 ## はじめに
 
