@@ -1,13 +1,15 @@
 ---
 title: "【Codex CLI】0.151.0 リリースノートまとめ"
 date: 2026-08-30T08:01:50+09:00
-draft: true
+draft: false
 tags: ["codex", "codex-cli", "mcp", "model-context-protocol", "sandbox", "permission-profile", "guardian", "tool-router", "subagent", "token-budget", "plugin", "extension", "remote-executor", "tui", "approval-mode", "reasoning-effort", "telemetry"]
 categories: ["Codex CLI Updates"]
 summary: "0.151.0 のCodex CLIリリースノートまとめ"
 ---
 
 # OpenAI Codex CLI v0.151.0 リリース解説
+
+![](/images/codex-updates-20260830/header.png)
 
 ## はじめに
 
@@ -119,9 +121,9 @@ OpenAI Codex CLI v0.151.0 は、**拡張性、セキュリティ、安定性**�
 
 また、トークン使用量の正確な集計、モデル切り替え時の挙動安定性、プラグイン設定の柔軟性向上など、日常的な開発ワークフローを支える細かな改善も多数含まれています。これらは、Codex CLI が単なる実験的ツールから、本番環境で信頼して使えるプロダクションツールへと成熟していることを示しています。
 
-テレメトリとテストの強化も見逃せません。CI 環境での安定性向上は、継続的な品質改善のための基盤であり、新しいテレメトリポイントの追加は、今後のパフォーマンス最適化や問題診断に役立つでしょう。
+テレメトリとテストの強化も見逃せません。CI 環境での安定性向上は、継続的な品質改善のための基盤であり、新しいテレメトリポイントの追加は、今後のパフォーマンス最適化や問題診断に役立ちます。
 
-全体として、このリリースは Codex CLI の成熟度を一段階引き上げる、堅実かつ重要なアップデートと言えます。
+全体として、このリリースは Codex CLI の成熟度を一段階引き上げる、堅実かつ重要なアップデートです。
 
 ---
 
