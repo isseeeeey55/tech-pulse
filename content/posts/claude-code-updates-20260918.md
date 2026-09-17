@@ -1,15 +1,19 @@
 ---
 title: "【Claude Code】v2.1.274 リリースノートまとめ"
 date: 2026-09-18T08:03:25+09:00
-draft: true
+draft: false
 tags: ["claude-code"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.274 のClaude Codeリリースノートまとめ"
 ---
 
+![](/images/claude-code-updates-20260918/header.png)
+
+# Claude Code v2.1.274 リリースノートまとめ
+
 ## はじめに
 
-2026年9月18日、Claude Code v2.1.274 がリリースされました。本バージョンでは、メモリ不足時の可視化警告、MCP サーバー接続タイムアウトの制御機能、OpenTelemetry トレース情報の拡張、Postgres 接続設定の改善など、運用安定性とデバッグ性を高める多数の修正・改善が含まれています。加えて、セッション内のエラー自動修復機能、HTTP+SSE MCP サーバー接続の修正、VS Code 拡張と Claude Tag（Slack）における UI/UX 改善、Code Review の出力品質向上など、幅広い領域にわたる修正が行われています。
+2026年9月17日、Claude Code v2.1.274 がリリースされました。本バージョンでは、メモリ不足時の可視化警告、MCP サーバー接続タイムアウトの制御機能、OpenTelemetry トレース情報の拡張、Postgres 接続設定の改善など、運用安定性とデバッグ性を高める多数の修正・改善が含まれています。加えて、セッション内のエラー自動修復機能、HTTP+SSE MCP サーバー接続の修正、VS Code 拡張と Claude Tag（Slack）における UI/UX 改善、Code Review の出力品質向上など、幅広い領域にわたる修正が行われています。
 
 ## 注目アップデート深掘り
 
@@ -140,7 +144,12 @@ summary: "v2.1.274 のClaude Codeリリースノートまとめ"
 | Change | `"type": "sdk"` MCP エントリのスキップ | `.mcp.json` / 設定 / プラグイン / エージェントファイルの `"type": "sdk"` エントリを警告付きでスキップ、SDK ホストアプリケーションのみが登録可能 |
 | Change | ローカルセッションでのアーティファクト監視変更 | 他の場所で公開された新バージョンがターンを開始しなくなり、Claude は後の Artifact ツール結果で新バージョンを認識 |
 | Change | プラグイン・マーケットプレイスクローンの Git LFS 変更 | Git LFS ファイルをポインターのままにし、チェックアウトで `git lfs pull` を実行して取得 |
-| Change | セルフホストランナーの読み取り専用リポジトリ変更 | git ホストがアクセスチェックで拒否する読み取り専用リポジトリをセッション開始失敗ではな
+| Change | セルフホストランナーの読み取り専用リポジトリ変更 | git ホストがアクセスチェックで拒否する読み取り専用リポジトリを、セッション開始を失敗させるのではなくスキップするよう変更 |
+| Change | `/status` と関連メッセージの表記変更 | `/status` の GitHub 行を "Cloud sessions" に変更、`/web-setup`・`/ultrareview`・teleport のメッセージを "Claude Code on the web" ではなく "cloud session" と表記 |
+| Change | [VSCode] グローバル gitignore の既定パス変更 | `XDG_CONFIG_HOME` が絶対パスの場合、既定のグローバル gitignore ファイルを `$XDG_CONFIG_HOME/git/ignore` に変更 |
+| Change | [Claude Code on the web] GitHub 接続欠落時のルーチン挙動変更 | オーナーの GitHub 接続が無い場合、最初のチェック失敗でルーチンを無効化せず、実行をスキップして最大72時間リトライするよう変更 |
+| Change | [Claude Code on the web] 保留中ルーチンの通知変更 | サブスクリプション一時停止時の保留通知が、自動再開を約束せず、ユーザー自身でルーチンを再度オンにするよう案内 |
+| Removed | [Claude Tag] Slack canvas のゲスト帰属注記を削除 | "Channel only" のゲスト設定を使うチャンネルで、canvas を編集するたびに追記していた帰属注記を削除 |
 
 ---
 
