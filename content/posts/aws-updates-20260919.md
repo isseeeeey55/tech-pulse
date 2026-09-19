@@ -1,17 +1,19 @@
 ---
 title: "【AWS】2026/09/19 のアップデートまとめ"
 date: 2026-09-19T08:02:12+09:00
-draft: true
-tags: ["aws", "privatelink", "sns", "sqs", "lambda", "firehose", "resilience-hub", "eks", "organizations", "continuum", "bedrock", "ecs", "graviton", "rtb-fabric", "ses", "s3", "quicksight"]
+draft: false
+tags: ["aws", "privatelink", "sns", "sqs", "lambda", "firehose", "resilience-hub", "eks", "organizations", "continuum", "bedrock", "ecs", "graviton", "rtb-fabric", "ses", "s3", "quick"]
 categories: ["AWS Updates"]
 summary: "2026/09/19 のAWSアップデートまとめ"
 ---
 
 # 直近の AWS アップデート情報 — 2026年9月版
 
+![](/images/aws-updates-20260919/header.png)
+
 ## はじめに
 
-今回は、直近で発表された11件のAWSアップデートを紹介します。注目のアップデートとしては、AWS PrivateLinkの新機能「Tunnel Endpoints」によるネットワークセグメント単位のプライベート接続、Amazon SNSのメッセージペイロード上限が1 MiBに拡大された点、そしてAmazon S3 Express One Zoneの提供リージョン拡大などが挙げられます。これらはいずれも、マルチアカウント・マルチベンダー環境での運用効率化、大容量データ処理の簡素化、そして高性能ワークロードの地理的展開を後押しする改善です。本記事では、特に運用インパクトの大きいアップデートを深掘りし、SRE視点での活用ポイントを整理します。
+今回は、直近で発表された11件のAWSアップデートを紹介します。注目のアップデートとしては、AWS PrivateLinkの新機能「Tunnel Endpoints」によるネットワークセグメント単位のプライベート接続、Amazon SNSのメッセージペイロード上限が1 MiBに拡大された点、そしてAmazon S3 Express One Zoneの提供リージョン拡大などが挙げられます。本記事では、特に運用インパクトの大きいアップデートを深掘りし、SRE視点での活用ポイントを整理します。
 
 ---
 
@@ -21,17 +23,17 @@ summary: "2026/09/19 のAWSアップデートまとめ"
 
 AWS PrivateLinkに新たに追加された「Tunnel Endpoints」は、VPCエンドポイントを介して別のVPCやアカウント内のネットワークセグメント全体にプライベートかつセキュアにアクセスできる機能です。従来のPrivateLinkでは、外部ベンダーやパートナーに個別リソースを共有する際、リソースごとにResource Configurationを作成する必要がありました。今回のアップデートでは、CIDRレンジを表す単一のResource Configurationを作成し、AWS Resource Access Manager（RAM）経由で共有するだけで、ベンダーはTunnel Endpointを作成し、GENEVEカプセル化を使用してトンネル経由で顧客VPC内のリソースにアクセスできるようになります。
 
-**なぜこのアップデートが重要なのか**
+**従来との違い**
 
-マルチベンダー環境やマネージドサービス提供の現場では、複数のセキュリティ・ネットワーク管理ツールが顧客のVPC内リソースにアクセスする必要があるケースが増えています。従来の方式では、リソースごとに個別の共有設定が必要で、管理が煩雑でした。Tunnel Endpointsでは、ネットワークセグメント（CIDRレンジ）単位で一括共有できるため、運用の簡素化とスケーラビリティの向上が期待できます。
+これまでは、外部ベンダーなどにリソースを共有する場合、リソースごとに Resource Configuration を作成して1つずつ共有する必要がありました。Tunnel Endpoints では、CIDR レンジを表す Resource Configuration を1つ作成して RAM で共有すれば、ベンダー側はその CIDR レンジ内のリソースにトンネル経由でアクセスできます。
 
-**GENEVEカプセル化の採用**
+**料金と提供リージョン**
 
-Tunnel EndpointsはGENEVE（Generic Network Virtualization Encapsulation）プロトコルを採用しています。GENEVEは、VXLANやNVGREといった従来のカプセル化プロトコルの後継として設計され、拡張性と柔軟性に優れています。このプロトコルを採用することで、AWS PrivateLinkはトンネル内のトラフィックを効率的に処理し、プライベートネットワークの分離を維持しながら、複数のベンダーやアカウント間での安全な接続を実現します。
+Tunnel Endpoint には時間単位の料金と、処理したデータ量に応じた GB 単位の料金がかかります（詳細は AWS PrivateLink の料金ページ）。提供リージョンは告知に列挙されており、アジアパシフィック（東京）・（大阪）も含まれます。
 
-**料金体系と運用上の考慮事項**
+**運用上の考慮事項**
 
-Tunnel Endpointsの料金は、エンドポイント時間単位とデータ処理量ベースの従量課金です。リソース単位の共有と比較すると、管理対象エンドポイント数を削減できるため、運用コストの最適化が見込めます。ただし、ネットワークセグメント全体を共有する仕組み上、アクセス制御の粒度やセキュリティポリシーの設計には十分な注意が必要です。
+共有の単位がリソースから CIDR レンジに変わるため、どの範囲を共有するかがそのまま相手に開放される範囲になります。共有する CIDR レンジの粒度は、アクセスを許可したいリソースの範囲に合わせて設計する必要があります。
 
 > **Note:** 詳細な設定手順や制限事項については、[AWS PrivateLink公式ドキュメント](https://docs.aws.amazon.com/vpc/latest/privatelink/)を参照してください。
 
@@ -48,19 +50,15 @@ Amazon SNSのメッセージペイロード上限が、従来の256 KiBから1 M
 - **ペイロード分割方式**: メッセージを複数の256 KiB以下のチャンクに分割し、受信側で再構成
 - **S3オフロード方式**: 大容量データをS3にアップロードし、SNSメッセージにはS3オブジェクトのキーのみを含める
 
-これらの方式では、送信側・受信側の双方で追加のロジックが必要となり、開発・運用コストが増大していました。1 MiBへの拡大により、こうした中間処理を省略でき、アーキテクチャがシンプルになります。
+告知では、従来の 256 KiB 制限により publish 前にペイロードをオフロードまたは分割する必要があったことが挙げられています。1 MiB 以下のペイロードであれば、こうした処理なしで直接 publish できます。
 
 **新機能の設定方法**
 
-新しい `MaximumMessageSize` トピック属性は、AWS CLI、Python SDK、IaC ツールから設定可能です。告知内容によれば、256 KiBを超えるサイズに対応するトピックは、Amazon SQS、Amazon Data Firehose、AWS Lambdaサブスクリプションをサポートし、トピックあたり最大100個のサブスクリプションが利用可能です。
-
-**ユースケースと実用上の利点**
-
-IoTデバイスから大容量センサーデータやビデオストリームメタデータをSNS経由で直接送信したり、生成AIの推論結果や構造化データを1 MiBの制限内でSQSキューに送信し分散処理を実現したりするケースで効果を発揮します。また、Data Firehoseとの統合により、大容量メッセージから直接S3やAnalyticsに流し込むパイプラインも簡素化されます。
+SNS Standard / SNS FIFO いずれのトピックでも、新しい `MaximumMessageSize` トピック属性を設定することで最大 1 MiB のメッセージを publish できます。`MaximumMessageSize` を 256 KiB より大きく設定したトピックでサポートされるサブスクリプションは Amazon SQS、Amazon Data Firehose、AWS Lambda で、トピックあたりのサブスクリプション数は合計最大100個です。SNS が利用可能な全リージョンで提供されています。
 
 **運用上の注意点**
 
-トピックあたりのサブスクリプション数が最大100個という制限があるため、大規模なファンアウトが必要なシステムでは、トピックの分割やアーキテクチャの再設計が必要になる場合があります。また、1 MiBのメッセージサイズは、受信側のLambda関数やSQSキューの処理時間・メモリ使用量にも影響を与えるため、パフォーマンステストを事前に実施することが推奨されます。
+`MaximumMessageSize` を 256 KiB より大きく設定したトピックでは、サブスクリプションの種類が SQS / Data Firehose / Lambda に限られ、数も合計最大100個です。それ以外のプロトコルのサブスクリプションを持つトピックや、100を超えるサブスクリプションを持つトピックでは、既存トピックの設定を変更する前にサブスクリプション構成を確認してください。また、受信側（Lambda 関数や SQS コンシューマー）が扱うメッセージサイズも大きくなるため、処理側の設定も合わせて見直す必要があります。
 
 ---
 
@@ -70,27 +68,27 @@ Amazon S3 Express One Zoneが、シンガポール、サンパウロ、北カリ
 
 **S3 Express One Zoneとは**
 
-S3 Express One Zoneは、単一のアベイラビリティゾーンに最適化された高性能ストレージクラスで、頻繁にアクセスされるデータに対して一桁ミリ秒（ms）単位の超高速アクセスを実現します。S3 Standardと比較して、データアクセス速度は最大10倍高速で、リクエストコストは最大80%削減できます。
+S3 Express One Zone は、単一のアベイラビリティゾーンに特化した高性能ストレージクラスで、最も頻繁にアクセスされるデータやレイテンシに敏感なアプリケーション向けに、一貫した一桁ミリ秒のデータアクセスを提供します。S3 Standard と比べて、データアクセス速度は最大10倍、リクエストコストは最大80%低くなります。
 
 **適用シーン**
 
-機械学習トレーニングでの高速データ読み込み、リアルタイムインタラクティブ分析ダッシュボード、AI検索エンジンのメモリキャッシュ代替など、レイテンシに敏感なワークロードに最適です。特に、従来ElastiCacheやRedisなどのインメモリキャッシュを使用していたシナリオにおいて、永続性とコストのバランスが取れた代替手段として注目されます。
+告知では、機械学習のトレーニング、インタラクティブ分析、AI 検索エンジンのキーバリューキャッシュといったワークロードが例として挙げられています。
 
 **トレードオフの考慮**
 
-S3 Express One Zoneは単一AZ構成のため、そのAZで障害が発生した場合、データへのアクセスができなくなります。高可用性が求められるシステムでは、S3 Standardとの組み合わせや、他のリージョンへのレプリケーション戦略を検討する必要があります。一方で、高頻度アクセスデータの経済的な保存と高速アクセスの両立が可能になるため、コスト最適化の観点では大きなメリットがあります。
+S3 Express One Zone は単一 AZ のストレージクラスのため、データは1つの AZ に配置されます。複数 AZ への冗長化が必要なデータには S3 Standard など他のストレージクラスを併用する設計になります。
 
 ---
 
 ## SRE視点での活用ポイント
 
-今回のアップデート群は、SREの日常業務において複数の改善機会を提供します。
+**AWS PrivateLink Tunnel Endpoints** は、外部ベンダーに自社 VPC 内の複数リソースへのアクセスを提供している場合に、リソースごとの Resource Configuration 作成・共有の手間を減らせます。一方で、共有範囲が CIDR レンジ単位になるため、共有前にそのレンジに含まれるリソースを棚卸ししておくことが重要です。
 
-**AWS PrivateLink Tunnel Endpoints**は、複数のベンダーツールやマネージドサービスが顧客環境にアクセスする必要があるシナリオで、セキュリティと運用効率のバランスを大幅に改善します。例えば、Terraformで管理しているマルチアカウント環境において、CIDRレンジ単位でResource Configurationを定義すれば、個別リソースごとの共有設定を削減でき、Infrastructure as Codeの保守性が向上します。導入時には、GENEVEカプセル化に対応したネットワーク設計が前提となるため、既存のVPCアーキテクチャとの整合性を確認する必要があります。
+**Amazon SNS の 1 MiB 対応** は、ペイロードを S3 にオフロードしたり分割したりしていたパイプラインを見直すきっかけになります。ただし 256 KiB を超える設定にしたトピックはサブスクリプションの種類と数に制約があるため、既存トピックを変更するか、大容量用の新しいトピックを用意するかを判断する必要があります。
 
-**Amazon SNSの1 MiB対応**は、イベント駆動アーキテクチャにおけるメッセージングパイプラインの簡素化に寄与します。CloudWatchアラームやカスタムメトリクスと組み合わせることで、大容量のコンテキストデータを含むアラート通知を1メッセージで完結でき、障害対応のランブックに組み込む際の情報収集ステップを削減できます。ただし、Lambdaのタイムアウト設定やSQSのvisibility timeout、Data Firehoseのバッファリング設定など、受信側のリソース設定を適切に調整しないと、処理遅延やメッセージロストのリスクがあるため注意が必要です。
+**S3 Express One Zone のリージョン拡大** により、シンガポール、シドニー、ソウルなどでも同ストレージクラスを選べるようになりました。単一 AZ である点を踏まえ、どのデータを配置するかはアクセス頻度・レイテンシ要件・冗長化要件から判断してください。
 
-**S3 Express One Zoneのリージョン拡大**は、グローバル展開を進める際のデータレイテンシ最適化に役立ちます。例えば、アジア太平洋地域のユーザー向けにシンガポールやシドニーでホットデータを配置すれば、機械学習モデルのトレーニングや推論パイプラインのレスポンス時間を大幅に短縮できます。導入判断においては、ワークロードのアクセスパターン（読み取り頻度、データサイズ、レイテンシ要件）とコストのトレードオフを定量的に評価し、S3 Standardとのライフサイクルポリシーを組み合わせた運用設計が重要です。
+**Amazon Bedrock AgentCore の新 Runtime** は、ランタイムの作成・更新時に `platformVersion` を `V2` に設定して利用します。告知ではテスト結果として、200 MB〜2 GB のコンテナイメージで P75 コールドスタートが 1.9〜2.0 秒（V1 は 5.4〜30 秒）と示されています。us-east-1、us-east-2、us-west-2、eu-west-1、ap-northeast-1 で利用可能です。
 
 ---
 
@@ -103,22 +101,22 @@ S3 Express One Zoneは単一AZ構成のため、そのAZで障害が発生した
 | 3 | [AWS Resilience Hub adds three new capabilities](https://aws.amazon.com/about-aws/whats-new/2026/09/resilience-hub-eks-dependency-policy/) | EKSラベルサポート、AI活用の依存関係インサイト、AWS Organizations経由のポリシー共有機能を追加 |
 | 4 | [AWS Continuum now supports credential testing and accessible domain suggestions](https://aws.amazon.com/about-aws/whats-new/2026/09/aws-security-agent/) | ペネトレーションテスト実行前に認証情報をテストし、アクセス可能なドメインを自動提案 |
 | 5 | [Kimi K3 by Moonshot AI is now generally available on Amazon Bedrock](https://aws.amazon.com/about-aws/whats-new/2026/09/moonshot-ai-kimi-k3-on-amazon-bedrock/) | 2.8兆パラメータのオープンウェイトモデル。100万トークンコンテキスト、プロンプトキャッシング対応 |
-| 6 | [Amazon ECS Express Mode now supports AWS Graviton (ARM64) workloads](https://aws.amazon.com/about-aws/whats-new/2026/09/amazon-ecs-express-mode-arm-architecture/) | ARM64アーキテクチャ対応により、x86比で最大40%の価格性能比向上を実現 |
+| 6 | [Amazon ECS Express Mode now supports AWS Graviton (ARM64) workloads](https://aws.amazon.com/about-aws/whats-new/2026/09/amazon-ecs-express-mode-arm-architecture/) | ARM64 を指定して Graviton 上で実行可能に。x86 ベースのインスタンスと比べ最大40%優れた価格性能 |
 | 7 | [AWS RTB Fabric now supports configurable Availability Zone affinity](https://aws.amazon.com/about-aws/whats-new/2026/09/aws-rtb-fabric-configurable-availability-zone-affinity/) | 応答ゲートウェイのAZアフィニティ設定が可能に。AdTech企業のインフラ効率化を支援 |
 | 8 | [Amazon SES now supports tenant-level deliverability insights](https://aws.amazon.com/about-aws/whats-new/2026/09/amazon-ses-vdm-tenants/) | VDMにテナント単位の配信可能性インサイト機能を追加。`BatchGetMetricData` APIで `TENANT_NAME` ディメンション対応 |
 | 9 | [The new AgentCore Runtime is now available in Amazon Bedrock AgentCore](https://aws.amazon.com/about-aws/whats-new/2026/09/new-agentcore-runtime-generally-available/) | エラスティックメモリ管理と一貫したコールドスタート時間（P75: 1.9〜2.0秒）を実現したV2ランタイム |
 | 10 | [Amazon S3 Express One Zone is now available in 7 additional AWS Regions](https://aws.amazon.com/about-aws/whats-new/2026/09/s3-express-one-zone-7-regions/) | シンガポール、サンパウロ、北カリフォルニア、カナダ中部、パリ、シドニー、ソウルで提供開始。全15リージョンに拡大 |
-| 11 | [Amazon QuickSight now generates individual sheets and builds analyses from an image](https://aws.amazon.com/about-aws/whats-new/2026/09/generate-sheet-and-generate-analysis-from-an-image/) | 自然言語でシート生成、ダッシュボード画像から編集可能な分析を再作成する機能を追加 |
+| 11 | [Amazon Quick now generates individual sheets and builds analyses from an image](https://aws.amazon.com/about-aws/whats-new/2026/09/generate-sheet-and-generate-analysis-from-an-image/) | 自然言語でシート生成、ダッシュボード画像から編集可能な分析を再作成する機能を追加 |
 
 ---
 
 ## まとめ
 
-今回紹介したアップデート群は、ネットワーク分離とセキュリティ、メッセージング基盤の拡張性、機械学習・分析ワークロードの高速化という3つの軸で、AWSのエンタープライズ対応力を強化するものです。特に、PrivateLink Tunnel EndpointsやSNSの1 MiB対応は、マルチベンダー・マルチアカウント環境での運用複雑性を軽減し、開発者がビジネスロジックに集中できる基盤を提供します。また、S3 Express One Zoneのリージョン拡大は、グローバル展開における地理的レイテンシの課題に直接応えるもので、AIやリアルタイム分析のユースケースにおける選択肢を広げます。
+今回の11件のうち、深掘りした3件は PrivateLink Tunnel Endpoints（CIDR レンジ単位でのプライベートアクセス共有）、SNS のメッセージペイロード上限 1 MiB 化、S3 Express One Zone の7リージョン追加（計15リージョン）です。
 
-SREの観点では、これらのアップデートを既存のTerraformやCloudFormationのコードベース、CI/CDパイプライン、監視・アラートの仕組みにどう統合するかが次のステップとなります。特に、Tunnel Endpointsのような新しいネットワークプリミティブは、既存のVPC設計やセキュリティポリシーとの整合性を慎重に検証する必要があります。一方で、SNSやS3 Express One Zoneのような既存サービスの拡張機能は、比較的低リスクで導入でき、即座にコストやパフォーマンスの改善効果を享受できるでしょう。
+このほか、Amazon Bedrock での Kimi K3 の一般提供、ECS Express Mode の Graviton（ARM64）対応、Amazon Bedrock AgentCore の新 Runtime（`platformVersion: V2`）、SES VDM のテナント単位インサイト、Amazon Quick の Generate Sheet／画像からの分析生成なども含まれています。
 
-公式ドキュメントやベストプラクティスガイドを参照しながら、各アップデートの詳細な動作を検証し、自組織のワークロードに最適な活用方法を見出していくことが重要です。
+Tunnel Endpoints は共有範囲の設計、SNS 1 MiB 対応はサブスクリプション構成の確認が、導入前の確認ポイントです。
 
 ---
 
