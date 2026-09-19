@@ -1,50 +1,44 @@
 ---
 title: "【Codex CLI】rust-v0.155.1 リリースノートまとめ"
 date: 2026-09-19T08:01:18+09:00
-draft: true
-tags: ["codex", "tui", "reasoning-summary", "bug-fix", "provider-compatibility"]
+draft: false
+tags: ["codex", "tui", "reasoning-summary", "bug-fix"]
 categories: ["Codex CLI Updates"]
 summary: "rust-v0.155.1 のCodex CLIリリースノートまとめ"
 ---
 
 # OpenAI Codex CLI rust-v0.155.1 リリース情報
 
+![](/images/codex-updates-20260919/header.png)
+
 ## はじめに
 
-2026年9月19日、OpenAI Codex CLI の Rust 実装版 **rust-v0.155.1** がリリースされました。このバージョンはマイナーアップデートで、主に TUI（Terminal User Interface）セッションにおける reasoning summary のデフォルト動作に関するバグ修正が含まれています。
+2026年9月19日（JST）、OpenAI Codex CLI の Rust 実装版 **rust-v0.155.1** がリリースされました。rust-v0.155.0 からのパッチリリースで、変更は Bug Fixes の1件（#46467）のみです。
 
-特に注目すべきは、ローカル TUI セッションで reasoning summary が無効化されるよう修正された点です。これにより、reasoning summary 機能をサポートしていないプロバイダーでのリクエスト拒否問題が解消され、より幅広い環境での安定した動作が期待できます。
+新規のローカル TUI セッションで reasoning summary がデフォルトで無効になり、reasoning summary をサポートしないプロバイダーでリクエストが拒否される問題が修正されました。
 
 ## 注目アップデート深掘り
 
 ### TUI セッションの reasoning summary デフォルト設定修正
 
-今回のリリースで最も重要な変更は、新規ローカル TUI セッションにおける reasoning summary のデフォルト設定変更です。これまでのバージョンでは、TUI セッション開始時に reasoning summary が有効な状態で初期化されるケースがあり、この機能をサポートしていないプロバイダーに対してリクエストを送信した際に拒否される問題が発生していました。
+リリースノートの記載は次のとおりです。
 
-**なぜこの変更が重要なのか**
+> New local TUI sessions now leave reasoning summaries disabled by default, fixing request rejection by providers that do not support them. Explicit reasoning-summary settings remain respected. (#46467)
 
-Codex CLI は複数の AI プロバイダーと連携可能な設計となっており、すべてのプロバイダーが reasoning summary 機能を実装しているわけではありません。従来のデフォルト設定では、未対応プロバイダーを使用するユーザーが初回セッションで予期しないエラーに遭遇するリスクがありました。この修正により、ユーザーは明示的に reasoning summary を有効化しない限り、安全にすべてのプロバイダーでセッションを開始できるようになりました。
+対応する PR #46467 のタイトルは "Restore none as the TUI reasoning summary default" で、TUI の reasoning summary のデフォルト値を `none` に戻す変更です。
 
 **変更の詳細**
 
-- **Before**: 新規 TUI セッションで reasoning summary がデフォルトで有効化される可能性があり、未対応プロバイダーでリクエストが拒否される
-- **After**: 新規ローカル TUI セッションでは reasoning summary がデフォルトで無効化され、明示的な設定のみが尊重される
+- **対象**: 新規のローカル TUI セッション
+- **変更後のデフォルト**: reasoning summary は無効
+- **修正される問題**: reasoning summary をサポートしないプロバイダーでのリクエスト拒否
+- **明示設定**: reasoning summary を明示的に設定している場合は、その設定が引き続き尊重される
 
-なお、この変更はデフォルト動作のみに影響し、ユーザーが明示的に reasoning summary を有効化した設定は引き続き正しく機能します。プロバイダーの互換性を維持しながら、必要に応じて高度な機能を利用できる柔軟性が保たれています。
-
-> **Note:** TUI は Codex CLI のターミナルベースのインタラクティブインターフェースで、コマンドラインからモデルと対話的にやり取りできる機能です。
+> **Note:** TUI は Codex CLI のターミナルベースのインタラクティブインターフェースです。
 
 ## 実用的な活用ポイント
 
-このバグ修正は、日常の開発ワークフローにおいて複数の AI プロバイダーを切り替えながら作業するユーザーにとって特に有益です。例えば、コスト最適化のために異なるプロバイダーを使い分けているチームや、プロバイダーの障害時にフォールバック先を設定している環境では、セッション開始時のエラーを気にすることなくスムーズに作業を開始できるようになります。
-
-**すぐに試せる Tips**
-
-rust-v0.155.1 にアップグレード後、さまざまなプロバイダーで TUI セッションを起動してみてください。以前のバージョンでリクエスト拒否エラーが発生していた環境でも、問題なくセッションが開始されることを確認できるはずです。reasoning summary 機能が必要な場合は、セッション設定で明示的に有効化することで引き続き利用可能です。
-
-**SRE/インフラエンジニアの視点での活用**
-
-インフラコードの生成やレビュー、運用スクリプトの作成時に、複数の AI プロバイダーを用途や予算に応じて使い分けるケースが増えています。今回の修正により、プロバイダー切り替え時のトラブルシューティング時間が削減され、より効率的なインフラ自動化業務が可能になります。
+reasoning summary をサポートしないプロバイダーでローカル TUI セッションを使っていて、リクエストが拒否されていた場合は rust-v0.155.1 へのアップグレードが対象になります。reasoning summary を使いたい場合は、従来どおり明示的に設定してください。明示設定はこの変更の影響を受けません。
 
 ## 全変更点一覧
 
@@ -54,11 +48,9 @@ rust-v0.155.1 にアップグレード後、さまざまなプロバイダーで
 
 ## まとめ
 
-rust-v0.155.1 は、TUI セッションにおけるプロバイダー互換性を改善する重要なバグ修正リリースです。変更点は1件のみですが、複数プロバイダー環境での安定性向上という明確な価値を提供しています。
+rust-v0.155.1 は、新規ローカル TUI セッションの reasoning summary デフォルトを無効に戻すバグ修正1件のみのパッチリリースです。reasoning summary 非対応のプロバイダーでのリクエスト拒否が解消され、明示的な設定は引き続き尊重されます。
 
-この修正により、Codex CLI はより多様な環境で「そのまま動作する」ツールとなり、セットアップ時の試行錯誤を削減します。OpenAI はマイナーバージョンでも着実にユーザー体験の改善を進めており、今後も安定性と互換性を重視した開発が期待できます。
-
-rust-v0.155.0 からのアップグレードは、特に複数の AI プロバイダーを運用している環境では推奨されます。[GitHub Release ページ](https://github.com/openai/codex/compare/rust-v0.155.0...rust-v0.155.1)で詳細な変更履歴を確認できます。
+詳細は [GitHub Release ページ](https://github.com/openai/codex/releases/tag/rust-v0.155.1) と [変更差分](https://github.com/openai/codex/compare/rust-v0.155.0...rust-v0.155.1) を参照してください。
 
 ---
 
