@@ -1,7 +1,7 @@
 ---
 title: "【Claude Code】v2.1.277・v2.1.276・v2.1.275 リリースノートまとめ"
 date: 2026-09-19T08:05:16+09:00
-draft: true
+draft: false
 tags: ["claude-code", "agents.md", "claude-apps-gateway", "mcp", "plugin", "artifact", "vscode", "claude-tag", "anthropic-api", "bedrock", "vertex", "foundry", "remote-control", "cowork"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.277・v2.1.276・v2.1.275 のClaude Codeリリースノートまとめ"
@@ -9,9 +9,11 @@ summary: "v2.1.277・v2.1.276・v2.1.275 のClaude Codeリリースノートま�
 
 # Claude Code v2.1.277・v2.1.276・v2.1.275 リリース情報
 
+![](/images/claude-code-updates-20260919/header.png)
+
 ## はじめに
 
-2026年9月19日、Claude Code の 3 つのバージョン（v2.1.277・v2.1.276・v2.1.275）がリリースされました。v2.1.275 では新機能として AGENTS.md 対応やメッセージ送信の改善が導入され、v2.1.276 では v2.1.275 で発生した回帰バグが修正されました。v2.1.277 では AGENTS.md サポートの完成、プロキシ環境のネットワーク制御強化、および多数の安定性修正が実施されています。
+Claude Code の 3 つのバージョンがリリースされました（v2.1.275: 2026年9月18日、v2.1.276: 同9月18日、v2.1.277: 同9月19日、いずれも JST）。v2.1.275 では send-now キーや claude.ai アカウントのスキル・プラグイン同期などが追加され、v2.1.276 では v2.1.275 の回帰バグが修正されました。v2.1.277 では AGENTS.md サポート、Claude apps ゲートウェイのプロキシ関連設定の追加、および多数のバグ修正が含まれています。
 
 ## 注目アップデート深掘り
 
@@ -19,33 +21,33 @@ summary: "v2.1.277・v2.1.276・v2.1.275 のClaude Codeリリースノートま�
 
 v2.1.277 で `AGENTS.md` サポートが追加され、プロジェクトに `CLAUDE.md` が存在しない場合に Claude Code が代わりに `AGENTS.md` を読み込むようになりました。設定は `/config` の "Project instructions" から変更できます（Bedrock、Vertex、Foundry ではまだ利用できません）。
 
-この変更により、プロジェクトごとに異なる設定ファイル名を使い分けることが可能になり、複数のエージェント型 AI ツールを並行利用するプロジェクトでの設定管理が柔軟になります。
+CLAUDE.md を置かずに AGENTS.md だけを置いているリポジトリでも、プロジェクト指示が読み込まれるようになります。
 
 ### プロキシ環境のネットワーク制御強化（v2.1.277）
 
 `CLAUDE_GATEWAY_PROXY_IS_EGRESS_BOUNDARY=1` 環境変数が追加され、Claude apps ゲートウェイの唯一の外部接続先がフォワードプロキシである場合に、すべての外向きリクエストがローカル DNS 解決ではなくプロキシにホスト名を渡すようになりました。また、ゲートウェイの upstream に対して静的ヘッダーを送信するための `headers:` マップも追加されています。
 
-これらの機能により、厳格なネットワークポリシーを持つ環境でのプロキシ経由の接続制御がより細かく行えるようになります。
+`headers:` マップは、プロバイダーの前段に自前で置いたプロキシへ静的ヘッダーを送るためのものです。
 
 ### プロキシ経由利用時の回帰バグ修正（v2.1.276）
 
-v2.1.275 で発生した重大な回帰バグが v2.1.276 で修正されました。`ANTHROPIC_BASE_URL` がプロキシやゲートウェイを指している際に、すべてのリクエストが `400 … Input tag 'advisor_20260301'` エラーで失敗する問題が解消されています。
+v2.1.275 で発生した回帰バグが v2.1.276 で修正されました。`ANTHROPIC_BASE_URL` がプロキシやゲートウェイを指している際に、すべてのリクエストが `400 … Input tag 'advisor_20260301'` エラーで失敗する問題が解消されています。
 
 ### メッセージ送信の即時実行機能（v2.1.275）
 
 v2.1.275 で send-now キー（ctrl+enter、または ctrl+x ctrl+s）が追加され、現在のターンを中断してキューに入っているすべてのメッセージを一度に送信できるようになりました。送信済みおよびキュー中のメッセージは、モデルが受信するまでグレー表示されます。
 
-この機能により、複数の指示を連続して送りたい場合に、前のターンの完了を待たずに次々と指示を投入できるようになります。
+現在のターンの完了を待たずに、キューに溜めたメッセージをまとめて送れます。
 
 ## 実用的な活用ポイント
 
 ### プロジェクト設定ファイルの使い分け
 
-AGENTS.md サポートにより、複数の AI エージェントツールを併用するプロジェクトでも、それぞれに適した設定ファイル名を使えるようになりました。CLAUDE.md が存在しない場合は AGENTS.md が自動的に読み込まれるため、プロジェクト構成に応じた柔軟な設定管理が可能です。
+v2.1.277 以降、CLAUDE.md が存在しないプロジェクトでは AGENTS.md が読み込まれます。挙動は `/config` の "Project instructions" で変更できます。Bedrock、Vertex、Foundry ではまだ利用できない点に注意してください。
 
 ### プロキシ環境での安定運用
 
-プロキシやゲートウェイを経由する環境では、v2.1.276 以降の利用が必須です。v2.1.275 で発生したプロキシ環境での全リクエスト失敗問題が修正されており、`CLAUDE_GATEWAY_PROXY_IS_EGRESS_BOUNDARY` 環境変数により、外部接続の境界制御もより細かく設定できます。
+`ANTHROPIC_BASE_URL` でプロキシやゲートウェイを指している環境では、v2.1.275 のままだと全リクエストが失敗するため、v2.1.276 以降へ更新してください。また v2.1.277 では、外向き通信がフォワードプロキシのみの Claude apps ゲートウェイ向けに `CLAUDE_GATEWAY_PROXY_IS_EGRESS_BOUNDARY=1` が追加されています。
 
 ### セッション再開とエラーハンドリングの改善
 
@@ -60,7 +62,7 @@ v2.1.277 では `claude -p` や Agent SDK セッションが内部エラー後�
 | Feature | AGENTS.md サポート | CLAUDE.md がない場合に AGENTS.md を読み込む（Bedrock/Vertex/Foundry 未対応） |
 | Feature | プロキシ境界設定 | `CLAUDE_GATEWAY_PROXY_IS_EGRESS_BOUNDARY=1` でプロキシへのホスト名渡しを有効化 |
 | Feature | upstream 静的ヘッダー | Claude apps ゲートウェイの upstream に `headers:` マップで静的ヘッダーを送信可能 |
-| Improvement | バックグラウンドタスク通知 | タスク完了時に `/tasks` などのパネルが開いている場合、更新待機中であることを表示 |
+| Feature | バックグラウンドタスク通知 | タスク完了時に `/tasks` などのパネルが開いている場合、更新待機中であることを表示 |
 | Fix | セッションハング | `claude -p` と Agent SDK セッションが内部エラー後にハングせず、エラー報告して終了コード 1 で終了 |
 | Fix | 空テキストブロックエラー | 空のテキストブロックを含む assistant ターン後に "text content blocks must be non-empty" でリクエストが失敗する問題 |
 | Fix | ログアウト問題 | 古い Claude Code ビルドが同じマシンで動作した際に予期せずログアウトされる問題 |
@@ -84,7 +86,7 @@ v2.1.277 では `claude -p` や Agent SDK セッションが内部エラー後�
 | Fix | SessionStart フックとキャッシュ | `/clear` 後の再開で SessionStart フックの出力により最初のメッセージが欠ける問題 |
 | Fix | サブエージェントメッセージ表示 | 他エージェントからのメッセージがターン中に "Ran N shell commands" 行の下に表示される問題 |
 | Fix | コピー通知 | フルスクリーン `/resume` ピッカーでのテキスト選択後に "copied" 通知が表示されない問題 |
-| Fix | $TMPDIR 展開 | サンドボックス有効時に Bash コマンドで `$TMPDIR` が空に展開される問題 |
+| Fix | $TMPDIR 展開 | サンドボックス有効時に、サンドボックス外で実行される Bash コマンドで `$TMPDIR` が空に展開される問題 |
 | Fix | WebFetch/WebSearch エラー | Cowork クラウドセッションで拒否理由（予算超過やポリシー）が Claude に伝わらない問題 |
 | Fix | テレメトリリレー | Claude apps ゲートウェイのテレメトリリレーが `NO_PROXY` のホスト/ドメインを無視する問題 |
 | Fix | マーケットプレイスポリシー | 不正な `strictKnownMarketplaces` または `blockedMarketplaces` エントリがポリシー全体を無効化する問題 |
@@ -119,13 +121,13 @@ v2.1.277 では `claude -p` や Agent SDK セッションが内部エラー後�
 | Improvement | Artifact リンク処理 | Artifact ツールが利用可能な場合に claude.ai の Artifact リンクを WebFetch ではなく Artifact ツールで読み込み |
 | Improvement | rm 許可プロンプト | 危険な rm コマンドを明記し `${VAR:?}` ガードを提案、ヘッドレス実行での復旧を支援 |
 | Improvement | Artifact 許可プロンプト | 短文化、ページと Artifact をタイトル/ファイル名で表示、リンクをテキスト後に配置 |
-| Breaking | Fable 表示 | Anthropic API の `/model` で Fable が常に表示され、組織設定で無効の場合のみグレーアウト |
-| Breaking | サンドボックス説明 | Bedrock/Vertex/Foundry で Bash サンドボックス説明をファーストパーティ文言に変更 |
-| Breaking | /ultrareview 拒否 | 非対話セッションでリポジトリにベースブランチまたは共有履歴がない場合に `/ultrareview` を拒否 |
-| Breaking | サブエージェント結果表示 | サブエージェント結果をヘッダー付きでインデント表示、結果内テキストがセッション指示として扱われないよう変更 |
-| Breaking | スクリプト prompt フレーミング | Bedrock/Vertex/Foundry で workflow スクリプトの `agent()` prompt がスクリプト作成テキストとしてフレーム化 |
-| Breaking | Haiku 自動タイトル削除 | SDK/IDE 外で起動された `claude -p` からバックグラウンド Haiku 自動タイトルリクエストを削除 |
-| Breaking | TaskOutput ツール削除 | 非推奨の TaskOutput ツールを削除、Read ツールでバックグラウンドタスク出力ファイルを読み込み |
+| Change | Fable 表示 | Anthropic API の `/model` で Fable が常に表示され、組織設定で無効の場合のみグレーアウト |
+| Change | サンドボックス説明 | Bedrock/Vertex/Foundry で Bash サンドボックス説明をファーストパーティ文言に変更 |
+| Change | /ultrareview 拒否 | 非対話セッションでリポジトリにベースブランチまたは共有履歴がない場合に `/ultrareview` を拒否 |
+| Change | サブエージェント結果表示 | サブエージェント結果をヘッダー付きでインデント表示、結果内テキストがセッション指示として扱われないよう変更 |
+| Change | スクリプト prompt フレーミング | Bedrock/Vertex/Foundry で workflow スクリプトの `agent()` prompt がスクリプト作成テキストとしてフレーム化 |
+| Removed | Haiku 自動タイトル削除 | SDK/IDE 外で起動された `claude -p` からバックグラウンド Haiku 自動タイトルリクエストを削除 |
+| Removed | TaskOutput ツール削除 | 非推奨の TaskOutput ツールを削除、Read ツールでバックグラウンドタスク出力ファイルを読み込み。`taskOutputMaxChars` 設定と `TASK_MAX_OUTPUT_LENGTH` は効果なし |
 | Feature | VSCode サインアウト | パネルメニューに Sign out 行を追加、タイプコマンドメニューに `/logout` を追加 |
 | Feature | VSCode タスク管理 | エージェントマップにバックグラウンドシェルと実行中タスクを表示、各タスクに Stop ボタン、タイプコマンド `/tasks` |
 | Feature | VSCode 応答コピー | 応答に Copy response ボタンとタイプコマンド `/copy` を追加 |
@@ -135,13 +137,13 @@ v2.1.277 では `claude -p` や Agent SDK セッションが内部エラー後�
 | Fix | VSCode Effort スライダー | `/effort` で保存したレベルが後続セッションで保持されない問題 |
 | Fix | VSCode Auto モード | 保存されたモデル設定が "Sonnet" のような大文字小文字の異なるエイリアスの場合に Auto がピッカーから消える問題 |
 | Fix | VSCode /fast 保存 | `/fast` が高速モードをデフォルトとして保存せず、拡張再起動後に失われる問題 |
-| Fix | Web 環境ピッカー | Team/Enterprise プランの環境ピッカーに Personal/Organization セクションを追加、管理者が個人環境を組織と共有可能に |
-| Fix | Web 組織環境 | Team/Enterprise プランで組織環境が Code タブから読み取り専用サマリーとして開き、Admin settings → Cloud environments で編集 |
+| Feature | Web 環境ピッカー | Team/Enterprise プランの環境ピッカーに Personal/Organization セクションを追加、管理者が個人環境を組織と共有可能に |
+| Change | Web 組織環境 | Team/Enterprise プランで組織環境が Code タブから読み取り専用サマリーとして開き、Admin settings → Cloud environments で編集 |
 | Fix | Web カスタムネットワークアクセス | Custom network access でドメインなしで保存した場合に Trusted に戻る問題、最低 1 ドメインを要求 |
-| Fix | Web 管理設定ラベル | 管理 Claude Code 設定の "Web" ラベルを "Cloud sessions" に変更、冗長な読み取り専用 Mobile 行を削除 |
+| Change | Web 管理設定ラベル | 管理 Claude Code 設定の "Web" ラベルを "Cloud sessions" に変更、冗長な読み取り専用 Mobile 行を削除 |
 | Fix | Tag ルーチンチャンネル読み取り | Enterprise Grid org-wide インストールの Slack チャンネルで作成されたルーチンが実行時に他の公開チャンネルを読めない問題 |
 | Fix | Tag 認証情報リンク | Claude Tag アクセスバンドルの認証プリセットの "Learn more" リンクが各ベンダーの認証セットアップページを開く |
-| Fix | Tag Pylon プリセット | Claude Tag アクセスバンドルの Pylon 認証プリセットで管理者が Pylon の EU ホストを指定可能に |
+| Change | Tag Pylon プリセット | Claude Tag アクセスバンドルの Pylon 認証プリセットで管理者が Pylon の EU ホストを指定可能に |
 | Fix | Tag Google Cloud 認証 | Claude Tag アクセスバンドルの Google Cloud 認証フォームで拒否されたキーファイルの理由表示、ウェブサイト/スコープのロック、拒否されたローテーション時のキー保持 |
 | Fix | Tag ネットワークイベントログ | Claude Tag 管理設定のネットワークイベントログで AWS 署名/クライアント証明書/カスタム CA を使用する接続の応答ステータスが表示されない問題 |
 
@@ -201,13 +203,13 @@ v2.1.277 では `claude -p` や Agent SDK セッションが内部エラー後�
 | Improvement | ListPlugins ツール説明 | `ListPlugins` ツール説明で Claude が claude.ai アカウントで有効化されたプラグインをリストし、`/plugin` でローカルインストールされたプラグインでないことを認識 |
 | Improvement | 出力応答性 | ターミナルが遅いまたは一時停止時の応答性を改善、ターミナルがキャッチアップ中に出力がさらに遅れなくなった |
 | Improvement | account-skills フォルダ結果 | 同期されたアカウントスキルフォルダ内のファイルに対する Write と Edit 結果で変更がアカウントに保存されず保存方法を表示 |
-| Breaking | ゲートウェイ /logout | Claude apps ゲートウェイサインインの `/logout` でトークン失効を通知するゲートウェイ上のセッションも終了 |
-| Breaking | 許可プロンプト保持 | ホストされたセッションがコンテナ再起動後に未回答の許可プロンプトを再度尋ねず保持 |
-| Breaking | Artifact タブアイコン | Artifact ツールが最初の公開時に emoji favicon ではなく 1 ワードのタブアイコンを要求 |
-| Breaking | Chrome 自動モード | 自動モードの Chrome の Claude が分類器承認呼び出しに対する拡張のサイトごとチェックをスキップ、バイパスモード同様に `browser_batch` の "Permission denied" 修正 |
-| Breaking | npm プラグインインストール | npm ソースからインストールされたプラグインを `npm pack --ignore-scripts` でフェッチし整合性検証、パッケージのインストールスクリプトが実行されなくなった |
-| Breaking | ルーチン Artifact 保存 | スケジュールおよび Run now のルーチン実行が尋ねずに編集可能な Artifact のデータ保存とページ再公開を実行、公開 Artifact、最初の公開、削除は依然として確認 |
-| Breaking | ルーチン起動通知削除 | 前回セッション以降に実行された 1 回限りスケジュールルーチンを通知する起動通知を削除 |
+| Change | ゲートウェイ /logout | Claude apps ゲートウェイサインインの `/logout` でトークン失効を通知するゲートウェイ上のセッションも終了 |
+| Change | 許可プロンプト保持 | ホストされたセッションがコンテナ再起動後に未回答の許可プロンプトを再度尋ねず保持 |
+| Change | Artifact タブアイコン | Artifact ツールが最初の公開時に emoji favicon ではなく 1 ワードのタブアイコンを要求 |
+| Change | Chrome 自動モード | 自動モードの Chrome の Claude が分類器承認呼び出しに対する拡張のサイトごとチェックをスキップ、バイパスモード同様に `browser_batch` の "Permission denied" 修正 |
+| Change | npm プラグインインストール | npm ソースからインストールされたプラグインを `npm pack --ignore-scripts` でフェッチし整合性検証、パッケージのインストールスクリプトが実行されなくなった |
+| Change | ルーチン Artifact 保存 | スケジュールおよび Run now のルーチン実行が尋ねずに編集可能な Artifact のデータ保存とページ再公開を実行、公開 Artifact、最初の公開、削除は依然として確認 |
+| Removed | ルーチン起動通知削除 | 前回セッション以降に実行された 1 回限りスケジュールルーチンを通知する起動通知を削除 |
 | Feature | VSCode メモリ管理 | Memory ダイアログ内で保存されたメモリの表示、編集、削除 |
 | Feature | VSCode 画像送信 | テキストを入力せずに添付画像を送信可能 |
 | Feature | VSCode MCP サーバーリトライ | サーバーリスト読み込み失敗時に MCP サーバーダイアログに Retry リンクを追加 |
@@ -233,8 +235,8 @@ v2.1.277 では `claude -p` や Agent SDK セッションが内部エラー後�
 | Fix | VSCode 返信中スクロール | 返信ストリーム中にスクロールアップ後に会話が下に引き戻される問題、送信時のジャンプをオフにする `claudeCode.scrollToBottomOnSend` 設定を追加 |
 | Fix | VSCode マーケットプレイス URL 表示 | Manage plugins ダイアログでマーケットプレイス URL に入力されたパスワードまたはトークンが表示される問題 |
 | Improvement | VSCode エージェントマップ | pill が実行中エージェントをカウントし失敗後に赤に変化、メインエージェントがマップスクロール中も表示、エージェントを状態→終了時刻でソート |
-| Breaking | VSCode New session | Preferred Location が Sidebar 設定時に Claude エディタタブの New session がタブではなくサイドバーに開く |
-| Breaking | VSCode 作業中メッセージ | Claude が作業中に送信されたメッセージが Claude が開始するまで会話の下で待機 |
+| Change | VSCode New session | Preferred Location が Sidebar 設定時に Claude エディタタブの New session がタブではなくサイドバーに開く |
+| Change | VSCode 作業中メッセージ | Claude が作業中に送信されたメッセージが Claude が開始するまで会話の下で待機 |
 | Feature | Web ルーチンリンク | ルーチンリンクが解決しなくなったページに "New routine" ボタンとルーチンリストへのリンクを追加 |
 | Fix | Web ルーチン通知 | ルーチンの "paused" と "on hold" 通知が途中で切れる問題、paused-subscription 通知でルーチンを自分で再度オンにするよう案内 |
 | Fix | Web ドメインリスト保存 | 許可ドメインリストが非常に長いクラウド環境が正常に保存され、その後すべてのセッション開始が失敗する問題、保存時に失敗し削減量を提示 |
@@ -254,9 +256,9 @@ v2.1.277 では `claude -p` や Agent SDK セッションが内部エラー後�
 
 ## まとめ
 
-3 つのリリース全体を通じて、Claude Code の安定性と使いやすさが大幅に向上しました。v2.1.275 では新機能として AGENTS.md サポート、メッセージ送信の即時実行、claude.ai スキル・プラグインの同期などが導入され、開発者の作業効率を高める改善が多数実施されました。v2.1.276 では v2.1.275 で発生したプロキシ経由利用時の重大な回帰バグが迅速に修正され、v2.1.277 ではプロキシ環境のネットワーク制御強化と多数のバグ修正によって全体の安定性がさらに向上しています。
+3 つのリリースで合計 184 項目（v2.1.275: 96、v2.1.276: 1、v2.1.277: 87）の変更が行われました。v2.1.275 では send-now キー、claude.ai スキル・プラグインの同期、`/plugin install --marketplace` などが追加されました。v2.1.276 ではプロキシ／ゲートウェイ経由利用時の回帰バグが修正され、v2.1.277 では AGENTS.md サポートと Claude apps ゲートウェイ向けの設定が追加されています。
 
-特に v2.1.277 では、セッションハング問題、エラーハンドリング、プラグインインストール周りの修正が多数実施され、ヘッドレス実行や SDK 利用時の信頼性が大きく改善されました。また、VS Code 拡張、Web 版、Claude Tag（Slack 統合）など、各プラットフォームでの機能強化と問題修正も含まれており、幅広い利用環境での品質向上が図られています。
+v2.1.277 では、`claude -p` / Agent SDK の内部エラー後のハング、プラグインインストール、セッション復帰まわりの修正も多く含まれています。VS Code 拡張、Claude Code on the web、Claude Tag 向けの変更も両バージョンに含まれています。
 
 ---
 
