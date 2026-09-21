@@ -1,6 +1,8 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+{{- /* タクソノミー (tags/categories) の一覧ページは低品質な重複ページとして
+       インデックスされるのを避けるため noindex にする */}}
 {{- $isTaxonomy := or (eq .Kind "term") (eq .Kind "taxonomy") }}
 {{- if hugo.IsProduction | or (eq site.Params.env "production") | and (ne .Params.robotsNoIndex true) | and (not $isTaxonomy) }}
 <meta name="robots" content="index, follow">
@@ -42,11 +44,6 @@
 {{- /* includes */}}
 {{- $includes := slice }}
 {{- $includes = $includes | append (" " | resources.FromString "assets/css/includes-blank.css")}}
-
-{{- if not (eq site.Params.assets.disableScrollBarStyle true) }}
-    {{- $ScrollStyle := (resources.Get "css/includes/scroll-bar.css") }}
-    {{- $includes = (append $ScrollStyle $includes) }}
-{{- end }}
 
 {{- $includes_all := $includes | resources.Concat "assets/css/includes.css" }}
 
@@ -137,12 +134,6 @@
 
             .toc {
                 background: var(--entry);
-            }
-        }
-
-        @media (prefers-color-scheme: light) {
-            .list::-webkit-scrollbar-thumb {
-                border-color: var(--code-bg);
             }
         }
 
