@@ -1,5 +1,5 @@
 baseURL = "https://tech-pulse.dev/"
-languageCode = "ja"
+locale = "ja"
 title = "Tech Pulse"
 theme = "PaperMod"
 paginate = 10
