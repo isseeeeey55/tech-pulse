@@ -1,19 +1,21 @@
 ---
 title: "【Claude Code】v2.1.282 リリースノートまとめ"
 date: 2026-09-25T08:02:16+09:00
-draft: true
+draft: false
 tags: ["claude-code", "maxProseWidth", "claude-doctor", "allowClaudeInChromeWithManagedMcp", "managed-mcp.json", "CLAUDE_CODE_AUTO_MODE_SERVER", "CLAUDE_CODE_ENABLE_TELEMETRY", "OTEL_LOG", "allowManagedPermissionRulesOnly", "allowUnsandboxedCommands", "allowManagedDomainsOnly", "anthropic-skills", "claude-ai", "Amazon Bedrock", "Vertex AI", "MCP", "claude-api", "ant apply", "SessionStart"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.282 のClaude Codeリリースノートまとめ"
 ---
 
-## Claude Code v2.1.282 リリースノート
+![](/images/claude-code-updates-20260925/header.png)
+
+# Claude Code v2.1.282 リリースノート
 
 ## はじめに
 
-Claude Code v2.1.282 は、大量のバグ修正と細かな改善が集積されたメンテナンス色の強いリリースです。公式 CHANGELOG には 70 件を超える変更が記録されており、主な領域は以下の通りです。
+Claude Code v2.1.282 は、大量のバグ修正と細かな改善が集積されたメンテナンス色の強いリリースです。公式 CHANGELOG には 86 件の変更が記録されており、主な領域は以下の通りです。
 
-- **新設定・新機能**: `maxProseWidth` 設定、テレメトリ変数の可視化、Chrome 連携のマネージド設定追加など
+- **新設定・新機能**: `maxProseWidth` 設定、無視されたテレメトリ変数の通知、Chrome 連携のマネージド設定追加など
 - **バグ修正（多数）**: web 検索結果を含む会話での 400 エラー、セッション再開時のメッセージ重複、extended thinking の欠落、vim モードの挙動など幅広い領域
 - **Claude Tag（Slack 連携）向け修正**: Enterprise Grid 対応、コスト表示の誤りなど複数の不具合修正
 - **VSCode 拡張向け修正**: 長い応答のレンダリング遅延、リモートコントロールセッションの開き方など
@@ -26,30 +28,28 @@ Claude Code v2.1.282 は、大量のバグ修正と細かな改善が集積さ�
 
 ワイドターミナルでは Claude の回答が横幅いっぱいに広がり、長い行が読みにくくなることがありました。新しく追加された `maxProseWidth` 設定は、Claude が出力する **散文（プレーンテキスト）の幅に上限** を設けるものです。テーブルとコードブロックはこの設定の影響を受けず、引き続き端末の全幅を使用します。
 
-公式リリースノートには次のように記載されています。
+CHANGELOG の原文は次の通りです。
 
 > "Added a `maxProseWidth` setting that caps the width of Claude's prose in wide terminals while tables and code blocks keep the full width"
 
-具体的な設定値や設定ファイルの記述形式は公式リリースノート本文には明示されていませんが、他のユーザー設定と同様の方法で指定できると考えられます（推測のため詳細は公式ドキュメントを参照してください）。
+設定値の形式は CHANGELOG には書かれていないため、指定方法は公式ドキュメントの設定リファレンスを確認してください。
 
 ---
 
-### テレメトリ変数の可視化
+### プロジェクト設定のテレメトリ変数の扱いの変更と通知
 
-スタートアップ時の通知、`/status`、および `claude doctor` の各エントリに、プロジェクトの設定ファイル内で **無視されているテレメトリ変数** や **テレメトリをオフにしているテレメトリ変数** が列挙されるようになりました。
+今回、プロジェクト設定とローカル設定では、テレメトリのエクスポートを有効化する・エンドポイントを設定する・コンテンツをキャプチャする OpenTelemetry 変数（`CLAUDE_CODE_ENABLE_TELEMETRY`、`OTEL_LOG_*` など）が**無視される**ように変更されました。
 
-これまでは、設定ファイルに記述したテレメトリ関連の変数（例: `CLAUDE_CODE_ENABLE_TELEMETRY`、`OTEL_LOG_*` 系）が実際に反映されているかどうかを確認する手段が限られていました。今回の変更により、設定が正しく読み込まれているかを `claude doctor` や `/status` で直接確認できるようになりました。
-
-あわせて、プロジェクトおよびローカル設定において、テレメトリエクスポートを有効化・エンドポイント設定・コンテンツキャプチャを行う OpenTelemetry 変数（`CLAUDE_CODE_ENABLE_TELEMETRY`、`OTEL_LOG_*` など）は**無視される**ように変更されています。
+これに合わせて、プロジェクトの設定ファイル内で **無視された** テレメトリ変数や **テレメトリをオフにした** テレメトリ変数を列挙する起動時の通知が追加され、`/status` と `claude doctor` にも同じ内容の項目が加わりました。これらの変数をプロジェクト設定に書いている場合は、起動時の通知や `claude doctor` で該当する変数を確認できます。
 
 ---
 
 ## 実用的な活用ポイント
 
 - **セッション再開の信頼性向上**: `--continue` / `--resume` 利用時にメッセージが変化した形で再送信されるケースが追加修正されました。また、`--tools` リストから組み込みツールを除外した状態で再開したとき extended thinking が失われる問題も修正されています。
-- **コンパクション失敗時のリカバリ**: 要約リクエストが拒否された場合にフォールバックモデルでリトライするようになりました。セッションが長くなるケースでも中断しにくくなっています。
+- **コンパクション失敗時のリカバリ**: 要約リクエストが拒否されてコンパクションが失敗する問題が修正され、フォールバックモデルでリトライするようになりました。
 - **マネージド設定の堅牢化**: boolean ロックキーの値の誤りや、ネストされた値が 1 つ不正な場合にブロック全体が無視される問題が複数修正されました。組織ポリシーとして `managed-settings.json` を運用している場合は特に注目の変更です。
-- **Bedrock / Vertex でのサーチ対応**: Vertex AI で Claude Code が未認識の（新規リリース直後などの）モデルに対して web 検索が提示されない問題が修正されています。
+- **Vertex AI での web 検索**: Claude Code がまだ認識していない（新規リリース直後などの）モデルで web 検索が提示されない問題が修正されています。
 
 ---
 
@@ -68,7 +68,7 @@ Claude Code v2.1.282 は、大量のバグ修正と細かな改善が集積さ�
 | Fix | `--tools` リストから組み込みツールを除いた状態での再開時に extended thinking が失われる問題を修正 |
 | Fix | `redacted_thinking` ブロックの "Invalid `data`" API エラーでセッションが毎ターン失敗する問題を修正（thinking ブロックを削除して 1 回リトライ） |
 | Fix | コンパクション失敗時（要約拒否）にフォールバックモデルでリトライするよう修正 |
-| Fix | thinking オフ・effort high 超のセッションでのモデル切り替え後に "Effort 'xhigh' isn't available" エラーが出る問題を修正 |
+| Fix | thinking オフ・effort high 超のセッションでの安全関連のモデル切り替え後に "Effort 'xhigh' isn't available" エラーが出る問題を修正 |
 | Fix | Fable usage-credits プロンプトが未応答のままモデルが切り替わる問題（SDK ホストセッション）を修正 |
 | Fix | フル Fable モデル ID での `/model` が usage-credits プロンプトを開かず API エラーで止まる問題を修正 |
 | Fix | 他プロセスがログインリフレッシュ中に閉じられた後、最大 1 分間ログインエラーになる問題を修正 |
@@ -92,7 +92,7 @@ Claude Code v2.1.282 は、大量のバグ修正と細かな改善が集積さ�
 | Fix | Windows Terminal 1.25 未満で ctrl+enter を送信するターミナルでの "send-now" ヒントを修正（ctrl+x ctrl+s を表示） |
 | Fix | `claude remote-control --debug` が "Unknown argument: --debug" で失敗する問題を修正 |
 | Fix | `/install-github-app` でキャンセルしても branch push と API key シークレット保存が続行される問題を修正 |
-| Fix | Bedrock / Vertex 等でフィードバックキャンセル後も保存が続行される問題を修正 |
+| Fix | Bedrock / Vertex 等のサードパーティプロバイダーで `/feedback`・`/bug`・`/share` の保存中にキャンセルしてもレポートファイルが保存される問題を修正 |
 | Fix | プラグインアンインストール時に設定ファイルが有効な状態だと成功と報告してオプションを削除してしまう問題を修正 |
 | Fix | プラグインアンインストール後にインストール済みプラグイン一覧が読めない場合に保存オプション・シークレットが削除される問題を修正 |
 | Fix | `/skills` で `/` 直後のキー入力がスキルリストを移動してしまう問題を修正 |
@@ -148,7 +148,7 @@ Claude Code v2.1.282 は、大量のバグ修正と細かな改善が集積さ�
 
 ## まとめ
 
-v2.1.282 は新機能よりも **修正と安定性向上に重点を置いたリリース** です。セッション再開・extended thinking の欠落・マネージド設定の誤動作など、信頼性に直結する修正が多数含まれています。vim モードの細かな挙動修正やレンダリング改善も充実しており、日常的な利用体験の改善が積み重なったリリースと言えます。Claude Tag（Slack 連携）と VSCode 拡張についても独立した修正セクションが設けられており、各プラットフォームにまたがる幅広い対応が行われています。
+v2.1.282 は新機能よりも **修正と安定性向上に重点を置いたリリース** です。セッション再開・extended thinking の欠落・マネージド設定の誤動作など、信頼性に直結する修正が多数含まれています。vim モードの挙動修正やレンダリング修正も多数含まれます。また、`anthropic-skills` / `claude-ai` 名前空間のスキル・MCP サーバーの扱いや、プロジェクト設定のテレメトリ変数の扱いなど、既存の設定に影響しうる変更（Change）もあるため、該当する設定を使っている場合は全変更点一覧を確認してください。VSCode 拡張、Cloud sessions、Claude Tag（Slack 連携）向けの項目も含まれています。
 
 ---
 
