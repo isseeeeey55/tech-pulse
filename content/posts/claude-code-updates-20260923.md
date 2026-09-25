@@ -1,17 +1,19 @@
 ---
 title: "【Claude Code】v2.1.280 リリースノートまとめ"
 date: 2026-09-23T08:02:46+09:00
-draft: true
+draft: false
 tags: ["claude-code", "claude-opus-5-5", "MCP", "CLAUDE_CODE_MAX_MCP_DESCRIPTION_LENGTH", "hook_execution_complete", "OpenTelemetry", "claude-agents", "keybindings.json", "UserPromptSubmit", "VSCode", "claude-tag", "ultrareview", "autocompact"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.280 のClaude Codeリリースノートまとめ"
 ---
 
-## Claude Code v2.1.280 リリースノート
+![](/images/claude-code-updates-20260923/header.png)
+
+# Claude Code v2.1.280 リリースノート
 
 ## はじめに
 
-Claude Code v2.1.280 は、Claude Opus 5.5 の追加とデフォルトモデル変更を筆頭に、UI・操作性・安定性にわたる大規模なアップデートです。バグ修正だけでも 50 件以上に及び、VSCode 拡張・Web・Slack（Claude Tag）・Code Review など各プラットフォーム向けの改善も同時に含まれています。
+Claude Code v2.1.280 は、Claude Opus 5.5 の追加とデフォルトモデル変更を筆頭に、UI・操作性・安定性にわたる大規模なアップデートです。公式 CHANGELOG には 114 件の変更が記録されており、そのうち修正（Fixed）が大半を占めます。VSCode 拡張・Web・Slack（Claude Tag）・Code Review など各プラットフォーム向けの改善も同時に含まれています。
 
 ---
 
@@ -23,9 +25,9 @@ Claude Code v2.1.280 は、Claude Opus 5.5 の追加とデフォルトモデル�
 
 あわせて、Pro および Team Standard プランにおけるデフォルトモデルが Sonnet から Opus に変更されました（Max・Team Premium・Enterprise はすでに Opus がデフォルトでした）。
 
-また、Opus 4.7・Opus 4.8・Fable 5 については、`/effort` や `-p`・Agent SDK・プロジェクト設定・`--settings` の `effortLevel`・モデル別レベルで保存されていた起動時デフォルト effort の固定が解除されました。さらに、`/effort` 導入以前に保存された effort レベルは、Opus 5.5 のような新モデルには適用されなくなり、各モデルのデフォルト値から始まります。
+また、Opus 4.7・Opus 4.8・Fable 5 は、`-p` や Agent SDK での `/effort`、プロジェクト・マネージド・`--settings` の `effortLevel`、モデル別レベルの指定よりも起動時デフォルトの effort を優先して保持する挙動をやめました。さらに、`/effort` がモデル別になる前に保存された effort レベルは、Opus 5.5 のような新しくリリースされたモデルには適用されなくなり、レベルを選ぶまでは各モデルのデフォルト値から始まります。
 
-> **Note:** `effortLevel` は Claude Code の `/effort` コマンドで設定できる、モデルの推論労力を制御するパラメータです。
+> **Note:** `effortLevel` はモデルの effort（推論に費やす労力）レベルを指定する設定です。対話中は `/effort` コマンドでも変更できます。
 
 ---
 
@@ -35,15 +37,15 @@ Claude Code v2.1.280 は、Claude Opus 5.5 の追加とデフォルトモデル�
 
 > **Note:** MCP（Model Context Protocol）は、外部ツールやサーバーを Claude Code に接続するためのプロトコルです。
 
-MCP ツールの説明が長い場合にデフォルト上限で切り捨てられていた状況に対して、この環境変数で上限を調整できます。
+説明が上限を超える MCP ツールを使う場合に、この環境変数で上限を変更できます。
 
 ---
 
 ## 実用的な活用ポイント
 
-- **デフォルトモデルの変更に注意**: Pro / Team Standard プランのユーザーはモデルが自動的に Opus に切り替わります。コスト感覚が変わる可能性があるため、現在のプランと利用状況を確認することを推奨します。
+- **デフォルトモデルの変更に注意**: Pro / Team Standard プランではデフォルトモデルが Sonnet から Opus に変わります。モデルを明示指定していない場合は、使用モデルが変わる点を確認してください。
 - **MCP ツール説明の上限調整**: `CLAUDE_CODE_MAX_MCP_DESCRIPTION_LENGTH` を設定することで、説明が長い MCP サーバーを使う際の文字数制限を変更できます。
-- **キーバインド変更の確認**: ダイアログで `y`/`n` がそれぞれ確認・キャンセルとして機能していた挙動が修正されました。以前の動作に戻す場合は `keybindings.json` に `y`/`n` を `confirm:yes`/`confirm:no` としてバインドする必要があります。
+- **キーバインド変更の確認**: ダイアログで誤入力の `n` / `y` が閉じる・確認として働いていた挙動が修正され、Enter と Esc で確定・キャンセルするようになりました。以前の動作に戻す場合は `keybindings.json` に `y`/`n` を `confirm:yes`/`confirm:no` としてバインドする必要があります。
 - **`ctrl+l` / `cmd+k` の挙動変更**: 2.1.260 で追加されたフルスクリーンモードでのトランスクリプトクリア機能がリバートされ、画面の再描画に戻りました。
 
 ---
@@ -112,7 +114,7 @@ MCP ツールの説明が長い場合にデフォルト上限で切り捨てら�
 | Fix | Self-hosted runner: `--configure-git` でライフサイクルフックのコミット署名が失敗する問題を修正 |
 | Fix | Windows: バックグラウンドクリーンアップが `~/.claude/` 配下のディレクトリシンボリックリンクまたはジャンクションを誤って削除する問題を修正 |
 | Fix | Self-hosted runner: `--retire-at` リリース直前にターンが終了すると終了シグナルが失われる問題を修正 |
-| Improvement | `ctrl+l` / `cmd+k` のフルスクリーンモードでのトランスクリプトクリアを 2.1.260 からリバート（画面再描画に戻す） |
+| Change | `ctrl+l` / `cmd+k` のフルスクリーンモードでのトランスクリプトクリアを 2.1.260 からリバート（画面再描画に戻す） |
 | Improvement | `/permissions`: ルールの表示・追加・削除後にフォーカスがルールリストに戻るよう改善。削除・ディレクトリ削除確認のデフォルトを No に変更 |
 | Improvement | `/permissions` タブナビゲーション: ルールリスト内の ←/→ と Tab がタブバーにフォーカスを移さずタブを切り替えるよう改善 |
 | Improvement | `/cost` のキャッシュミス原因表示に thinking モードおよび thinking 表示変更を追記 |
@@ -129,15 +131,14 @@ MCP ツールの説明が長い場合にデフォルト上限で切り捨てら�
 | Improvement | アーティファクトページの改善（印刷ボタン非表示、連絡先情報のテキスト表示、フォームコントロール・スクロールバーへのダークモード対応等） |
 | Improvement | `/ultrareview` アップロード: `id_rsa copy` や `kubeconfig (1).yaml` などのキーファイルの名前変更コピーもローカルに保持 |
 | Improvement | クロスセッションメッセージングの起動警告に `--debug-file` の説明を追加 |
-| Improvement | `@` ファイルサジェスト改善（再掲） |
-| Feature | Pro / Team Standard プランのデフォルトモデルを Sonnet から Opus に変更 |
-| Feature | `/effort` 導入以前に保存された effort レベルを Opus 5.5 等の新モデルに適用しないよう変更 |
-| Feature | Opus 4.7・Opus 4.8・Fable 5 の起動時 effort 固定を解除 |
-| Improvement | `/autocompact` のフッターヒントに ←/→ キーを明記 |
-| Improvement | `/fast` のフッターに Space トグルキーを明記 |
-| Feature | Self-hosted runner: ライフサイクルフックの git がランナー共有 git ファイルに列挙されたフックフォルダ・プログラムを無視するよう変更。ローカルパス・`git://` リモートには `GIT_ALLOW_PROTOCOL` が必要 |
-| Feature | 予約済みマーケットプレイス名を模倣したプラグインマーケットプレイスの追加拒否・ロード停止 |
-| Feature | `PermissionRequest` フック: エージェント型フックが実行されなくなり、コマンド・http フックを指定するエラーを表示 |
+| Change | Pro / Team Standard プランのデフォルトモデルを Sonnet から Opus に変更 |
+| Change | `/effort` がモデル別になる前に保存された effort レベルを Opus 5.5 等の新モデルに適用しないよう変更 |
+| Change | Opus 4.7・Opus 4.8・Fable 5 が指定済みの effort より起動時デフォルトの effort を優先して保持しないよう変更 |
+| Change | `/autocompact` のフッターヒントに ←/→ キーを明記 |
+| Change | `/fast` のフッターに Space トグルキーを明記 |
+| Change | Self-hosted runner: ライフサイクルフックの git がランナー共有 git ファイルに列挙されたフックフォルダ・プログラムを無視するよう変更。ローカルパス・`git://` リモートには `GIT_ALLOW_PROTOCOL` が必要 |
+| Change | 予約済みマーケットプレイス名を模倣したプラグインマーケットプレイスの追加拒否・ロード停止 |
+| Change | `PermissionRequest` フック: エージェント型フックが実行されなくなり、コマンド・http フックを指定するエラーを表示 |
 | Feature | [VSCode] `/status` コマンドでセッションのバージョン・アカウント・モデル・サーバー詳細を表示する Status ダイアログを追加 |
 | Feature | [VSCode] `/sandbox` でサンドボックスモード・フォールバック・除外コマンドを表示する Sandbox ダイアログを追加 |
 | Feature | [VSCode] `/chrome` で Chrome 拡張のステータス・インストール・再接続・権限ページ等を表示する Claude in Chrome ダイアログを追加 |
@@ -146,19 +147,19 @@ MCP ツールの説明が長い場合にデフォルト上限で切り捨てら�
 | Feature | [VSCode] `/plan` でプランモードへの切り替え・最初の計画プロンプト送信・セッションプランの表示が可能 |
 | Improvement | [VSCode] チャットボックスのペーストテキスト処理改善（800 文字または 2 行超のペーストをマーク） |
 | Improvement | [VSCode] チャットボックスのプロンプト処理改善（ペーストテキストから不可視 Unicode フォーマット・タグ文字を除去） |
-| Improvement | [VSCode] "Open in New Tab" が最後のグループの後ではなく作業中のエディターグループの隣に開くよう変更 |
+| Change | [VSCode] "Open in New Tab" が最後のグループの後ではなく作業中のエディターグループの隣に開くよう変更 |
 | Fix | [VSCode] effort チップが実行中のレベルではなく古い保存済み effort レベルを表示する問題を修正 |
 | Fix | [VSCode] Python 拡張のアクティベーションハング時に Claude Code が起動しない問題を修正（60 秒後に Python 環境なしで起動） |
 | Fix | [VSCode] プラン承認カードに auto mode が提示されない問題を修正（"Yes, and use auto mode" を最初の選択肢に） |
 | Fix | [VSCode] セッションリストで archive/unarchive 後にキーボードによる矢印キーナビゲーションが停止する問題を修正 |
 | Fix | [VSCode] セッション再オープン後にペーストマーカー行が自分のメッセージに表示される問題を修正 |
-| Feature | [Claude Code on the web] 管理者向け Routines オン/オフ設定を Admin settings → Capabilities → Remote sessions に移動 |
+| Change | [Claude Code on the web] 管理者向け Routines オン/オフ設定を Admin settings → Capabilities → Remote sessions に移動 |
 | Fix | [Claude Code on the web] GitHub Enterprise Server リポジトリのクラウドセッションで `gh` および GitHub API 呼び出しが約 8 時間後に失敗する問題を修正（トークン自動更新） |
 | Fix | [Claude Code on the web] スケジュール実行直前に編集されたルーティンが古いプロンプト・名前で実行される問題を修正 |
 | Fix | [Claude Code on the web] クラウドセッションのトランスクリプト内でセッションの作業ディレクトリ外を指すファイルリンクのファイルカードが永続的にロード中になる問題を修正（無効化して理由を表示） |
 | Fix | [Claude Code on the web] 期限切れまたは新しいメッセージで上書きされた承認プロンプトが拒否として記録され auto mode がツール呼び出しを再試行しない問題を修正 |
 | Improvement | [Claude Code on the web] Claude アプリでのクラウドセッション閲覧時に、ユーザー向けファイルをアプリが開けるパスに保存するよう改善 |
-| Improvement | [Claude Code on the web] 管理者が GitHub をオフにした組織でセルフホスト環境のセッション開始時に空のリポジトリピッカーが表示されていた問題を修正（非表示に変更） |
+| Change | [Claude Code on the web] 管理者が GitHub をオフにした組織でセルフホスト環境のセッション開始時に表示されていた空のリポジトリピッカーを削除 |
 | Feature | [Claude Tag] Slack のネイティブ Working インジケーター・Stop ボタン・スレッドタイトルを Claude のスレッドに追加 |
 | Feature | [Claude Tag] ゲストの参加・退出で Claude の応答方法が変わる場合に Slack チャンネルへの通知を追加 |
 | Fix | [Claude Tag] Enterprise Grid 参加前に接続した Slack ワークスペースでスケジュールルーティンがサイレントに失敗する問題を修正 |
@@ -172,7 +173,7 @@ MCP ツールの説明が長い場合にデフォルト上限で切り捨てら�
 
 ## まとめ
 
-v2.1.280 は Claude Opus 5.5 の追加と Pro/Team Standard プランへのデフォルトモデル変更という大きな変化を含みつつ、50 件超のバグ修正と多数の UI 改善が含まれた大規模リリースです。フルスクリーン UI・ダイアログ操作・バックグラウンドエージェント・MCP・プラグイン管理など広範な領域で既知の問題が修正されており、安定性向上を重視したリリースとなっています。VSCode・Web・Claude Tag・Code Review の各プラットフォームにも独自の機能追加と修正が施されています。
+v2.1.280 は Claude Opus 5.5 の追加と Pro/Team Standard プランへのデフォルトモデル変更という大きな変化を含みつつ、多数のバグ修正と UI 改善を含む計 114 件の大規模リリースです。フルスクリーン UI・ダイアログ操作・バックグラウンドエージェント・MCP・プラグイン管理など広範な領域で既知の問題が修正されています。デフォルトモデルや effort の扱い、`PermissionRequest` フックなど、挙動が変わる変更（Change）も含まれるため、該当する設定を使っている場合は全変更点一覧を確認してください。VSCode・Web・Claude Tag・Code Review の各プラットフォームにも独自の機能追加と修正が施されています。
 
 ---
 
