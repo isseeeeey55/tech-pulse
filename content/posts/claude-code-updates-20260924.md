@@ -1,23 +1,25 @@
 ---
 title: "【Claude Code】v2.1.281 リリースノートまとめ"
 date: 2026-09-24T08:04:17+09:00
-draft: true
+draft: false
 tags: ["claude-code", "mcp", "bedrock", "claude-tag", "artifact", "worktree", "agent-sdk", "vscode"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.281 のClaude Codeリリースノートまとめ"
 ---
 
+![](/images/claude-code-updates-20260924/header.png)
+
 # Claude Code v2.1.281 リリースノート
 
 ## はじめに
 
-Claude Code v2.1.281 は、Claude apps gateway の機能拡張、MCP 関連の改善、セッション再開時の安定性修正、UI/UX の多数の改善を含む大規模なリリースです。
+Claude Code v2.1.281 は、Claude apps gateway の機能拡張、MCP 関連の改善、セッション再開時の安定性修正、UI/UX の多数の改善を含む、計 176 件の大規模なリリースです。
 
 主な変更点は以下のとおりです。
 
 - **Claude apps gateway** への `assume_role`・Bedrock guardrail・テレメトリ属性などの新機能追加
 - **MCP** の URL モード elicitation 対応、`claude plugin validate` によるサーバーチェック強化
-- セッション再開時の無限リトライ・ターン重複送信・プロンプトキャッシュ消失などの **多数の Fix**
+- `--max-turns` を無視したターンの無限リトライ、セッション再開時のターン重複送信、プロンプトキャッシュ消失などの **多数の Fix**
 - `/insights`・`/skills`・`/plugin` など **UI コンポーネントの改善**
 - **Claude Tag（Slack）** および **Claude Code on the web** の個別修正
 
@@ -27,9 +29,9 @@ Claude Code v2.1.281 は、Claude apps gateway の機能拡張、MCP 関連の�
 
 ### Claude apps gateway への `assume_role` と Bedrock guardrail サポート
 
-Claude apps gateway の Bedrock upstream に `assume_role` が追加されました。これにより、gateway は STS 経由で IAM ロールを引き受けて Bedrock を呼び出せるようになります。別の AWS アカウントへのクロスアカウントアクセスや、開発者ごとに 1 セッションを割り当てる構成にも対応しています。
+Claude apps gateway の Bedrock upstream に `assume_role` が追加されました。これにより、gateway は STS 経由で IAM ロールを引き受けて Bedrock を呼び出せるようになります。必要に応じて別の AWS アカウントのロールを使え、オプションで開発者ごとに 1 セッションとすることもできます。
 
-また、`guardrail: {id, version}` を Bedrock upstream に設定すると、その upstream 経由のすべてのリクエストに Amazon Bedrock guardrail が適用されます。リリースノートでは「すべての Bedrock upstream に設定するか、いずれにも設定しないかのどちらかにすること」と明記されています。
+また、`guardrail: {id, version}` を Bedrock upstream に設定すると、その upstream 経由のすべてのリクエストに Amazon Bedrock guardrail が適用されます。設定はすべての Bedrock upstream に入れるか、どれにも入れないかのどちらかにします（CHANGELOG 原文: "set it on all Bedrock upstreams or none"）。
 
 さらに `telemetry.resource_attributes` も追加され、Claude Desktop および `/login` セッションのテレメトリに固定ラベルを付与できるようになりました。
 
@@ -41,18 +43,16 @@ Claude apps gateway の Bedrock upstream に `assume_role` が追加されまし
 - 未宣言の `${user_config.*}` 参照
 - 安全でない URL
 
-プラグイン設定の事前検証が強化されることで、実行時に初めて問題が発覚するケースを減らせます。
+ロード時に黙って除外されるエントリなどを、`claude plugin validate` の段階で確認できるようになりました。
 
 ---
 
 ## 実用的な活用ポイント
 
-リリースノートに記載された変更から、以下の点に注意して活用してください。
-
-- **`"attribution": false` の設定**: `settings.json` に追加することでコミットおよび PR の帰属表示をすべて非表示にできます。リリースノートでは「旧バージョンの CLI はこのキーを含む設定ファイルをスキップするため、バージョン間で共有するファイルではオブジェクト形式を維持すること」と説明されています。
+- **`"attribution": false` の設定**: `settings.json` に追加することでコミットおよび PR の帰属表示をすべて非表示にできます。ただし旧バージョンの CLI はこのキーを含む設定ファイルを読み飛ばすため、複数バージョンで共有する設定ファイルではオブジェクト形式を維持します（CHANGELOG 原文: "older CLI versions skip a settings file that holds it, so keep the object form in files shared across versions"）。
 - **`/insights` の auto mode 推奨**: 直近のセッションで auto mode が処理できたであろう権限プロンプトの数を推定して表示するようになりました。
 - **`--agents` の改善**: `-p` とともにインライン JSON に加えて JSON ファイルのパスも受け付けるようになり、`prompt` を空にすることも許可されました。
-- **自己ホスト型ランナーの `--system-prompt` 変更**: system prompt がコマンドライン引数ではなくプライベートファイルとして渡されるようになりました。`--system-prompt` または `--append-system-prompt` を使うラッパーや `command` フックは `--system-prompt-file` または `--append-system-prompt-file` に切り替える必要があります。
+- **自己ホスト型ランナーの `--system-prompt` 変更**: system prompt がコマンドライン引数ではなくプライベートファイルとして渡されるようになり、大きなプロンプトで起動に失敗しなくなりました。`--system-prompt` または `--append-system-prompt` を使うラッパーや `command` フックは `--system-prompt-file` または `--append-system-prompt-file` に切り替える必要があります。
 
 ---
 
@@ -193,7 +193,7 @@ Claude apps gateway の Bedrock upstream に `assume_role` が追加されまし
 | Improvement | `/hooks`: フックの詳細画面でフックの種類と変更場所を表示（常に settings.json を指す代わりに）、フック無効・セーフモード・managed-hooks-only 通知がそれぞれ 1 文で説明 |
 | Improvement | `/mcp` のスクリーンリーダー出力改善: 無効なサーバーが「pending」ではなく「off」として読み上げられるようになった |
 | Improvement | Remote Control 確認の改善: ターミナルウィンドウがフォーカスを取り戻した後に選択肢が短時間非アクティブになり、切り替え中に押されたキーが回答してしまわないようになった |
-| Breaking | 自己ホスト型ランナーがシステムプロンプトをコマンドライン引数ではなくプライベートファイルとして渡すようになった: `--system-prompt` または `--append-system-prompt` を使うラッパーや `command` フックは `--system-prompt-file` または `--append-system-prompt-file` に切り替える必要がある |
+| Change | 自己ホスト型ランナーがシステムプロンプトをコマンドライン引数ではなくプライベートファイルとして渡すようになった: `--system-prompt` または `--append-system-prompt` を使うラッパーや `command` フックは `--system-prompt-file` または `--append-system-prompt-file` に切り替える必要がある |
 | Change | send now（Ctrl+Enter または Ctrl+X Ctrl+S）が実行中のツールをキャンセルする代わりにバックグラウンドに移動するようになった |
 | Change | auto mode でクラシファイアレビューがサーバーサイドで実行される場合、読み取り専用とサンドボックス化されたシェルコマンドもそのレビューを待機しフラグされたときブロックされるようになった |
 | Change | `CLAUDE_CODE_AUTO_MODE_SERVER` が Anthropic API 直接接続でも適用されるようになった: `0` でサーバーサイド auto mode クラシファイアをオプトアウト（ローカルクラシファイアが使用量にカウントされる）、`1` でオプトイン |
@@ -241,11 +241,11 @@ Claude apps gateway の Bedrock upstream に `assume_role` が追加されまし
 
 ## まとめ
 
-v2.1.281 は Feature・Fix・Improvement・Change を合わせて 100 項目以上に及ぶ大規模なリリースです。
+v2.1.281 は Feature 13 件・Fix 112 件・Improvement 33 件・Change 18 件、計 176 件の大規模なリリースです。
 
 Claude apps gateway への `assume_role`・Bedrock guardrail・テレメトリ属性の追加が目立つ機能追加です。MCP まわりでは `claude plugin validate` によるサーバーチェック強化と URL モード elicitation の対応が加わりました。
 
-Fix の大部分はセッション再開の安定性（ターン重複送信・プロンプトキャッシュ消失・無限リトライ）と、プロキシ・ゲートウェイ経由の接続品質に集中しています。UI 面では vim モード・スクリーンリーダー・狭いターミナルでの表示など細部にわたる修正と改善が含まれています。
+Fix には、セッション再開時のターン重複送信やプロンプトキャッシュ消失、`--max-turns` を無視した無限リトライのほか、プロキシ・ゲートウェイ経由の接続に関するものが多く含まれます。UI 面では vim モード・スクリーンリーダー・狭いターミナルでの表示など細部にわたる修正と改善が含まれています。
 
 自己ホスト型ランナーを利用している場合は、`--system-prompt` / `--append-system-prompt` から `--system-prompt-file` / `--append-system-prompt-file` への移行が必要な点に注意してください。
 
