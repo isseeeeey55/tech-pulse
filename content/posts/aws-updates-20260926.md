@@ -1,23 +1,23 @@
 ---
 title: "【AWS】2026/09/26 のアップデートまとめ"
 date: 2026-09-26T08:02:01+09:00
-draft: true
+draft: false
 tags: ["aws", "End User Messaging", "IAM", "STS", "Transcribe", "KMS", "Elastic Disaster Recovery", "DataSync", "Billing and Cost Management", "EventBridge", "ElastiCache", "PrivateLink", "CloudTrail", "Resource Access Manager"]
 categories: ["AWS Updates"]
 summary: "2026/09/26 のAWSアップデートまとめ"
 ---
 
-# 直近の AWS アップデート情報まとめ（8件）
+![](/images/aws-updates-20260926/header.png)
+
+# 今回は、直近で発表された8件のAWSアップデートを紹介します
 
 ## はじめに
 
-今回は、直近で発表された8件の AWS アップデートを紹介します。今回のアップデートでは、**エンタープライズ規模のイベント駆動アーキテクチャを実現する Amazon EventBridge の Custom event bus 刷新**や、**WhatsApp 内で音声通話が可能になった AWS End User Messaging の拡張**など、エンタープライズ向けの機能強化が目立ちます。
+今回は、直近で発表された8件の AWS アップデートを紹介します。今回のアップデートでは、**エンタープライズ規模のイベント駆動アーキテクチャを実現する Amazon EventBridge の Custom event bus 刷新**や、**WhatsApp 内で音声通話が可能になった AWS End User Messaging の拡張**などが含まれます。
 
 また、セキュリティとガバナンスの面では、**IAM outbound identity federation が VPC エンドポイントに対応**し、厳格なネットワーク分離環境でも OIDC ベースの認証が可能になりました。さらに **Amazon Transcribe のカスタマー管理型 KMS キー対応**、**ElastiCache Global Datastore のタグベースアクセス制御**など、コンプライアンス要件への対応が強化されています。
 
-ディザスタリカバリと運用監視の領域では、**AWS DRS が Graviton ベースサーバーに対応**し、**DataSync の監視ダッシュボード**が追加されるなど、マルチアーキテクチャ環境の運用効率化が進んでいます。
-
-それでは注目のアップデートから詳しく見ていきましょう。
+ディザスタリカバリと運用監視の領域では、**AWS DRS が Graviton ベース（arm64）のソースサーバーに対応**し、**DataSync のコンソールに監視ダッシュボード**が追加されました。
 
 ---
 
@@ -25,86 +25,74 @@ summary: "2026/09/26 のAWSアップデートまとめ"
 
 ### 1. Amazon EventBridge が企業規模対応の Custom event bus をリリース
 
-Amazon EventBridge が企業規模対応の新しい Custom event bus をリリースしました。このアップデートは、マイクロサービスアーキテクチャやイベント駆動アプリケーションを本格的に展開する組織にとって重要な機能強化です。
+Amazon EventBridge が、機能を強化した新しい Custom event bus をリリースしました。カスタムイベントバスを作成してアカウント間で共有し、チームが厳密な順序保証・オープンなイベント形式・組み込みの保持期間・高度なイベント変換を使ってイベントを発行・購読できます。
 
-#### なぜこのアップデートが重要なのか
-
-従来の Custom event bus - classic では、大規模なマルチチーム・マルチアカウント環境での運用において、いくつかの制約がありました。特にイベントの順序保証、長期保持、標準形式対応などの面で、エンタープライズグレードのイベント駆動アーキテクチャを構築するには課題がありました。
-
-今回のリリースにより、以下の機能が新たにサポートされます：
+#### 新しい Custom event bus の機能
 
 - **複数アカウント間での event bus 共有**：AWS Resource Access Manager を通じて、組織内の異なるアカウント間で event bus を共有できます。これにより、集約的なイベント処理ハブを構築しつつ、各チームは独立した AWS アカウントで運用できます
-- **厳密な順序保証**：金融取引やオーダー処理など、イベントの処理順序が重要なユースケースに対応できます
-- **CloudEvents などのオープン形式対応**：ベンダーロックインを避け、標準化されたイベント形式でシステム間連携が可能になります
+- **厳密な順序保証**：受け取った順序どおりにイベントを処理できます
+- **CloudEvents などのオープン形式対応**：新しいイベント発行 API で、CloudEvents などの JSON ベースのイベント形式をスキーマを変えずに発行できます
 - **組み込み保持期間（24時間〜最大1年）**：アプリケーションエラーからの復旧や、新しいマイクロサービスのオンボーディング時に履歴イベントを供給できます
-- **250以上の AWS サービスへの配信をサポートする Subscriber リソース**：内容ベースの重複排除も自動対応します
+- **Subscriber リソース**：イベントをフィルタリングし、250 以上の AWS サービスに配信できます
+- **内容ベースの重複排除**：新しいイベント評価により自動で重複を排除します
 
 #### 実際の活用シナリオ
 
 マイクロサービスアーキテクチャを採用している組織では、チーム間の疎結合を維持しながらイベント通信を実現することが重要です。新しい Custom event bus を使用すると、以下のような運用が可能になります：
 
-**マルチアカウント環境でのイベント集約**：本番環境、ステージング環境、開発環境をそれぞれ別の AWS アカウントで運用している場合でも、共有された event bus を通じてイベントを集約・配信できます。これにより、環境間の分離を維持しつつ、統一されたイベント処理基盤を構築できます。
+**マルチアカウントでのイベント集約**：チームごとに別の AWS アカウントを使っている場合でも、共有した中央の event bus に各アカウントのパブリッシャーから直接イベントを送れます。
 
-**履歴イベントを活用した復旧**：アプリケーションにバグが混入し、一部のイベント処理に失敗した場合、保持期間内の履歴イベントを再処理することで、データの整合性を回復できます。24時間のデフォルト保持期間は最大1年まで延長可能なため、長期的な監査やコンプライアンス要件にも対応できます。
+**履歴イベントを活用した復旧**：アプリケーションにバグが混入し、一部のイベント処理に失敗した場合、保持期間内の履歴イベントを再処理することで、データの整合性を回復できます。保持期間は既定の24時間から最大1年まで延長できます。
 
-**新規サービスのオンボーディング**：新しいマイクロサービスをシステムに追加する際、過去のイベントを供給することで、現在の状態を構築できます。これにより、既存システムを停止することなく、新しいコンポーネントをシームレスに統合できます。
+**新規サービスのオンボーディング**：新しいコンポーネントを追加する際に、保持されている過去のイベントでデータを投入（hydrate）できます。
 
 #### 既存環境からの移行検討
 
-既存の Custom event bus - classic を利用している場合、新しい event bus への移行パスを検討する必要があります。リリースノートでは、新機能と従来機能の共存が可能であることが示唆されていますが、具体的なマイグレーション手順については、AWS の公式ドキュメントを確認することをお勧めします。
+既存の Custom event bus は「Custom event bus - classic」に名称変更されましたが、既存の API はすべて変更ありません。新しい Custom event bus は、コンソール、AWS CLI、AWS SDK、Serverless Agent skill、AWS CloudFormation で作成・共有できます。移行手順は告知には書かれていないため、公式ドキュメントを確認してください。
 
 ---
 
 ### 2. IAM outbound identity federation が VPC エンドポイント経由の OIDC discovery をサポート
 
-AWS IAM の outbound identity federation が、OIDC discovery APIs に対応した VPC エンドポイント機能をサポートしました。これは、厳格なネットワーク分離要件を持つ組織にとって重要な機能追加です。
+AWS IAM の outbound identity federation が、OIDC discovery API 用の VPC エンドポイントをサポートしました。
 
 #### 背景：なぜこの機能が必要だったのか
 
-従来、外部サービスとの連携時には長期的な認証情報（IAM ユーザーのアクセスキーなど）を使用することが一般的でした。しかし、長期認証情報は漏洩リスクが高く、ローテーション管理も煩雑です。
+IAM outbound identity federation は、AWS のワークロードが外部サービスにアクセスする際に長期的な認証情報を不要にする仕組みです。ワークロードは AWS STS から短期の JSON Web Token（JWT）を取得し、外部サービスは OIDC discovery エンドポイントで公開されている検証キーとメタデータでトークンを検証します。
 
-IAM outbound identity federation では、AWS STS から短期的な JWT トークンを取得し、外部サービスがそれを検証する仕組みを提供しています。外部サービスは OIDC discovery エンドポイントで公開されている検証キー（JWKS）を使用してトークンを検証します。
-
-しかし、これまで OIDC discovery エンドポイントはパブリックインターネット経由でのみアクセス可能でした。そのため、以下のような課題がありました：
-
-- **ゼロトラストセキュリティポリシーへの非対応**：インターネットへの出口を完全に塞いでいる VPC 環境では、JWKS を取得できない
-- **コンプライアンス要件との不整合**：金融機関やヘルスケア業界など、データの出口管理が厳格な組織では利用が困難
-- **ネットワーク監査の複雑化**：パブリックインターネット経由の通信が混在すると、監査証跡の管理が複雑になる
+これまで OIDC discovery エンドポイントにはパブリックインターネット経由でしか到達できなかったため、インターネットにアクセスできない VPC で動く検証側のワークロードは、検証キーを取得できませんでした。
 
 #### VPC エンドポイント対応による改善
 
-今回の機能追加により、AWS PrivateLink を使用して OIDC discovery メタデータと JWKS 検証キーエンドポイントにプライベートアクセスできるようになりました。これにより、トラフィックがパブリックインターネットを経由する必要がなくなります。
+インターフェース VPC エンドポイントを作成すれば、AWS PrivateLink 経由で OIDC discovery のメタデータと JWKS（JSON Web Key Set）の検証キーエンドポイントに VPC 内からアクセスでき、検証キー取得のトラフィックを AWS ネットワーク内に留められます。
 
 **通信フローの変化**：
 
 - **従来**：VPC 内のワークロード → NAT Gateway または Internet Gateway → パブリックインターネット → OIDC discovery エンドポイント
 - **新方式**：VPC 内のワークロード → VPC エンドポイント（AWS PrivateLink） → OIDC discovery エンドポイント
 
-すべての通信が AWS のプライベートネットワーク内で完結するため、セキュリティ要件が厳格な環境でも JWT ベースの認証が実現できます。
+インターネットへのアクセスが制限された VPC で動くワークロードでも、ネットワークセキュリティ要件を満たしながら JWT の検証ができます。
 
 #### 設定と運用上のポイント
 
 VPC エンドポイントを作成する際には、以下の点に注意が必要です：
 
 - **セキュリティグループの設定**：VPC エンドポイントに適切なセキュリティグループを割り当て、必要な通信のみを許可します
-- **CloudTrail によるログ記録**：OIDC discovery エンドポイントへのアクセスを CloudTrail で追跡し、監査証跡として記録できます
-- **料金**：AWS PrivateLink の標準料金のみが適用され、この機能自体に追加料金はかかりません
+- **料金**：AWS PrivateLink の標準料金以外に、この機能の追加料金はかかりません
 
-この機能は、すべての商用 AWS リージョン、AWS GovCloud (US)、China リージョンで利用可能です。
+この機能は、すべての商用 AWS リージョン、AWS GovCloud (US) リージョン、中国リージョンで利用できます。
 
 ---
 
 ## SRE 視点での活用ポイント
 
-今回のアップデートを SRE の観点から見ると、**運用の可観測性とセキュリティガバナンスの強化**が際立っています。
+**DataSync の監視ダッシュボード**では、アカウント内のタスク実行について、ステータス、データとファイルの転送レート、所要時間、転送量をコンソールで確認できます。ステータス・タスク・タスクモード・実行 ID・開始時刻で絞り込み、失敗した実行を選んでエラーを確認できます。タスクごとの成功・失敗の件数もまとめて表示されるため、定期転送の状況確認に使えます。
 
-**DataSync の監視ダッシュボード**は、複数の拠点から AWS へのデータ移行を行う際に、転送速度や成功率を一元的に監視できるようになりました。これまで CloudWatch でカスタムダッシュボードを構築していた手間が不要になり、失敗したタスクをフィルタリングして即座にエラー詳細を確認できます。定期的なバックアップタスクの SLI（転送成功率、転送速度）を追跡し、SLO に基づいたアラート設計に活用できるでしょう。
+**ElastiCache Global Datastore のタグベースアクセス制御**では、IAM ポリシーや SCP の条件にタグを使い、個々のリソースを列挙せずに権限を付与できます。たとえば `Environment:production` タグを持つリソースにのみ本番環境の権限を付与するといった制御ができます。Global Datastore のタグの変更は、対象のすべてのリージョンに自動で伝播します。
 
-**ElastiCache Global Datastore のタグベースアクセス制御**は、マルチリージョン環境での権限管理を大幅に簡素化します。従来は各リージョンごとにリソース ARN を列挙した IAM ポリシーを管理する必要がありましたが、タグベースのポリシーに移行すれば、`Environment:production` タグを持つリソースにのみ本番環境の権限を付与するといった柔軟な制御が可能です。特に、タグの変更が自動的に全リージョンに伝播するため、ポリシーの一貫性を保ちやすくなります。
+**AWS DRS の Graviton 対応**により、Graviton ベース（arm64）のソースサーバーも、x86 と同じ DRS の手順で保護・復旧できるようになりました。arm64 サーバーは自動で識別され、Graviton インスタンスに復旧されます。追加料金はかかりません。Graviton へ移行したワークロードも、復旧テストで RPO/RTO を実測しておきます。
 
-**AWS DRS の Graviton 対応**は、コスト最適化のために Graviton インスタンスへの移行を進めている組織にとって、ディザスタリカバリの空白を埋める重要な機能です。x86 と Graviton のワークロードを統一的な DRS プロセスで保護できるため、アーキテクチャの異なるインスタンス群を混在させても運用負荷は増えません。復旧テストを定期的に実行し、RPO/RTO の実測値をモニタリングすることで、災害対策の実効性を担保できます。
-
-**IAM outbound identity federation の VPC エンドポイント対応**は、ゼロトラストアーキテクチャを採用している組織で、Lambda や ECS などのサーバーレス・コンテナワークロードから外部 API を呼び出す際のセキュリティ要件を満たします。Terraform で VPC エンドポイントを管理している場合、必要なエンドポイントをコード化してデプロイすることで、ネットワーク設定の再現性が向上します。ただし、VPC エンドポイントの追加により AWS PrivateLink の料金が発生する点は、コスト最適化の観点で事前に評価すべきです。
+**IAM outbound identity federation の VPC エンドポイント対応**は、インターネットへのアクセスを制限した VPC で JWT を検証するワークロードがある場合に関係します。インターフェース VPC エンドポイントには AWS PrivateLink の標準料金がかかる点は事前に確認します。
 
 ---
 
@@ -115,25 +103,21 @@ VPC エンドポイントを作成する際には、以下の点に注意が必�
 | **AWS End User Messaging** | WhatsApp 内で音声通話の発信・受信が可能に。チャットから通話へシームレスに移行でき、会話コンテキストを維持 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/09/aws-end-user-messaging-voice-calling-whatsapp) |
 | **AWS IAM** | outbound identity federation が OIDC discovery APIs 用の VPC エンドポイントをサポート。PrivateLink 経由でプライベートアクセスが可能に | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/09/aws-sts-vpc-oidc/) |
 | **Amazon Transcribe** | カスタマー管理型 KMS キーによる暗号化をサポート。カスタム語彙、語彙フィルター、カスタム言語モデルに対して独自の暗号化キーを指定可能 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/09/amazon-transcribe/) |
-| **AWS Elastic Disaster Recovery** | Graviton ベース（arm64）サーバーのディザスタリカバリに対応。x86 と同じプロセスで Graviton ワークロードを保護・復旧可能 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/09/elastic-disaster-recovery-graviton/) |
+| **AWS Elastic Disaster Recovery** | Graviton ベース（arm64）のソースサーバーのディザスタリカバリに対応。x86 と同じ DRS の手順で保護・復旧可能（追加料金なし） | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/09/elastic-disaster-recovery-graviton/) |
 | **AWS DataSync** | コンソール内に監視ダッシュボードを追加。アカウント全体のデータ転送を一元的に可視化し、ステータス、転送速度、実行時間などを確認可能 | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/09/datasync-monitoring-dashboard) |
 | **AWS Billing and Cost Management** | 新 API「ListBillingViewSegments」を提供。指定期間のアカウント請求コンテキスト（請求階層内の位置付け）を返す | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/09/aws-billing-and-cost-management-billing-context-api/) |
-| **Amazon EventBridge** | 企業規模対応の新しい Custom event bus をリリース。厳密な順序保証、CloudEvents 対応、最大1年の保持期間、Subscriber リソースなどをサポート | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/09/eventbridge-relaunches-custom-event-buses/) |
-| **Amazon ElastiCache** | Global Datastore がタグ機能とタグベースアクセス制御に対応。タグ変更が自動的に全リージョンに伝播し、統一的な権限管理とコスト配分が可能に | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/09/amazon-elasticache-global-datastore-tagging/) |
+| **Amazon EventBridge** | 機能を強化した新しい Custom event bus をリリース（既存バスは「Custom event bus - classic」に改称）。厳密な順序保証、CloudEvents 対応、最大1年の保持期間、Subscriber リソースなどをサポート | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/09/eventbridge-relaunches-custom-event-buses/) |
+| **Amazon ElastiCache** | Global Datastore がタグ付けとタグベースアクセス制御に対応。タグ変更は対象の全リージョンに自動伝播し、権限とコスト配分のポリシーをリージョンごとの操作なしに揃えられる | [詳細](https://aws.amazon.com/about-aws/whats-new/2026/09/amazon-elasticache-global-datastore-tagging/) |
 
 ---
 
 ## まとめ
 
-今回紹介した8件のアップデートは、**エンタープライズグレードの運用基盤強化**という共通のテーマが見えてきます。
+EventBridge は、アカウント間での共有、厳密な順序保証、CloudEvents などのオープン形式、最大1年の保持、250 以上の AWS サービスへ配信できる Subscriber リソースを備えた新しい Custom event bus をリリースしました。既存のバスは「Custom event bus - classic」に改称され、既存の API は変わりません。
 
-EventBridge の Custom event bus 刷新は、マイクロサービスアーキテクチャの本格導入を後押しする機能強化です。順序保証や長期保持といったエンタープライズ要件に対応し、マルチアカウント環境での疎結合なイベント駆動システムの構築が現実的になりました。
+セキュリティとガバナンスの面では、IAM outbound identity federation の OIDC discovery 用 VPC エンドポイント、Transcribe のカスタマー管理 KMS キー、ElastiCache Global Datastore のタグベースアクセス制御が加わりました。運用面では、DataSync の監視ダッシュボードと DRS の Graviton 対応があります。
 
-セキュリティとコンプライアンスの面では、IAM の VPC エンドポイント対応、Transcribe の KMS 対応、ElastiCache のタグベースアクセス制御が揃い、厳格なネットワーク分離とデータ保護要件を満たす選択肢が増えています。特にゼロトラストアーキテクチャやデータ主権要件への対応が求められる組織にとって、これらの機能は導入検討の価値があります。
-
-運用効率の面では、DataSync の監視ダッシュボードと DRS の Graviton 対応により、大規模なデータ移行やマルチアーキテクチャ環境のディザスタリカバリが管理しやすくなりました。これらは運用の可観測性を高め、SRE チームの負荷軽減に貢献するでしょう。
-
-また、AWS Billing and Cost Management の新 API や End User Messaging の音声通話対応など、エンタープライズ顧客の多様なニーズに応える機能拡張も続いています。これらのアップデートを活用することで、より堅牢で効率的な AWS 環境の構築が可能になります。
+このほか、請求コンテキストを返す Billing and Cost Management の `ListBillingViewSegments` API と、WhatsApp 上での音声通話（End User Messaging）が追加されています。
 
 ---
 
