@@ -1,17 +1,19 @@
 ---
 title: "【Claude Code】v2.1.283 リリースノートまとめ"
 date: 2026-09-26T08:02:34+09:00
-draft: true
+draft: false
 tags: ["claude-code", "MCP", "OpenTelemetry", "availableModelsMatch", "deniedModels", "CLAUDE_CODE_GATEWAY_HINT_HEADERS", "OTEL_LOG_TOOL_CONTENT", "DISABLE_TELEMETRY", "DO_NOT_TRACK", "ANTHROPIC_DEFAULT_HAIKU_MODEL", "DISABLE_PROMPT_CACHING_HAIKU", "VSCode", "Claude Tag", "Code Review"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.283 のClaude Codeリリースノートまとめ"
 ---
 
-## Claude Code v2.1.283 リリースノート
+![](/images/claude-code-updates-20260926/header.png)
+
+# Claude Code v2.1.283 リリースノート
 
 ## はじめに
 
-Claude Code v2.1.283 がリリースされました。本バージョンは非常に広範囲にわたるアップデートで、新機能の追加から多数のバグ修正まで含まれています。主な変更点として、LLM ゲートウェイ向けのリクエスト追跡機能、モデル管理設定の強化、`/doctor prompt-audit` コマンドの追加、MCP 関連の複数の安定性改善、プラグイン管理のバグ修正多数、UI・操作性の改善、VSCode / クラウドセッション / Claude Tag / Code Review 向けの個別修正などが挙げられます。
+Claude Code v2.1.283 がリリースされました。公式 CHANGELOG の記載は 94 件で、新機能の追加から多数のバグ修正まで含まれています。主な変更点として、LLM ゲートウェイ向けのリクエスト追跡機能、モデル管理設定の強化、`/doctor prompt-audit` コマンドの追加、MCP 関連の複数の安定性改善、プラグイン管理のバグ修正多数、UI・操作性の改善、VSCode / クラウドセッション / Claude Tag / Code Review 向けの個別修正などが挙げられます。
 
 ---
 
@@ -81,7 +83,7 @@ Claude Code v2.1.283 がリリースされました。本バージョンは非�
 | Fix | Warp ターミナルで Markdown リンクがクリッカブルなハイパーリンクではなくプレーンテキストとして表示される問題を修正 |
 | Fix | `claude mcp add`・`add-json`・`remove` がコンフィグファイルへの書き込み失敗時でも成功と報告する問題を修正 |
 | Fix | クラウドセッションで返答の最初の単語がストリーミングされず遅れて表示される問題を修正 |
-| Fix | Claude の組み込みキーバインドガイドでコードのタイムアウトを 1 秒と記載していた問題を修正（正しくは 3 秒）、および `cmd` を `meta` のエイリアスと表記していた問題を修正 |
+| Fix | Claude の組み込みキーバインドガイドでコード（chord：キーの連続入力）のタイムアウトを 1 秒と記載していた問題を修正（正しくは 3 秒）、および `cmd` を `meta` のエイリアスと表記していた問題を修正 |
 | Fix | `keybindings.json` でタイプミスのある修飾キー（例: `ctl+k`）が警告なく受け入れられる問題を修正 |
 | Fix | `footer:openSelected` をリバインドまたはアンバインドした後もフッターヒントが "Enter to view" と表示され続ける問題を修正 |
 | Fix | 素早く連続入力したキー（タイプアヘッド・キーリピート・SSH/tmux 経由のバースト）が古いステートに対して処理される問題を修正 |
@@ -147,7 +149,7 @@ Claude Code v2.1.283 がリリースされました。本バージョンは非�
 
 ## まとめ
 
-v2.1.283 は機能追加・バグ修正・改善が広範囲にわたる大型リリースです。LLM ゲートウェイ連携の強化（リクエスト追跡・ロードテストモード）、組織のモデル利用ポリシー管理の細粒度化（`availableModelsMatch`・`deniedModels`）、`/doctor prompt-audit` によるプロンプト監査機能の追加が新機能として加わりました。一方で、プラグイン管理・MCP・vim モード・VSCode 統合・クラウドセッション・Claude Tag・Code Review にわたる多数のバグが修正されており、安定性向上への注力も見られます。起動レイテンシや初回返答レイテンシの改善も複数含まれており、全体的に品質改善とオペレーション機能の拡充を中心としたリリースと言えます。
+v2.1.283 は機能追加・バグ修正・改善が広範囲にわたる大型リリースです。LLM ゲートウェイ連携の強化（リクエスト追跡・ロードテストモード）、組織のモデル利用ポリシー管理の細粒度化（`availableModelsMatch`・`deniedModels`）、`/doctor prompt-audit` によるプロンプト監査機能の追加が新機能として加わりました。一方で、プラグイン管理・MCP・vim モード・VSCode 統合・クラウドセッション・Claude Tag・Code Review にわたる多数のバグが修正されています。起動時と初回返答のレイテンシの改善も複数含まれます。サードパーティプロバイダー利用時やテレメトリオフ時に auto mode で起動するようになるなど、挙動が変わる変更（Change）もあるため、該当する設定を使っている場合は全変更点一覧を確認してください。
 
 ---
 
