@@ -1,11 +1,13 @@
 ---
 title: "【Claude Code】v2.1.284 リリースノートまとめ"
 date: 2026-09-29T08:02:57+09:00
-draft: true
+draft: false
 tags: ["claude-code", "claude-sonnet-5-5", "mcp", "ultracode", "claude-tag", "vscode", "remote-control", "google-cloud", "agent-sdk"]
 categories: ["Claude Code Updates"]
 summary: "v2.1.284 のClaude Codeリリースノートまとめ"
 ---
+
+![](/images/claude-code-updates-20260929/header.png)
 
 ## Claude Code v2.1.284 リリースノート
 
@@ -30,7 +32,9 @@ Claude Code v2.1.284 は、モデルの更新、UI・操作性の改善、多数
 
 Anthropic API において、Claude Sonnet 5.5（`claude-sonnet-5-5`）がデフォルトの Sonnet モデルとして追加されました。1M コンテキストウィンドウを持ち、料金は入力 $2/Mtok・出力 $10/Mtok、キャッシュ読み取りは $0.20/Mtok です。
 
-モデル ID を明示的に指定したい場合は `claude-sonnet-5-5` を使用します。なお、マネージドポリシーの `availableModels` が空の場合や、起動時のモデルが含まれていない場合にはスタートアップ警告が出るようになったため、ポリシー設定のある環境では確認が必要です。
+モデル ID は `claude-sonnet-5-5` です。
+
+なお同じリリースで、Claude apps ゲートウェイのマネージドポリシーで `availableModels` が空の場合や、`model` / `enforceAvailableModels` を設定しないまま Claude Code の起動モデルが `availableModels` から外れている場合に、起動時の警告が出るようになりました。
 
 ---
 
@@ -46,11 +50,11 @@ Anthropic API において、Claude Sonnet 5.5（`claude-sonnet-5-5`）がデフ
 
 ## 実用的な活用ポイント
 
-- **ドル建て支出の可視化**: `/usage` やステータスラインに `$271.40 / $500.00 spent this month` のような形式でゲートウェイのスペンドリミットに対する使用額が表示されます。`rate_limits.spend_limit` には `used_usd`・`limit_usd`・`period` フィールドも追加されています（ゲートウェイが本バージョン以降を実行している場合）。
+- **ドル建て支出の可視化**: ゲートウェイが本バージョン以降を実行している場合、`/usage` やステータスラインに `$271.40 / $500.00 spent this month` のような形式で Claude apps ゲートウェイのスペンドリミットに対する使用額が表示されます。ステータスラインの `rate_limits.spend_limit` には `used_usd`・`limit_usd`・`period` フィールドも追加されています。
 
 - **Ultracode の独立トグル化**: Ultracode が `/effort` スライダーから独立し、Tab キーまたは `/effort ultracode [on|off]` で切り替え可能になりました。以前は xhigh effort を強制していましたが、変更後はどの effort レベルでも Ultracode をオン/オフできます。
 
-- **自動モードのデフォルト化**: インタラクティブターミナルおよび VS Code セッションは、`permissions.defaultMode` が設定されていない場合、すべてのプランとプロバイダーで自動モードで起動するようになりました。
+- **自動モードのデフォルト化**: インタラクティブターミナルおよび VS Code セッションは、`permissions.defaultMode` が設定されていない場合、すべてのプランとプロバイダーで自動モードで起動するようになりました。`permissions.defaultMode` を設定すればそちらが優先されます。
 
 - **`/rate-limit-options` が `/help` に追加**: claude.ai サブスクライバー向けに `/rate-limit-options` コマンドが `/help` とコマンドメニューに追加されました。
 
@@ -66,8 +70,8 @@ Anthropic API において、Claude Sonnet 5.5（`claude-sonnet-5-5`）がデフ
 | Feature | `effortSlider:decreaseEffort`・`increaseEffort`・`toggleUltracode` キーバインドアクションを追加（`keybindings.json` でリバインド可能） |
 | Feature | `/rate-limit-options` を `/help` とコマンドメニューに追加（claude.ai サブスクライバー向け） |
 | Feature | `/mcp reconnect all` をインタラクティブターミナルに追加（失敗・認証待ちの MCP サーバーを一括再試行） |
-| Feature | マネージドポリシーの `availableModels` が空、またはモデルが除外されている場合の Claude apps ゲートウェイ起動警告を追加 |
-| Feature | Claude apps ゲートウェイの `telemetry.forward_to` 宛先に `auth: { google: {} }` を追加（Google Cloud の OTLP エンドポイントへ直接テレメトリ出力） |
+| Feature | マネージドポリシーの `availableModels` が空、または `model`・`enforceAvailableModels` 未設定のまま起動モデルが含まれていない場合の Claude apps ゲートウェイ起動警告を追加 |
+| Feature | Claude apps ゲートウェイの `telemetry.forward_to` 宛先に `auth: { google: {} }` を追加（ゲートウェイの Google Cloud 認証情報で Google Cloud の OTLP エンドポイントへ直接テレメトリ出力） |
 | Feature | Claude apps ゲートウェイとアイデンティティプロバイダー間の証明書クライアント認証（`private_key_jwt`）を追加 |
 | Fix | 破損したレスポンスストリームが「JSON Parse error」や「undefined is not an object」等の生エラーを表示する、または「undefined」という文字列を回答に書き込む不具合を修正（リトライまたは中断レスポンスとして報告されるように） |
 | Fix | thinking ブロック直後にオーバーロードまたはサーバーエラーが発生した場合、リトライされずにエラーでターンが終了する不具合を修正 |
@@ -109,7 +113,7 @@ Anthropic API において、Claude Sonnet 5.5（`claude-sonnet-5-5`）がデフ
 | Fix | アーティファクト DB の書き込み結果が、`data/users/` サブツリーへの書き込みをすべての閲覧者に見えるとクロードに誤って伝える不具合を修正（`as_level` に「view」レベルを追加） |
 | Fix | アイデンティティプロバイダーが多数のグループを列挙するサインインからのリクエストに Claude apps ゲートウェイが `431 Request Header Fields Too Large` を返す不具合を修正（リクエストヘッダーを最大 256 KiB まで受け入れる） |
 | Improvement | 使用量制限待機の表示を改善（制限の状態とカウントダウンがプロンプト下の 1 ブロックに統合、カウントダウンの繰り返し表示を解消） |
-| Improvement | Chrome ツールがプレフィックスなしで呼び出された場合の「No such tool available」エラーを改善（呼び出すべきツール名を明示） |
+| Improvement | Claude in Chrome のツールがプレフィックスなしで呼び出された場合の「No such tool available」エラーを改善（呼び出すべきツール名を明示） |
 | Improvement | Monitor イベント行を改善（各イベントが出力した内容を表示、変化のない「Waiting for N … to finish」行の繰り返しを解消） |
 | Improvement | Workflow ツールのサンドボックスを、async スクリプトフックのエラー処理に対して強化 |
 | Improvement | 起動時間とメモリ使用量を、実際に使用している設定スキーマ部分のみをビルドすることで改善 |
@@ -121,8 +125,7 @@ Anthropic API において、Claude Sonnet 5.5（`claude-sonnet-5-5`）がデフ
 | Improvement | `claude remote-control` を改善（未トラストのフォルダーでは終了せずにターミナル上でワークスペーストラストを確認） |
 | Improvement | アーティファクトページを改善（Claude が設計プランを返信ではなくページ内に書き込み、既存の名前をページタイトルとして使用） |
 | Improvement | Artifact ツールを改善（claude.ai のチャット・プロジェクトリンク、チャットからのアーティファクト、アーティファクト ID 単体が渡された場合に正しいリンクまたはコンテンツを要求） |
-| Improvement | `/claude-api`: 詳細は上記参照 |
-| Improvement | `/artifacts` フィルタータブをタイトル横に配置し、1 語ラベル（All・Mine・Shared）に変更（`/config` や `/plugin` と同じタブバーを使用） |
+| Change | `/artifacts` フィルタータブをタイトル横に配置し、1 語ラベル（All・Mine・Shared）に変更（`/config` や `/plugin` と同じタブバーを使用） |
 | Change | インタラクティブターミナルおよび VS Code セッションは、`permissions.defaultMode` が未設定の場合、すべてのプランとプロバイダーで自動モードで起動するよう変更 |
 | Change | Ultracode を `/effort` の独立したトグルに変更（Tab または `/effort ultracode [on|off]`、xhigh effort の強制をなくし、どの effort レベルでも使用可能） |
 | Change | 接続断後のリトライがリクエスト全体のリトライバジェットを共有するよう変更（失敗リクエストがより早く諦める） |
@@ -153,12 +156,12 @@ Anthropic API において、Claude Sonnet 5.5（`claude-sonnet-5-5`）がデフ
 | Feature (Claude Tag) | スレッド・チャンネルデフォルト・DM 向けに「Opus (latest)」等のモデルファミリー選択を追加（最新モデルに自動追従） |
 | Feature (Claude Tag) | 組織全体の上限に対するスペンドと使用率を、アナリティクスのスペンドプロジェクションチャートに追加 |
 | Fix (Claude Tag) | GitHub Enterprise ホスト名にアンダースコアが含まれる場合に旧 Claude in Slack アプリのプログレスカードとリンクプレビューがリポジトリと PR 作成ボタンを省略する不具合を修正 |
-| Fix (Claude Tag) | チャンネルの環境が起動を拒否した場合に Claude が沈黙する不具合を修正（1 回の通知を投稿し、@メンション時に再試行するように） |
+| Fix (Claude Tag) | チャンネルの環境が起動を拒否した場合に Claude が沈黙する不具合を修正（管理者への連絡を促す通知を 1 回投稿し、@メンション時に再試行するように） |
 | Change (Claude Tag) | アカウント未接続のユーザーから @メンションされるたびにプライベートサインイン通知を送信するよう変更（初回のみから変更） |
 | Improvement (Claude Tag) | 「Notify members now」を改善（Enterprise Grid 全ワークスペースへの一斉通知と大規模ワークスペースでのより多くのメンバーへの到達） |
 | Improvement (Claude Tag) | オンデマンドランナーを持つセルフホスト環境での待機通知を改善（ランナーが起動中・再試行中・起動しないのいずれかを表示） |
 | Improvement (Claude Tag) | チャンネルマネージャー追加失敗時のエラー表示を改善（Slack ワークスペースが組織に接続済みであることを確認できない場合） |
-| Improvement (Claude Tag) | 管理設定のチャンネルアクセスリストを改善（コネクター・リポジトリ・プラグインと各ソースの表示） |
+| Improvement (Claude Tag) | 管理設定のチャンネルアクセスリストを改善（auto-join パターンが付与するコネクター・リポジトリ・プラグインと、それぞれの由来を表示） |
 | Improvement (Claude Tag) | リポジトリをチャンネルマネージャーとして追加する際、リポジトリ管理者確認ができない場合に GitHub サインインを促すよう改善 |
 | Fix (Code Review) | 未提出のレビューが既に開いている場合に Code Review が完成したレビューを投稿せずに諦める不具合を修正（投稿を先に再試行するように） |
 
@@ -166,7 +169,7 @@ Anthropic API において、Claude Sonnet 5.5（`claude-sonnet-5-5`）がデフ
 
 ## まとめ
 
-v2.1.284 は、Claude Sonnet 5.5 のデフォルト化、Ultracode トグルの独立、自動モードのデフォルト化といった動作上の変更に加え、レスポンスストリーム破損・MCP ツール・vim モード・各種 UI など多岐にわたる不具合修正を含む大規模リリースです。VSCode 拡張・Claude Tag・Cloud Sessions それぞれにも機能追加と修正が行われています。変更量が多く、広範な安定性向上を目的とした内容が中心となっています。
+v2.1.284 は、Claude Sonnet 5.5 のデフォルト化、Ultracode トグルの独立、自動モードのデフォルト化といった動作上の変更に加え、レスポンスストリーム破損・MCP ツール・vim モード・各種 UI など多岐にわたる不具合修正を含む大規模リリースです。VSCode 拡張・Claude Tag・Cloud Sessions それぞれにも機能追加と修正が行われています。変更点は全 100 件で、そのうち半数以上が不具合修正です。
 
 ---
 
