@@ -18,7 +18,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      HUGO_VERSION: "0.166.0"
+      HUGO_VERSION: "0.168.0"
     steps:
       - uses: actions/checkout@v7
         with:
@@ -30,6 +30,9 @@ jobs:
         with:
           hugo-version: ${{ env.HUGO_VERSION }}
           extended: true
+
+      - name: Check Hugo security regression
+        run: python3 scripts/test_hugo_security.py
 
       - name: Build
         run: hugo --minify --baseURL "https://tech-pulse.dev/"
